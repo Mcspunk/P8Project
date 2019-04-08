@@ -1,0 +1,14 @@
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\bin\Debug\TripAdvisorCrawler.exe.config
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\bin\Debug\TripAdvisorCrawler.exe
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\bin\Debug\TripAdvisorCrawler.pdb
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\bin\Debug\HtmlAgilityPack.dll
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\bin\Debug\HtmlAgilityPack.pdb
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\bin\Debug\HtmlAgilityPack.xml
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\obj\Debug\TripAdvisorCrawler.csprojAssemblyReference.cache
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\obj\Debug\TripAdvisorCrawler.csproj.CoreCompileInputs.cache
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\obj\Debug\TripAdvisorCrawler.csproj.CopyComplete
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\obj\Debug\TripAdvisorCrawler.exe
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\obj\Debug\TripAdvisorCrawler.pdb
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\bin\Debug\Newtonsoft.Json.dll
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\bin\Debug\Newtonsoft.Json.pdb
+C:\Users\User\source\repos\TripAdvisorCrawler\TripAdvisorCrawler\bin\Debug\Newtonsoft.Json.xml
