@@ -12,6 +12,5 @@ namespace TripAdvisorCrawler
         public User author;
         public string month_visited;
         public string company;
-
     }
 }
