@@ -18,5 +18,6 @@ namespace TripAdvisorCrawler
         public string category;
         public string imgURL;
         public string name;
+        public int priceLevel;
     }
 }
