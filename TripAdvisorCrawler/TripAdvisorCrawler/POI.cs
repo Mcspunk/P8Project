@@ -12,7 +12,7 @@ namespace TripAdvisorCrawler
         public double lat;
         public double lng;
         public double avgRating;
-        public Dictionary<string, string> openingshours;
+        public Dictionary<string, List<string>> openingshours;
         public string address;
         public string city;
         public string category;
