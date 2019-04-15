@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Web;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.UI;
 using System.Threading;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium;
 
 namespace TripAdvisorCrawler
 {
@@ -20,8 +19,8 @@ namespace TripAdvisorCrawler
         public List<POI> results = new List<POI>();
         public Dictionary<string, User> users = new Dictionary<string, User>();
         public string tripType;
- //       public ChromeDriver driver = new ChromeDriver("C:/Users/User/Documents/AAU/P8Project/TripAdvisorCrawler/TripAdvisorCrawler");
-        public ChromeDriver driver = new ChromeDriver("C:/Users/marku/Desktop");
+        public ChromeDriver driver = new ChromeDriver("C:/Users/Patrick Alminde/Desktop/");
+        //public ChromeDriver driver = new ChromeDriver("C:/Users/marku/Desktop");
         public HtmlWeb web = new HtmlWeb();
         public HtmlDocument doc;
 
@@ -33,11 +32,11 @@ namespace TripAdvisorCrawler
 
         public void Crawl()
         {
-            //ProcessTop10Pages(seed);
+            //ProcessTop30Attractions(seed);
             ProcessTop30RestaurantsPage(seed);
         }
 
-        public void ProcessTop10Pages(string pageUrl)
+        public void ProcessTop30Attractions(string pageUrl)
         {
 
             var ele = doc.GetElementbyId("FILTERED_LIST");
@@ -69,7 +68,7 @@ namespace TripAdvisorCrawler
             newPOI.avgRating = Convert.ToDouble(array["aggregateRating"]["ratingValue"]);
             newPOI.address = array["address"]["streetAddress"];
             newPOI.city = array["address"]["addressLocality"];
-            newPOI.openingshours = new Dictionary<string, string>();
+            newPOI.openingshours = new Dictionary<string, List<string>>();
             //Gets first div with class 'detail' containing the category
             newPOI.category = innerDoc.DocumentNode.SelectNodes("//div[contains(@class,'detail')]")[0].InnerText;
             //Checks for existence of opening times
@@ -78,9 +77,21 @@ namespace TripAdvisorCrawler
             {
                 //Adds opening times
                 var openingTimesDiv = openingExist[0].ChildNodes[0];
+                int lastDayIndex = 0;
                 for (int i = 0; i < openingTimesDiv.ChildNodes.Count; i++)
                 {
-                    newPOI.openingshours.Add(openingTimesDiv.ChildNodes[i].InnerText, openingTimesDiv.ChildNodes[i + 1].InnerText);
+                    if (Char.IsNumber(openingTimesDiv.ChildNodes[i].InnerText.First()))
+                    {
+                        newPOI.openingshours[openingTimesDiv.ChildNodes[lastDayIndex].InnerText].Add(openingTimesDiv.ChildNodes[i].InnerText);
+
+                    }
+
+                    else
+                    {
+                        newPOI.openingshours.Add(openingTimesDiv.ChildNodes[i].InnerText, new List<string>());
+                        lastDayIndex = i;
+                    }
+
                     i++;
                 }
             }
@@ -216,14 +227,13 @@ namespace TripAdvisorCrawler
         {
             HtmlWeb web = new HtmlWeb();
             HtmlDocument doc = web.Load(pageUrl);
-            var ele = doc.GetElementbyId("EATERY_LIST_CONTENTS");
+            var elements = doc.DocumentNode.SelectNodes("//div[contains(@id,'eatery_')]");
 
-            for (int restIndex = 0; restIndex < 30; restIndex++)
+            foreach (var element in elements)
             {
-                var e = ele.ChildNodes[1].ChildNodes[11].ChildNodes[1];
-                var restLink = e.InnerHtml.Split('\"')[3];
-
+                var restLink = element.ChildNodes[1].InnerHtml.Split('\"')[3];
                 var poi = ProcessRestaurant(restLink);
+                Console.WriteLine("===== Fetching reviews: " + poi.name + " =====");
                 ProcessRestaurantReviews(poi, restLink);
             }
         }
@@ -258,7 +268,7 @@ namespace TripAdvisorCrawler
             //måske ændres
             var headerInfoNode = restaurantPage.GetElementbyId("taplc_resp_rr_top_info_rr_resp_0");
             newPOI.category = headerInfoNode.ChildNodes[0].ChildNodes[2].ChildNodes[2].ChildNodes[0].ChildNodes[2].InnerText;
-            newPOI.openingshours = new Dictionary<string, string>();
+            newPOI.openingshours = new Dictionary<string, List<string>>();
 
 
             driver.Navigate().GoToUrl(tripadvisor + restLink);
@@ -266,13 +276,32 @@ namespace TripAdvisorCrawler
             //Opening hours
             var openingHoursButton = driver.FindElementByXPath("//*[@id='component_10']/div/div/div");
             openingHoursButton.Click();
+            Thread.Sleep(5000);
+            IWebElement openingHoursWindowContents = null;
 
-            var openingHoursWindowContents = driver.FindElementById("c_popover_2");
+            try
+            {
+                openingHoursWindowContents = driver.FindElementByXPath("//*[contains(@id,'c_popover_')]");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Opening times error");
+            }
+            
             var openingHours = openingHoursWindowContents.Text.Split('\n').Skip(1).ToList();
 
-            for (int i = 0; i < openingHours.Count(); i = i + 2)
+            int lastDayIndex = 0;
+            for (int i = 0; i < openingHours.Count(); i++)
             {
-                newPOI.openingshours.Add(openingHours[i], openingHours[i + 1]);
+                if (Char.IsNumber(openingHours[i].First()))
+                {
+                    newPOI.openingshours[openingHours[lastDayIndex]].Add(openingHours[i]);
+                }
+                else
+                {
+                    newPOI.openingshours.Add(openingHours[i], new List<string>());
+                    lastDayIndex = i;
+                }
             }
 
             return newPOI;
@@ -301,6 +330,7 @@ namespace TripAdvisorCrawler
                     tripCheckBox = driver.FindElementByXPath("//*[@id='taplc_detail_filters_rr_resp_0']/div/div[1]/div/div[2]/div[2]/div/div[2]/div/div[1]");
                     tripCheckBox.Click();
                     Thread.Sleep(3000);
+                    Console.WriteLine("-- Processing Family reviews :: " + DateTime.UtcNow);
                     tripType = "family";
                 }
                 else if (i == 1)
@@ -311,6 +341,7 @@ namespace TripAdvisorCrawler
                     tripCheckBox = driver.FindElementByXPath("//*[@id='taplc_detail_filters_rr_resp_0']/div/div[1]/div/div[2]/div[2]/div/div[2]/div/div[2]/label");
                     tripCheckBox.Click();
                     Thread.Sleep(3000);
+                    Console.WriteLine("-- Processing Couple reviews :: " + DateTime.UtcNow);
                     tripType = "couple";
                 }
                 else if (i == 2)
@@ -321,6 +352,7 @@ namespace TripAdvisorCrawler
                     tripCheckBox = driver.FindElementByXPath("//*[@id='taplc_detail_filters_rr_resp_0']/div/div[1]/div/div[2]/div[2]/div/div[2]/div/div[3]/label");
                     tripCheckBox.Click();
                     Thread.Sleep(3000);
+                    Console.WriteLine("-- Processing Alone reviews :: " + DateTime.UtcNow);
                     tripType = "alone";
                 }
                 else if (i == 3)
@@ -332,6 +364,7 @@ namespace TripAdvisorCrawler
                     tripCheckBox = driver.FindElementByXPath("//*[@id='taplc_detail_filters_rr_resp_0']/div/div[1]/div/div[2]/div[2]/div/div[2]/div/div[4]/label");
                     tripCheckBox.Click();
                     Thread.Sleep(3000);
+                    Console.WriteLine("-- Processing Business reviews :: " + DateTime.UtcNow);
                     tripType = "business";
                 }
                 else if (i == 4)
@@ -343,14 +376,15 @@ namespace TripAdvisorCrawler
                     tripCheckBox = driver.FindElementByXPath("//*[@id='taplc_detail_filters_rr_resp_0']/div/div[1]/div/div[2]/div[2]/div/div[2]/div/div[5]/label");
                     tripCheckBox.Click();
                     Thread.Sleep(3000);
+                    Console.WriteLine("-- Processing Friends reviews :: " + DateTime.UtcNow);
                     tripType = "friends";
                 }
 
                 alteredDoc.LoadHtml(driver.PageSource);
                 //Find number of pages of reviews
-                var pageNode = alteredDoc.DocumentNode.SelectNodes("//a[contains(@class, 'pageNum last taLnk')]")[0];
-                noPages = Convert.ToInt32(pageNode.InnerText);
-                noPages = 2;
+                var pageNodes = alteredDoc.DocumentNode.SelectNodes("//a[contains(@class, 'pageNum last taLnk')]");
+                if (pageNodes != null) noPages = Convert.ToInt32(pageNodes[0].InnerText);
+                else noPages = 1;
 
                 for (int h = 0; h < noPages; h++)
                 {
@@ -362,6 +396,9 @@ namespace TripAdvisorCrawler
                     }
 
                     var reviewNodes = alteredDoc.DocumentNode.SelectNodes("//div[@class='prw_rup prw_reviews_review_resp']");
+                    if (reviewNodes == null) continue;
+
+
                     int k = 0;
                     foreach (var item in reviewNodes)
                     {
@@ -393,15 +430,17 @@ namespace TripAdvisorCrawler
                         k++;
 
                     }
-                    Console.WriteLine("Next page");
+                    Console.WriteLine("Page: " + (h+1) + "/" + noPages);
                     Thread.Sleep(1000);
                 }
-                Console.WriteLine("Finished triptype: " + tripType);
+                Console.WriteLine("Finished triptype: " + tripType + " :: " + DateTime.UtcNow);
+                Console.WriteLine();
 
 
 
             }
-            Console.WriteLine("Finished attraktion");
+            Console.WriteLine(" ===== Finished processing:" + newPOI.name + " =====");
+            Console.WriteLine();
             results.Add(newPOI);
             Console.WriteLine("Next attraktion");
 
