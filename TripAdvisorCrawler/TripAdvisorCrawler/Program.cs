@@ -10,8 +10,8 @@ namespace TripAdvisorCrawler
     {
         static void Main(string[] args)
         {
-            //Crawler crawler = new Crawler("https://www.tripadvisor.dk/Attractions-g186338-Activities-London_England.html");
-            Crawler crawler = new Crawler("https://www.tripadvisor.dk/Restaurants-g186338-London_England.html");
+            Crawler crawler = new Crawler("https://www.tripadvisor.dk/Attractions-g186338-Activities-London_England.html");
+            //Crawler crawler = new Crawler("https://www.tripadvisor.dk/Restaurants-g186338-London_England.html#EATERY_OVERVIEW_BOX");
             crawler.Crawl();
             Console.ReadKey();
         }
