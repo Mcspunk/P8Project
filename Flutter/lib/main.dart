@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:english_words/english_words.dart';
-import 'sign_in.dart';
+import 'select_interests.dart';
+import 'settings.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         primaryColor: Colors.lightBlue,
       ),
-      home: Recommender(),
+      home: SettingsState(),
     );
   }
 }
