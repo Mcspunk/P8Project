@@ -14,8 +14,6 @@ class RecommenderState extends State<Recommender> {
     super.dispose();
   }
 
-
-
   Widget _logInScreen() {
     return Scaffold(
       backgroundColor: Color(0xFFCAF8F3),
@@ -29,7 +27,7 @@ class RecommenderState extends State<Recommender> {
             height: 70,
             onPressed: () {
               Navigator.push(
-                context, 
+                context,
                 MaterialPageRoute(builder: (context) => home.build(context)),
               );
             },
@@ -159,7 +157,8 @@ class RecommenderState extends State<Recommender> {
                 minWidth: 300,
                 height: 70,
                 onPressed: () {
-                  User a = new User(userNameController.text, emailController.text);
+                  User a =
+                      new User(userNameController.text, emailController.text);
                   displayMsg(a.toString(), context);
                 },
                 child: const Text(
