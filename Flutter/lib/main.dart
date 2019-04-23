@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'select_interests.dart';
 import 'settings.dart';
+import 'sign_in.dart';
 
 void main() => runApp(MyApp());
 
