@@ -9,46 +9,69 @@ using System.Web;
 using System.Threading;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium;
-using MongoDB.Bson;
-using MongoDB.Driver;
+using Npgsql;
+using System.Net.Http;
+using System.Net;
 
 namespace TripAdvisorCrawler
 {
     public class Crawler
     {
         private static int CLICK_WAIT = 4000;
+        private static int POI_SKIP = 1;
         private static int MAX_REVIEWS = 500;
+        private static string connectionString = ""; //INSERT CONNECTION STRING HERE
         private string seed;
         private string tripadvisor = "https://tripadvisor.com";
         public List<POI> results = new List<POI>();
         public Dictionary<string, User> users = new Dictionary<string, User>();
         public string tripType;
-        private ChromeOptions chromeOptions = new ChromeOptions();
         public ChromeDriver driver = null;
         //public ChromeDriver driver = new ChromeDriver("C:/Users/marku/Desktop");
         public HtmlWeb web = new HtmlWeb();
         public HtmlDocument doc;
-        public MongoClient dbClient = new MongoClient("mongodb://127.0.0.1:27017");
         private int reviewCounter = 0;
-        private int idCounterPoi = 0;
+        private int idCounterPoi = POI_SKIP;
+
+
+        private void dataBaseTesting()
+        {
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+                var cmd = new NpgsqlCommand();
+                cmd.Connection = conn;
+                cmd.CommandText = "INSERT INTO justdiscover.testing_table (name) VALUES ('Markus') returning id;";
+                int id = Convert.ToInt32(cmd.ExecuteScalar());
+            }
+        }
 
         public Crawler(string seed)
         {
+            
             this.seed = seed;
             doc = web.Load(seed);
-            var chromeOptions = new ChromeOptions();
-            chromeOptions.AddArguments("--headless");
-            chromeOptions.AddArguments("--disable-gpu","--log-level=3");
-            
-            driver = new ChromeDriver("C:/Users/User/Documents/AAU/P8Project/TripAdvisorCrawler/TripAdvisorCrawler", chromeOptions);
+            ChromeOptions options = new ChromeOptions();
+            options.AddArguments("enable-automation");
+            options.AddArguments("--headless");
+            options.AddArguments("--incognito");
+            options.AddArguments("--window-size=1920,1080");
+            options.AddArguments("--no-sandbox");
+            options.AddArguments("--disable-extensions");
+            options.AddArguments("--dns-prefetch-disable");
+            options.AddArguments("--disable-gpu");
+            options.AddArguments("log-level=3");
+            options.PageLoadStrategy = PageLoadStrategy.Normal;
+
+            driver = new ChromeDriver("C:/Users/User/Documents/AAU/P8Project/TripAdvisorCrawler/TripAdvisorCrawler", options);
         }
 
         public void Crawl()
         {
-            //ProcessTop30Attractions(seed);
-            //ProcessTop30RestaurantsPage("https://www.tripadvisor.com/Restaurants-g186338-London_England.html#EATERY_OVERVIEW_BOX");
+            ProcessTop30Attractions(seed);
+            ProcessTop30RestaurantsPage("https://www.tripadvisor.com/Restaurants-g186338-London_England.html#EATERY_OVERVIEW_BOX");
             ProcessOtherAttractions("https://www.tripadvisor.com/Attractions-g186338-Activities-oa30-London_England.html");
-            //ProcessOtherRestaurants("https://www.tripadvisor.com/Restaurants-g186338-oa30-London_England.html#EATERY_OVERVIEW_BOX");
+            ProcessOtherRestaurants("https://www.tripadvisor.com/Restaurants-g186338-oa30-London_England.html#EATERY_OVERVIEW_BOX");
 
         }
 
@@ -56,7 +79,7 @@ namespace TripAdvisorCrawler
         {
 
             var attractionElements = doc.DocumentNode.SelectNodes("//li[contains(@class,'attractions-attraction-overview-main-TopPOIs')]");
-            foreach (var element in attractionElements)
+            foreach (var element in attractionElements.Skip(POI_SKIP))
             {
                 //var e = ele.ChildNodes[1].ChildNodes.Where(x => x.Name == "li").ToList()[attIndex].ChildNodes[1].ChildNodes[2];
                 var attLink = element.InnerHtml.Split('\"')[5];
@@ -65,6 +88,8 @@ namespace TripAdvisorCrawler
                 Console.WriteLine();
                 Console.WriteLine("===== Fetching Reviews: " + poi.name +" :: " + DateTime.Now );
                 ProcessReviews(poi, driver, attLink);
+                Console.WriteLine("=== Saving in DB ===");
+                SavePOIReviewsToDB(poi);
 
             }
         }
@@ -102,13 +127,94 @@ namespace TripAdvisorCrawler
 
         private void SavePOIReviewsToDB(POI poi)
         {
-            var db = dbClient.GetDatabase("TripAdvisor");
-            var collection = db.GetCollection<BsonDocument>("Reviews");
-            collection.InsertManyAsync(poi.reviews.Select(r => r.ToBsonDocument()));
 
-            collection = db.GetCollection<BsonDocument>("POI");
-            collection.InsertOneAsync(poi.ToBsonDocument());
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+                SaveUsersToDB(conn);
+                var resultingID = SavePOIToDB(conn,poi);
+                SaveReviewsToDB(conn, poi, resultingID);
+                
+            }
+        }
 
+        private void SaveReviewsToDB(NpgsqlConnection conn, POI poi, int resultingID)
+        {
+            foreach (var review in poi.reviews)
+            {
+                using (var cmd = new NpgsqlCommand())
+                {
+                    cmd.Connection = conn;
+                    cmd.CommandText = "INSERT INTO justdiscover.reviews (rating,month_visited,company,user_id,poi_id) VALUES (@rating,@month_visited,@company,@user_id,@poi_id)";
+                    cmd.Parameters.AddWithValue("rating", review.rating);
+                    cmd.Parameters.AddWithValue("month_visited", review.month_visited);
+                    cmd.Parameters.AddWithValue("company", review.company);
+                    cmd.Parameters.AddWithValue("user_id", review.author.uid);
+                    cmd.Parameters.AddWithValue("poi_id", resultingID);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            
+        }
+
+        private int SavePOIToDB(NpgsqlConnection conn, POI poi)
+        {
+            using(var cmd = new NpgsqlCommand())
+            {
+                cmd.Connection = conn;
+                cmd.CommandText = "INSERT INTO justdiscover.poi (lat,lng,avg_rating,open_hours,address,city,category,img_url,name,price_level,is_attraction) VALUES (@lat,@lng,@avg_rating,@open_hours,@address,@city,@category,@img_url,@name,@price_level,@is_attraction) RETURNING id;";
+                cmd.Parameters.AddWithValue("lat", poi.lat);
+                cmd.Parameters.AddWithValue("lng", poi.lng);
+                cmd.Parameters.AddWithValue("avg_rating", poi.avgRating);
+                cmd.Parameters.AddWithValue("open_hours", poi.openingHoursString());
+                cmd.Parameters.AddWithValue("address", poi.address);
+                cmd.Parameters.AddWithValue("city", poi.city);
+                cmd.Parameters.AddWithValue("category", poi.category);
+                cmd.Parameters.AddWithValue("img_url", poi.imgURL);
+                cmd.Parameters.AddWithValue("name", poi.name);
+                cmd.Parameters.AddWithValue("price_level", poi.priceLevel);
+                if (poi.priceLevel == -1)
+                {
+                    cmd.Parameters.AddWithValue("is_attraction", true);
+                }
+                cmd.Parameters.AddWithValue("is_attraction", false);
+                int resultingID = Convert.ToInt32(cmd.ExecuteScalar());
+                return resultingID;
+            }
+        }
+
+        private void SaveUsersToDB(NpgsqlConnection conn)
+        {
+            int i = 0;
+            foreach (User user in users.Values)
+            {
+                // Insert some data
+                using (var cmd = new NpgsqlCommand())
+                {
+                    cmd.Connection = conn;
+                    cmd.CommandText = "INSERT INTO justdiscover.users VALUES (@id,@password,@created,@preferences,@user_name)";
+                    cmd.Parameters.AddWithValue("id", user.uid);
+                    cmd.Parameters.AddWithValue("password", "123");
+                    cmd.Parameters.AddWithValue("created", DateTime.Now);
+                    cmd.Parameters.AddWithValue("preferences", JsonConvert.SerializeObject(new { Museum = i + 2, Parks = i - 1, FerrisWheel = i * 2 }));
+                    cmd.Parameters.AddWithValue("user_name", i.ToString());
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch (NpgsqlException e)
+                    {
+                        if (e.ErrorCode == -2147467259)
+                        {
+                            Console.WriteLine("Duplicate user -> SKIPPING");
+                            continue;
+                        }
+                        else throw;
+                    }
+                    i++;
+                }
+            }
+            users.Clear();
         }
 
         private POI ProcessAttraction(string link)
@@ -148,8 +254,7 @@ namespace TripAdvisorCrawler
                         newPOI.openingshours.Add(openingTimesDiv.ChildNodes[i].InnerText, new List<string>());
                         lastDayIndex = i;
                     }
-
-                    i++;
+                    
                 }
             }
             return newPOI;
@@ -253,19 +358,57 @@ namespace TripAdvisorCrawler
                 else noPages = 1;
 
                 if (noPages > MAX_REVIEWS) noPages = MAX_REVIEWS;
-
-                noPages = 2;
+                int failCounter = 0;
                 for (int h = 0; h < noPages; h++)
                 {
                     if (h != 0)
                     {
                         var insIndex = attractionLink.IndexOf("Reviews") + 8;
-                        attractionLink = attractionLink.Insert(insIndex, "or" + h * 10 + "-");
-                        driver.Navigate().GoToUrl(tripadvisor + attractionLink);
-                        alteredDoc.LoadHtml(driver.PageSource);
-                    }
+                        var newAttractionLink = attractionLink.Insert(insIndex, "or" + h * 10 + "-");
+                        try
+                        {
+                            driver.Navigate().GoToUrl(tripadvisor + newAttractionLink);
+                            alteredDoc.LoadHtml(driver.PageSource);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                            try
+                            {
+                                driver.Navigate().Refresh();
+                                alteredDoc.LoadHtml(driver.PageSource);
+                            }
+                            catch (Exception n)
+                            {
+                                if (failCounter == 5) throw n;
 
-                    var reviewNodes = alteredDoc.DocumentNode.SelectNodes("//div[contains(@class,'rev_wrap')]");
+                                Console.WriteLine("FAIL AT LOADING PAGE - RETRYING TIME: " + failCounter);
+                                h--;
+                                failCounter++;
+                                continue;
+                            }
+                        }
+                       
+                    }
+                    HtmlNodeCollection reviewNodes = null;
+                    try
+                    {
+                        reviewNodes = alteredDoc.DocumentNode.SelectNodes("//div[contains(@class,'rev_wrap')]");
+
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("!!!!!!!!!! COULD NOT RETRIEVE REVIEW NODES - RETRIEING !!!!!!!!!! ");
+                        h--;
+                        continue;
+                    }
+                    if(reviewNodes == null)
+                    {
+                        Console.WriteLine("!!!!!!!!!! COULD NOT RETRIEVE REVIEW NODES - RETRIEING !!!!!!!!!! ");
+                        h--;
+                        continue;
+                    }
+                    
                     int k = 0;
                     foreach (var item in reviewNodes)
                     {
@@ -301,10 +444,20 @@ namespace TripAdvisorCrawler
                             //newUser.given_reviews.Add(newReview.id);
                             newReview.author = newUser;
                         }
-                        var spanContainer = item.SelectNodes("//div[contains(@class,'rev_wrap ui_columns is-multiline')]")[k];
-                        var rating = Char.GetNumericValue(spanContainer.ChildNodes[1].InnerHtml.Split('_')[3][0]);
-                        newReview.rating = rating;
-                        newReview.month_visited = item.SelectNodes("//div[@class='prw_rup prw_reviews_stay_date_hsx']")[k].InnerText.Split(':')[1].Trim();
+                        try
+                        {
+                            var spanContainer = item.SelectNodes("//div[contains(@class,'rev_wrap ui_columns is-multiline')]")[k];
+                            var rating = Char.GetNumericValue(spanContainer.ChildNodes[1].InnerHtml.Split('_')[3][0]);
+                            newReview.rating = rating;
+                            newReview.month_visited = item.SelectNodes("//div[@class='prw_rup prw_reviews_stay_date_hsx']")[k].InnerText.Split(':')[1].Trim();
+
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("COULD NOT RETRIEVE RATING OR CONTEXT FROM REVIEW SKIPPING");
+                            k++;
+                            continue;
+                        }
                         
                         newReview.company = tripType;
 
@@ -340,6 +493,8 @@ namespace TripAdvisorCrawler
                 var poi = ProcessRestaurant(restLink);
                 Console.WriteLine("===== Fetching reviews: " + poi.name + " =====");
                 ProcessRestaurantReviews(poi, restLink);
+                Console.WriteLine("=== Saving in DB ===");
+                SavePOIReviewsToDB(poi);
             }
         }
 
@@ -360,6 +515,8 @@ namespace TripAdvisorCrawler
                     Console.WriteLine();
                     Console.WriteLine("===== Fetching Reviews: " + poi.name + " :: " + DateTime.Now);
                     ProcessRestaurantReviews(poi, attLink);
+                    Console.WriteLine("=== Saving in DB ===");
+                    SavePOIReviewsToDB(poi);
                 }
                 pageUrl = pageUrl.Replace(("oa" + (i + 1) * startIndex), "oa" + ((i + 2) * startIndex));
 
@@ -411,28 +568,27 @@ namespace TripAdvisorCrawler
             try
             {
                 openingHoursWindowContents = driver.FindElementByXPath("//*[contains(@id,'c_popover_')]");
+                var openingHours = openingHoursWindowContents.Text.Split('\n').Skip(1).ToList();
+
+                int lastDayIndex = 0;
+                for (int i = 0; i < openingHours.Count(); i++)
+                {
+                    if (Char.IsNumber(openingHours[i].First()))
+                    {
+                        newPOI.openingshours[openingHours[lastDayIndex]].Add(openingHours[i]);
+                    }
+                    else
+                    {
+                        newPOI.openingshours.Add(openingHours[i], new List<string>());
+                        lastDayIndex = i;
+                    }
+                }
             }
             catch (Exception e)
             {
                 Console.WriteLine("Opening times error");
             }
             
-            var openingHours = openingHoursWindowContents.Text.Split('\n').Skip(1).ToList();
-
-            int lastDayIndex = 0;
-            for (int i = 0; i < openingHours.Count(); i++)
-            {
-                if (Char.IsNumber(openingHours[i].First()))
-                {
-                    newPOI.openingshours[openingHours[lastDayIndex]].Add(openingHours[i]);
-                }
-                else
-                {
-                    newPOI.openingshours.Add(openingHours[i], new List<string>());
-                    lastDayIndex = i;
-                }
-            }
-
             return newPOI;
         }
 
@@ -517,21 +673,56 @@ namespace TripAdvisorCrawler
                 if (pageNodes != null) noPages = Convert.ToInt32(pageNodes[0].InnerText);
                 else noPages = 1;
 
-
+                int failCounter = 0;
                 for (int h = 0; h < noPages; h++)
                 {
                     if (h != 0)
                     {
                         var insIndex = restaurantLink.IndexOf("Reviews") + 8;
-                        restaurantLink = restaurantLink.Insert(insIndex, "or" + h * 10 + "-");
-                        driver.Navigate().GoToUrl(tripadvisor + restaurantLink);
-                        alteredDoc.LoadHtml(driver.PageSource);
+                        var newrestaurantLink = restaurantLink.Insert(insIndex, "or" + h * 10 + "-");
+                        try
+                        {
+                            driver.Navigate().GoToUrl(tripadvisor + newrestaurantLink);
+                            alteredDoc.LoadHtml(driver.PageSource);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                            try
+                            {
+                                driver.Navigate().Refresh();
+                                alteredDoc.LoadHtml(driver.PageSource);
+                            }
+                            catch (Exception n)
+                            {
+                                if (failCounter == 5) throw n;
+
+                                Console.WriteLine("FAIL AT LOADING PAGE - RETRYING TIME: " + failCounter);
+                                h--;
+                                failCounter++;
+                                continue;
+                            }
+                        }
                     }
 
-                    var reviewNodes = alteredDoc.DocumentNode.SelectNodes("//div[contains(@class,'rev_wrap')]");
-                    if (reviewNodes == null) continue;
+                    HtmlNodeCollection reviewNodes = null;
+                    try
+                    {
+                        reviewNodes = alteredDoc.DocumentNode.SelectNodes("//div[contains(@class,'rev_wrap')]");
 
-
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("!!!!!!!!!! COULD NOT RETRIEVE REVIEW NODES - RETRIEING !!!!!!!!!! ");
+                        h--;
+                        continue;
+                    }
+                    if (reviewNodes == null)
+                    {
+                        Console.WriteLine("!!!!!!!!!! COULD NOT RETRIEVE REVIEW NODES - RETRIEING !!!!!!!!!! ");
+                        h--;
+                        continue;
+                    }
                     int k = 0;
                     foreach (var item in reviewNodes)
                     {
@@ -561,13 +752,23 @@ namespace TripAdvisorCrawler
                             //newUser.given_reviews.Add(newReview.id);
                             newReview.author = newUser;
                         }
-                        var rating = Char.GetNumericValue(item.ChildNodes[1].InnerHtml.Split('_')[3][0]);
-                        newReview.rating = rating;
-                        newReview.month_visited = item.SelectNodes("//div[@class='prw_rup prw_reviews_stay_date_hsx']")[k].InnerText.Split(':')[1].Trim();
+
+                        try
+                        {
+                            var rating = Char.GetNumericValue(item.ChildNodes[1].InnerHtml.Split('_')[3][0]);
+                            newReview.rating = rating;
+                            newReview.month_visited = item.SelectNodes("//div[@class='prw_rup prw_reviews_stay_date_hsx']")[k].InnerText.Split(':')[1].Trim();
+                        }
+                        catch (Exception)
+                        {
+                            Console.WriteLine("COULD NOT RETRIEVE RATING OR CONTEXT FROM REVIEW SKIPPING");
+                            k++;
+                            continue;
+                        }
+                        
                         newReview.company = tripType;
 
                         
-
                         newPOI.reviews.Add(newReview);
                         k++;
 
