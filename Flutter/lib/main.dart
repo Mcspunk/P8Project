@@ -13,6 +13,15 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.lightBlue,
       ),
       home: SettingsState(),
+      onGenerateRoute: (RouteSettings settings) {
+        switch (settings.name) {
+          case '/':
+            return MaterialPageRoute(builder: (context) => SettingsState());
+            break;
+          case '/select_interests':
+            return MaterialPageRoute(builder: (context) => InterestsState());
+        }
+      },
     );
   }
 }
