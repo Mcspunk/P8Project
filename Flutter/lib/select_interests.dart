@@ -3,8 +3,7 @@ import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void saveCategoryRatings(
-    String key, List<String> categories, List<double> ratings) async {
+void saveCategoryRatings(String key, List<String> categories, List<double> ratings) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   prefs.setStringList(key, categories);
   saveRatings('Ratings', ratings);
@@ -19,25 +18,24 @@ void saveRatings(String key, List<double> ratings) async {
   prefs.setStringList(key, stringRatings);
 }
 
-Future<List<String>> getCategories(String key) async {
+Future<List<String>> getListOfStrings(String key) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getStringList(key);
 }
 
-Future<List<String>> getRatings(String key) async {
+void clearSharedPrefs() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getStringList(key);
+  prefs.clear();
 }
 
 class SelectInterests extends State<InterestsState> {
-  List<String> _categories = [ 'Park', 'Zoo', 'Museum', 'Casino', 'Indian', '1', '1', '1', '1'
-  ];
-  List<double> _ratings = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  List<String> _categories = [];
+  List<double> _ratings = [];
 
   @override
   void initState() {
-    getCategories('Categories').then(loadCategories);
-    getRatings('Ratings').then(loadRatings);
+    getListOfStrings('Categories').then(loadCategories);
+    getListOfStrings('Ratings').then(loadRatings);
     super.initState();
   }
 
