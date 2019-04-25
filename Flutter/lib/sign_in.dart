@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'utility.dart';
 import 'home_screen.dart';
 
-class RecommenderState extends State<Recommender> {
+
+class LogIn extends State<LogInState> {
   final userNameController = TextEditingController();
   final emailController = TextEditingController();
-  homeScreenState home = new homeScreenState();
+  HomeScreen home = new HomeScreen();
 
   @override
   void dispose() {
@@ -26,10 +27,7 @@ class RecommenderState extends State<Recommender> {
             minWidth: 300,
             height: 70,
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => home.build(context)),
-              );
+              displayMsg('Facebook not implemented yet', context);
             },
             child: const Text('Facebook',
                 style: TextStyle(
@@ -45,7 +43,7 @@ class RecommenderState extends State<Recommender> {
             minWidth: 300,
             height: 70,
             onPressed: () {
-              _logInScreen();
+              displayMsg('Twitter not implemented yet', context);
             },
             child: const Text('Twitter',
                 style: TextStyle(
@@ -61,7 +59,7 @@ class RecommenderState extends State<Recommender> {
             minWidth: 300,
             height: 70,
             onPressed: () {
-              _logInScreen();
+              displayMsg('Google not implemented yet', context);
             },
             child: const Text('Google',
                 style: TextStyle(color: Colors.white, fontSize: 24.0)),
@@ -156,10 +154,9 @@ class RecommenderState extends State<Recommender> {
               MaterialButton(
                 minWidth: 300,
                 height: 70,
-                onPressed: () {
-                  User a =
-                      new User(userNameController.text, emailController.text);
-                  displayMsg(a.toString(), context);
+                onPressed: () {       
+                  saveString('currentUser', userNameController.text);      
+                  Navigator.pushNamed(context, '/');
                 },
                 child: const Text(
                   'Next',
@@ -186,7 +183,7 @@ class RecommenderState extends State<Recommender> {
   }
 }
 
-class Recommender extends StatefulWidget {
+class LogInState extends StatefulWidget {
   @override
-  homeScreenState createState() => homeScreenState();
+  LogIn createState() => LogIn();
 }

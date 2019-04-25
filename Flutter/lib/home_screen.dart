@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
 import 'utility.dart';
-import 'sign_in.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'sign_in.dart';
 
-class homeScreenState extends State<Recommender> {
+class HomeScreen extends State<HomeScreenState> {
   final attractions = [
     new Attraction(
         'Tower of London',
@@ -21,14 +21,31 @@ class homeScreenState extends State<Recommender> {
         'Open from 8:00 to 17:30',
         'ToL.png',
         false,
-        4.2,
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer mi dolor, sodales vitae tortor in, malesuada vehicula arcu. Ut vitae risus nec sapien aliquet venenatis. Curabitur rutrum augue tincidunt risus elementum, nec dictum nisi malesuada. Aenean tristique ut ante ac consequat. Aliquam fermentum eget nulla id venenatis. Praesent consectetur urna erat, eget posuere sapien auctor ut. Vivamus vestibulum augue quis porta bibendum. Vestibulum diam metus, hendrerit non lobortis vitae, commodo id leo. Maecenas fermentum faucibus pellentesque. Fusce vel sodales neque. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vivamus rutrum odio sed erat tristique, nec mollis leo egestas. Nam varius pellentesque turpis, non dignissim urna sodales sit amet. Suspendisse nec mauris ex. Phasellus blandit odio eget justo aliquet aliquet. Suspendisse non scelerisque neque. Nulla facilisi. Suspendisse interdum sollicitudin felis. Ut non finibus augue. Donec dictum mollis orci. Aliquam laoreet sapien eu laoreet tincidunt. Nunc blandit feugiat elit, ac rhoncus nisl egestas et. Maecenas sit amet euismod ex. Nunc ut dictum diam. Cras posuere purus vitae lectus sagittis porttitor. Aliquam erat volutpat. Aliquam pharetra lectus ut felis tincidunt finibus. Donec ac molestie felis. Aliquam diam mi, luctus at nisl id, mattis sodales tellus. Phasellus sed mauris non arcu finibus dignissim. Donec eget velit tellus. Etiam egestas nunc egestas porta tristique. Donec vulputate ut metus eu vehicula. Cras ut massa nec massa maximus rhoncus non sed nisl. Mauris posuere aliquet pellentesque. Quisque id arcu ut odio fringilla lobortis. Suspendisse condimentum, velit et rutrum aliquam, turpis lectus rhoncus lorem, quis venenatis ex felis sit amet mi. Donec pretium sed diam a viverra. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aliquam fringilla suscipit lorem vel pretium. Donec pretium eros vitae est finibus, feugiat vulputate nulla aliquet. Etiam vitae leo nec ligula condimentum tincidunt. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Quisque tincidunt scelerisque bibendum. Phasellus risus enim, eleifend sit amet tortor ac, lobortis pulvinar eros. Fusce hendrerit posuere nisl ac tincidunt. Maecenas imperdiet gravida metus et auctor. Fusce tempor consequat massa ut vehicula. Integer mollis velit nec lacus commodo, eu cursus leo pulvinar. Integer nec placerat sem. Duis et blandit ligula, sit amet tempor ex. Fusce fringilla vel tortor ut molestie. Fusce at nisl ipsum. Quisque interdum id sapien a faucibus. Nunc ut lectus non lectus maximus mattis. Vestibulum cursus leo sapien, quis imperdiet ex facilisis imperdiet. Nam faucibus euismod ultricies. Nullam id urna maximus diam pretium sodales. Nunc tristique, ex sollicitudin malesuada porttitor, nulla eros dapibus dui, ac ultrices sapien quam at purus. Pellentesque augue nisl, interdum eu est vitae, dictum congue risus. Donec mollis rutrum purus, sit amet euismod ligula luctus ac. Nam id molestie nisi. Nullam sagittis odio nec orci semper, ut ullamcorper massa condimentum. Mauris dignissim enim id imperdiet lacinia.'),
+        4.8,
+        'A tower in London 3',
+        'https://www.hrp.org.uk/tower-of-london/',
+        51.528144,
+        -0.04626),
     new Attraction(
-        'Tower of London 3', 'Open from 8:00 to 17:30', 'ToL.png', false, 3.8),
+        'Tower of London 4',
+        'Open from 8:00 to 17:30',
+        'ToL.png',
+        false,
+        4.8,
+        'A tower in London',
+        'https://www.hrp.org.uk/tower-of-london/',
+        51.538144,
+        -0.05626),
     new Attraction(
-        'Tower of London 4', 'Open from 8:00 to 17:30', 'ToL.png', false, 5.0),
-    new Attraction(
-        'Tower of London 5', 'Open from 8:00 to 17:30', 'ToL.png', false, 4.7),
+        'Tower of London 5',
+        'Open from 8:00 to 17:30',
+        'ToL.png',
+        false,
+        4.8,
+        'A tower in London',
+        'https://www.hrp.org.uk/tower-of-london/',
+        51.548144,
+        -0.06626),
   ];
 
   final foodPlaces = [
@@ -44,7 +61,7 @@ class homeScreenState extends State<Recommender> {
         'Mc Donald\'s 5', 'Open from 0:00 to 24:00', 'mcd.png', true, 4.2),
   ];
   final likedAttractions = [];
-
+  String username = null;
   Widget _homeScreen() {
     return MaterialApp(
       home: DefaultTabController(
@@ -53,11 +70,17 @@ class homeScreenState extends State<Recommender> {
           appBar: AppBar(
             title: Text('Home'),
             actions: <Widget>[
+              new IconButton( //Tror ikke det er her den her funktionalitet skal være, men kunne ikke få lov til at lave en tab mere
+                  icon: const Icon(Icons.map),
+                  onPressed: () {
+                    _fullMapView(attractions); // Det her skal være en liste af alle attractions inden for en radius
+                  }),
               new IconButton(
                   icon: const Icon(Icons.settings),
                   onPressed: () {
-                    displayMsg('Todo: call correct function', context);
+                    Navigator.pushNamed(context, '/settings');
                   }),
+              
             ],
             bottom: TabBar(tabs: [
               Tab(
@@ -68,7 +91,7 @@ class homeScreenState extends State<Recommender> {
               ),
               Tab(
                 icon: Icon(Icons.fastfood),
-              ),
+              ),              
               Tab(
                 icon: Icon(Icons.favorite),
               ),
@@ -261,7 +284,10 @@ class homeScreenState extends State<Recommender> {
                   minWidth: 100,
                   height: 50,
                   onPressed: () {
-                    attraction.GetCoordinate() != null ? _mapView(attraction) : displayMsg('Location unknown for this attraction', context);
+                    attraction.GetCoordinate() != null
+                        ? _mapView(attraction)
+                        : displayMsg(
+                            'Location unknown for this attraction', context);
                   },
                   child: const Text(
                     'Location',
@@ -276,7 +302,10 @@ class homeScreenState extends State<Recommender> {
                   minWidth: 100,
                   height: 50,
                   onPressed: () {
-                    attraction.GetURL() != null ? launchWebsite(attraction.GetURL(), context) : displayMsg('Website for this attraction is unknown', context);
+                    attraction.GetURL() != null
+                        ? launchWebsite(attraction.GetURL(), context)
+                        : displayMsg(
+                            'Website for this attraction is unknown', context);
                   },
                   child: const Text(
                     'Website',
@@ -308,72 +337,157 @@ class homeScreenState extends State<Recommender> {
   }
 
   Widget _mapView(Attraction attraction) {
-    Coordinate tempUserCoordinate = new Coordinate(attraction.GetCoordinate().GetLat()+0.01, attraction.GetCoordinate().GetLong()+0.01);
-    Coordinate tempCoordinate = findMiddlePoint(attraction.GetCoordinate(), tempUserCoordinate);
-    
-    attraction.GetCoordinate() == null ? displayMsg('Location for attraction is unknown', context) :
-    Navigator.of(context)
-        .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
-      return new Scaffold(
-        appBar: AppBar(
-          title: Text(attraction.GetName()),
-        ),
-        body: Container(
-          child: FlutterMap(
-            options: new MapOptions(
-              center: new LatLng(tempCoordinate.GetLat(), tempCoordinate.GetLong()), // Ændre det her til at være midten mellem attraction og user
-              zoom: 15.0,
-            ),
-            layers: [
-              new TileLayerOptions(
-                urlTemplate: "https://api.tiles.mapbox.com/v4/"
-                    "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
-                additionalOptions: {
-                  'accessToken':
-                      'pk.eyJ1IjoibTQ5OTEiLCJhIjoiY2p1c2QzNnltMGlqcjQzcDVoa3Z1dWk4cSJ9.OI1Jbas1lQYDVp0-W5Xs7g',
-                  'id': 'mapbox.streets',
-                },
+    Coordinate tempUserCoordinate = new Coordinate(
+        attraction.GetCoordinate().GetLat() + 0.01,
+        attraction.GetCoordinate().GetLong() + 0.01);
+    Coordinate tempCoordinate =
+        findMiddlePoint(attraction.GetCoordinate(), tempUserCoordinate);
+
+    attraction.GetCoordinate() == null
+        ? displayMsg('Location for attraction is unknown', context)
+        : Navigator.of(context)
+            .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
+            return new Scaffold(
+              appBar: AppBar(
+                title: Text(attraction.GetName()),
               ),
-              new MarkerLayerOptions(
-                markers: [
-                  new Marker(
-                    width: 200.0,
-                    height: 200.0,
-                    point:
-                        new LatLng(attraction.GetCoordinate().GetLat(), attraction.GetCoordinate().GetLong()),
-                    builder: (context) => new Container(
-                          child: Icon(
-                            Icons.location_on,
-                            color: Colors.red,
-                          ),
-                        ),
+              body: Container(
+                child: FlutterMap(
+                  options: new MapOptions(
+                    center: new LatLng(
+                        tempCoordinate.GetLat(), tempCoordinate.GetLong()),
+                    zoom: 15.0,
                   ),
-                  new Marker(   //Her skal det være userens placering
-                    width: 200.0,
-                    height: 200.0,
-                    point:
-                        new LatLng(tempUserCoordinate.GetLat(), tempUserCoordinate.GetLong()),
-                    builder: (context) => new Container(
-                          child: Icon(
-                            Icons.my_location,
-                            color: Colors.red,
-                          ),
+                  layers: [
+                    new TileLayerOptions(
+                      urlTemplate: "https://api.tiles.mapbox.com/v4/"
+                          "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
+                      additionalOptions: {
+                        'accessToken':
+                            'pk.eyJ1IjoibTQ5OTEiLCJhIjoiY2p1c2QzNnltMGlqcjQzcDVoa3Z1dWk4cSJ9.OI1Jbas1lQYDVp0-W5Xs7g',
+                        'id': 'mapbox.streets',
+                      },
+                    ),
+                    new MarkerLayerOptions(
+                      markers: [
+                        new Marker(
+                          width: 200.0,
+                          height: 200.0,
+                          point: new LatLng(attraction.GetCoordinate().GetLat(),
+                              attraction.GetCoordinate().GetLong()),
+                          builder: (context) => new Container(
+                                child: Icon(
+                                  Icons.location_on,
+                                  color: Colors.red,
+                                ),
+                              ),
                         ),
-                  ),
-                ],
+                        new Marker(
+                          //Her skal det være userens placering
+                          width: 200.0,
+                          height: 200.0,
+                          point: new LatLng(tempUserCoordinate.GetLat(),
+                              tempUserCoordinate.GetLong()),
+                          builder: (context) => new Container(
+                                child: Icon(
+                                  Icons.my_location,
+                                  color: Colors.red,
+                                ),
+                              ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
+            );
+          }));
+  }
+
+  Widget _fullMapView(List<Attraction> allAttractions) {
+    allAttractions.length == 0 || allAttractions == null
+        ? displayMsg('No attractions nearby', context)
+        : Navigator.of(context)
+            .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
+            return new Scaffold(
+              appBar: AppBar(
+                title: Text('Nearby attractions'),
+              ),
+              body: Container(
+                child: FlutterMap(
+                  options: new MapOptions(
+                    center: new LatLng(
+                        allAttractions[0].GetCoordinate().GetLat(),
+                        allAttractions[0]
+                            .GetCoordinate()
+                            .GetLong()), //Det her skal være userens placering
+                    zoom: 15.0,
+                  ),
+                  layers: [
+                    new TileLayerOptions(
+                      urlTemplate: "https://api.tiles.mapbox.com/v4/"
+                          "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
+                      additionalOptions: {
+                        'accessToken':
+                            'pk.eyJ1IjoibTQ5OTEiLCJhIjoiY2p1c2QzNnltMGlqcjQzcDVoa3Z1dWk4cSJ9.OI1Jbas1lQYDVp0-W5Xs7g',
+                        'id': 'mapbox.streets',
+                      },
+                    ),
+                    new MarkerLayerOptions(
+                      markers: createMarkers(allAttractions),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }));
+  }
+
+  List<Marker> createMarkers(List<Attraction> allAttractions) {
+    List<Marker> returnList = [];
+    for (Attraction item in allAttractions) {
+      returnList.add(
+        new Marker(
+          width: 200.0,
+          height: 200.0,
+          point: new LatLng(
+              item.GetCoordinate().GetLat(), item.GetCoordinate().GetLong()),
+          builder: (context) => new Container(
+                child: Icon(
+                  Icons.location_on,
+                  color: Colors.red,
+                ),
+              ),
         ),
       );
-    }));
+    }
+    return returnList;
   }
 
   @override
   Widget build(BuildContext context) {
+    if (username == null) {
+      return LogInState();
+    }
     return _homeScreen();
   }
 
+  @override
+  void initState() {
+    loadString('currentUser').then(loadUser);
+    super.initState();
+  }
 
-
+  void loadUser(String userName) {
+    setState(() {
+      this.username = userName;
+    });
+  }
 }
+
+class HomeScreenState extends StatefulWidget {
+  @override
+  HomeScreen createState() => HomeScreen();
+}
+
+//Lav map over alt der er i nærheden
