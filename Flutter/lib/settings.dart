@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'select_interests.dart';
-import 'utility.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
@@ -57,7 +56,7 @@ class Settings extends State<SettingsState> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Center(child: Text('Settings')),
+        title: Text('Settings'),
         backgroundColor: Colors.grey,
       ),
       body: _customSettings(),
@@ -73,9 +72,6 @@ class Settings extends State<SettingsState> {
         children: <Widget>[
           Divider(),
           ListTile(
-            //padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-            //margin: EdgeInsets.symmetric(vertical: 6.0),
-
             title: Container(
               constraints: BoxConstraints(maxWidth: width),
               child: Row(
@@ -174,7 +170,6 @@ class Settings extends State<SettingsState> {
                           clearSharedPrefs();
                           Navigator.of(context).pop();
                           //Her skal vi måske gå til loginscreen TODO
-                          
                         },
                       ),
                       FlatButton(
