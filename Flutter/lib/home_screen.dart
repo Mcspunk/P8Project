@@ -640,7 +640,14 @@ class HomeScreen extends State<HomeScreenState> {
     
     return _homeScreen();
   }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    DataContainer data = DataProvider.of(context).dataContainer;
+  }
 
+  Future<Post> post;
   @override
   void didChangeDependencoes(){
     super.didChangeDependencies();
@@ -650,6 +657,7 @@ class HomeScreen extends State<HomeScreenState> {
   @override
   void initState() {
     loadString('currentUser').then(loadUser);
+    //post = fetchPost();
     super.initState();
   }
 
