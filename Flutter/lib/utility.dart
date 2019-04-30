@@ -97,7 +97,7 @@ class Attraction {
       double lat,
       double long]) {
     _name = name;
-    _openingHours = openingHours;
+    _openingHours = 'Opening hours:\n' + openingHours;
     _imgPath = imgPath;
     rating != null ? _rating = rating : _rating = 0;
     description != null
