@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
+import 'package:test2/data_container.dart';
 import 'utility.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -137,137 +138,11 @@ class RatingState extends StatefulWidget {
 }
 
 class HomeScreen extends State<HomeScreenState> {
-  double attractionRating = 0;
-  final attractions = [
-    new Attraction(
-        'Tower of London',
-        '8:00 - 17:30',
-        'ToL.png',
-        false,
-        4.8,
-        'A tower in London',
-        'https://www.hrp.org.uk/tower-of-london/',
-        51.508144,
-        -0.07626),
-    new Attraction(
-        'Tower of London 2',
-        '8:00 - 17:30',
-        'ToL.png',
-        false,
-        4.8,
-        'A tower in London',
-        'https://www.hrp.org.uk/tower-of-london/',
-        51.528144,
-        -0.04626),
-    new Attraction(
-        'Tower of London 3',
-        '8:00 - 17:30',
-        'ToL.png',
-        false,
-        4.8,
-        'A tower in London',
-        'https://www.hrp.org.uk/tower-of-london/',
-        51.508144,
-        -0.06326),
-    new Attraction(
-        'Tower of London 4',
-        '8:00 - 17:30',
-        'ToL.png',
-        false,
-        4.8,
-        'A tower in London',
-        'https://www.hrp.org.uk/tower-of-london/',
-        51.538144,
-        -0.05626),
-    new Attraction(
-        'Tower of London 5',
-        '8:00 - 17:30',
-        'ToL.png',
-        false,
-        4.8,
-        'A tower in London',
-        'https://www.hrp.org.uk/tower-of-london/',
-        51.548144,
-        -0.06626),
-    new Attraction(
-        'Mc Donald\'s',
-        '0:00 - 24:00',
-        'mcd.png',
-        false,
-        3.8,
-        'Family restaurant',
-        'https://www.mcdonalds.com/',
-        37.4222,
-        -122.0758),
-    new Attraction(
-        'Mc Donald\'s 2',
-        '0:00 - 24:00',
-        'mcd.png',
-        false,
-        3.9,
-        'Family restaurant',
-        'https://www.mcdonalds.com/',
-        37.4242,
-        -122.0778),
-  ];
-
-  final foodPlaces = [
-    new Attraction(
-        'Mc Donald\'s',
-        '0:00 - 24:00',
-        'mcd.png',
-        true,
-        3.8,
-        'Family restaurant',
-        'https://www.mcdonalds.com/',
-        37.4242,
-        -122.0808),
-    new Attraction(
-        'Mc Donald\'s 2',
-        '0:00 - 24:00',
-        'mcd.png',
-        true,
-        3.9,
-        'Family restaurant',
-        'https://www.mcdonalds.com/',
-        37.4242,
-        -122.0808),
-    new Attraction(
-      'Mc Donald\'s 3',
-      '0:00 - 24:00',
-      'mcd.png',
-      true,
-      3.2,
-      'Family restaurant',
-      'https://www.mcdonalds.com/',
-      37.4142,
-      -122.0858,
-    ),
-    new Attraction(
-        'Mc Donald\'s 4',
-        '0:00 - 24:00',
-        'mcd.png',
-        true,
-        3.3,
-        'Family restaurant',
-        'https://www.mcdonalds.com/',
-        37.4212,
-        -122.0808),
-    new Attraction(
-        'Mc Donald\'s 5',
-        '0:00 - 24:00',
-        'mcd.png',
-        true,
-        4.2,
-        'Family restaurant',
-        'https://www.mcdonalds.com/',
-        37.4248,
-        -122.0908),
-  ];
-  final likedAttractions = [];
+  double attractionRating = 0;  
   Coordinate userLocation;
   String username = null;
   Widget _homeScreen() {
+    DataContainer data = DataProvider.of(context).dataContainer;
     return MaterialApp(
       home: DefaultTabController(
         length: 4,
@@ -286,7 +161,7 @@ class HomeScreen extends State<HomeScreenState> {
                             'Your location is not available at the moment, please try again later',
                             context)
                         : _fullMapView(
-                            foodPlaces); // Det her skal være en liste af alle attractions inden for en radius
+                            data.getAttractions()); // Det her skal være en liste af alle attractions inden for en radius
                   }),
               new IconButton(
                   icon: const Icon(Icons.settings),
@@ -339,49 +214,24 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _attractionView() {
-    return _buildRecList(attractions);
+    DataContainer data = DataProvider.of(context).dataContainer;
+    return _buildRecList(data.getAttractions().where((x) => x.GetIsFoodPlace() == false));
   }
 
   Widget _allView() {
-    List<Attraction> allList = [];
-    int x = 0;
-
-    if (attractions.length < foodPlaces.length) {
-      x = foodPlaces.length;
-
-      for (var i = 0; i < x; i++) {
-        Attraction f = foodPlaces[i];
-
-        allList.add(f);
-        if (i < attractions.length) {
-          Attraction a = attractions[i];
-          allList.add(a);
-        }
-      }
-    } else {
-      x = attractions.length;
-
-      for (var i = 0; i < x; i++) {
-        Attraction a = attractions[i];
-
-        allList.add(a);
-        if (i < foodPlaces.length) {
-          Attraction f = foodPlaces[i];
-          allList.add(f);
-        }
-      }
-    }
-
-    return _buildRecList(allList);
+    DataContainer data = DataProvider.of(context).dataContainer;
+    return _buildRecList(data.getAttractions());
   }
 
   Widget _restaurantView() {
-    return _buildRecList(foodPlaces);
+    DataContainer data = DataProvider.of(context).dataContainer;
+    return _buildRecList(data.getAttractions().where((x) => x.GetIsFoodPlace() == true));
   }
 
   Widget _likeView() {
-    return likedAttractions.length != 0
-        ? _buildRecList(likedAttractions)
+    DataContainer data = DataProvider.of(context).dataContainer;
+    return data.getAttractions().length != 0
+        ? _buildRecList(data.getAttractions())
         : new ListTile(
             title: Text('No liked attractions'),
             subtitle: Text(
@@ -434,6 +284,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget buildRecTile(Attraction attraction) {
+    DataContainer data = DataProvider.of(context).dataContainer;
     final deviceSize = MediaQuery.of(context).size;
     return Column(
       children: <Widget>[
@@ -464,10 +315,10 @@ class HomeScreen extends State<HomeScreenState> {
                 trailing: GestureDetector(
                     onTap: () {
                       setState(() {
-                        if (likedAttractions.contains(attraction)) {
-                          likedAttractions.remove(attraction);
+                        if (data.getAttractions().contains(attraction)) {
+                          data.getAttractions().remove(attraction);
                         } else {
-                          likedAttractions.add(attraction);
+                          data.getAttractions().add(attraction);
                         }
                       });
                     },
@@ -507,7 +358,7 @@ class HomeScreen extends State<HomeScreenState> {
                         ),
                         Icon(
                           Icons.favorite,
-                          color: likedAttractions.contains(attraction)
+                          color: data.getFavourites().contains(attraction)
                               ? Colors.red
                               : Colors.white,
                         )
@@ -715,10 +566,8 @@ class HomeScreen extends State<HomeScreenState> {
 
   List<Marker> createMarkers(/*List<Attraction> allAttractions*/) {
     ////////////////////////////////
-
-    List<Attraction> allAttractions = [];
-    allAttractions.addAll(attractions);
-    allAttractions.addAll(foodPlaces);
+    DataContainer data = DataProvider.of(context).dataContainer;
+    List<Attraction> allAttractions = data.getAttractions();
 
     ////////////////////////////////
 
@@ -770,6 +619,7 @@ class HomeScreen extends State<HomeScreenState> {
             ),
           ),
     ));
+    
     return returnList;
   }
 
@@ -787,7 +637,14 @@ class HomeScreen extends State<HomeScreenState> {
     if (username == null) {
       return LogInState();
     }
+    
     return _homeScreen();
+  }
+
+  @override
+  void didChangeDependencoes(){
+    super.didChangeDependencies();
+    DataContainer data = DataProvider.of(context).dataContainer;
   }
 
   @override
