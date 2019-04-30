@@ -290,7 +290,7 @@ class HomeScreen extends State<HomeScreenState> {
       children: <Widget>[
         Container(
             constraints:
-                new BoxConstraints.expand(height: deviceSize.height * 0.4),
+                new BoxConstraints.expand(height: deviceSize.height * 0.3),
             alignment: Alignment.bottomLeft,
             padding: new EdgeInsets.only(left: 4.0, bottom: 2.0),
             decoration: new BoxDecoration(
