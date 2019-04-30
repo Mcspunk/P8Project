@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'sign_in.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'data_provider.dart';
+import 'dart:io';
 
 class RatingDialog extends State<RatingState> {
   //https://www.youtube.com/watch?v=MsycCv5r2Wo
@@ -98,7 +99,6 @@ class RatingDialog extends State<RatingState> {
                         child: child,
                       );
                     },
-                    
                   );
                   setState(() async {
                     selectedTime = await chosenTime;
@@ -110,8 +110,13 @@ class RatingDialog extends State<RatingState> {
             title: RaisedButton(
               child: Text('Submit review'),
               onPressed: () {
-                saveString(widget.attraction.GetName() + '%Rating', attractionRating.toString());
-                saveString(widget.attraction.GetName() + '%Date', selectedTime.day.toString() + '/' + selectedTime.month.toString());
+                saveString(widget.attraction.GetName() + '%Rating',
+                    attractionRating.toString());
+                saveString(
+                    widget.attraction.GetName() + '%Date',
+                    selectedTime.day.toString() +
+                        '/' +
+                        selectedTime.month.toString());
                 saveString(widget.attraction.GetName() + '%TripType', tripType);
                 Navigator.pop(context);
               },
@@ -133,106 +138,11 @@ class RatingState extends StatefulWidget {
 }
 
 class HomeScreen extends State<HomeScreenState> {
-  List<Attraction> fetchedAttractions;
-  Map fetchedRatings;
-
-
-  double attractionRating = 0;
-  final attractions = [
-    new Attraction(
-        'Tower of London',
-        'Open from 8:00 to 17:30',
-        'ToL.png',
-        false,
-        4.8,
-        'A tower in London',
-        'https://www.hrp.org.uk/tower-of-london/',
-        51.508144,
-        -0.07626),
-    new Attraction(
-        'Tower of London 2',
-        'Open from 8:00 to 17:30',
-        'ToL.png',
-        false,
-        4.8,
-        'A tower in London 3',
-        'https://www.hrp.org.uk/tower-of-london/',
-        51.528144,
-        -0.04626),
-    new Attraction(
-        'Tower of London 4',
-        'Open from 8:00 to 17:30',
-        'ToL.png',
-        false,
-        4.8,
-        'A tower in London',
-        'https://www.hrp.org.uk/tower-of-london/',
-        51.538144,
-        -0.05626),
-    new Attraction(
-        'Tower of London 5',
-        'Open from 8:00 to 17:30',
-        'ToL.png',
-        false,
-        4.8,
-        'A tower in London',
-        'https://www.hrp.org.uk/tower-of-london/',
-        51.548144,
-        -0.06626),
-  ];
-
-  final foodPlaces = [
-    new Attraction(
-        'Mc Donald\'s',
-        'Open from 0:00 to 24:00',
-        'mcd.png',
-        true,
-        3.8,
-        'Family restaurant',
-        'https://www.mcdonalds.com/',
-        37.4242,
-        -122.0808),
-    new Attraction(
-        'Mc Donald\'s 2',
-        'Open from 0:00 to 24:00',
-        'mcd.png',
-        true,
-        3.9,
-        'Family restaurant',
-        'https://www.mcdonalds.com/',
-        37.4242,
-        -122.0808),
-    new Attraction(
-        'Mc Donald\'s 3', 'Open from 0:00 to 24:00', 'mcd.png', true, 3.2,
-    'Family restaurant',
-    'https://www.mcdonalds.com/',
-    37.4142,
-    -122.0858,),
-    new Attraction(
-        'Mc Donald\'s 4',
-        'Open from 0:00 to 24:00',
-        'mcd.png',
-        true,
-        3.3,
-        'Family restaurant',
-        'https://www.mcdonalds.com/',
-        37.4342,
-        -122.0808),
-    new Attraction(
-        'Mc Donald\'s 5',
-        'Open from 0:00 to 24:00',
-        'mcd.png',
-        true,
-        4.2,
-        'Family restaurant',
-        'https://www.mcdonalds.com/',
-        37.4248,
-        -122.0908),
-  ];
-  final likedAttractions = [];
+  double attractionRating = 0;  
   Coordinate userLocation;
   String username = null;
   Widget _homeScreen() {
+    DataContainer data = DataProvider.of(context).dataContainer;
     return MaterialApp(
       home: DefaultTabController(
         length: 4,
@@ -245,13 +155,13 @@ class HomeScreen extends State<HomeScreenState> {
                   icon: const Icon(Icons.map),
                   onPressed: () {
                     updateUserLocation();
-                    //sleepOne();
+
                     userLocation == null
                         ? displayMsg(
                             'Your location is not available at the moment, please try again later',
                             context)
                         : _fullMapView(
-                            foodPlaces); // Det her skal være en liste af alle attractions inden for en radius
+                            data.getAttractions()); // Det her skal være en liste af alle attractions inden for en radius
                   }),
               new IconButton(
                   icon: const Icon(Icons.settings),
@@ -264,7 +174,7 @@ class HomeScreen extends State<HomeScreenState> {
                 icon: Icon(Icons.home),
               ),
               Tab(
-                icon: Icon(Icons.landscape),
+                icon: Icon(Icons.account_balance),
               ),
               Tab(
                 icon: Icon(Icons.fastfood),
@@ -297,46 +207,31 @@ class HomeScreen extends State<HomeScreenState> {
         final index = i ~/ 2;
 
         if (index < items.length) {
-          return buildRecTile(items[index]);
+          return buildInteractiveRecTile(items[index]);
         }
       },
     );
   }
 
   Widget _attractionView() {
-    return _buildRecList(attractions);
+    DataContainer data = DataProvider.of(context).dataContainer;
+    return _buildRecList(data.getAttractions().where((x) => x.GetIsFoodPlace() == false));
   }
 
   Widget _allView() {
-    List<Attraction> allList = [];
-    int x = 0;
-
-    if (attractions.length < foodPlaces.length) {
-      x = foodPlaces.length;
-    } else {
-      x = attractions.length;
-    }
-
-    for (var i = 0; i < x; i++) {
-      Attraction f = foodPlaces[i];
-
-      allList.add(f);
-      if (i < attractions.length) {
-        Attraction a = attractions[i];
-        allList.add(a);
-      }
-    }
-
-    return _buildRecList(allList);
+    DataContainer data = DataProvider.of(context).dataContainer;
+    return _buildRecList(data.getAttractions());
   }
 
   Widget _restaurantView() {
-    return _buildRecList(foodPlaces);
+    DataContainer data = DataProvider.of(context).dataContainer;
+    return _buildRecList(data.getAttractions().where((x) => x.GetIsFoodPlace() == true));
   }
 
   Widget _likeView() {
-    return likedAttractions.length != 0
-        ? _buildRecList(likedAttractions)
+    DataContainer data = DataProvider.of(context).dataContainer;
+    return data.getAttractions().length != 0
+        ? _buildRecList(data.getAttractions())
         : new ListTile(
             title: Text('No liked attractions'),
             subtitle: Text(
@@ -345,102 +240,145 @@ class HomeScreen extends State<HomeScreenState> {
           );
   }
 
+  Widget buildRecCardTile(Attraction attraction) {
+    final deviceSize = MediaQuery.of(context).size;
+    return GestureDetector(
+      onTap: () {
+        _detailedAttractionView(attraction);
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Container(
+              constraints:
+                  new BoxConstraints.expand(height: deviceSize.height * 0.3, width: deviceSize.width * 0.85),
+              alignment: Alignment.bottomLeft,
+              padding: new EdgeInsets.only(left: 4.0, bottom: 2.0),
+              decoration: new BoxDecoration(
+                image: new DecorationImage(
+                  image: new AssetImage(attraction.GetImgPath()),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: ListTile(
+                  title: new Text(attraction.GetName(),
+                      style: new TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20.0,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(offset: Offset(-1.5, -1.5), color: Colors.black),
+                          Shadow(offset: Offset(1.5, -1.5), color: Colors.black),
+                          Shadow(offset: Offset(1.5, 1.5), color: Colors.black),
+                          Shadow(offset: Offset(-1.5, 1.5), color: Colors.black),
+                        ],
+                      )))),
+          ListTile(
+              title: Text('Rating: ' + attraction.GetRating().toString()),
+              subtitle: Text('Distance 0.8 km'),
+              trailing: Text(attraction.GetOpeningHours())),
+        ],
+      ),
+    );
+  }
+
   Widget buildRecTile(Attraction attraction) {
+    DataContainer data = DataProvider.of(context).dataContainer;
+    final deviceSize = MediaQuery.of(context).size;
+    return Column(
+      children: <Widget>[
+        Container(
+            constraints:
+                new BoxConstraints.expand(height: deviceSize.height * 0.4),
+            alignment: Alignment.bottomLeft,
+            padding: new EdgeInsets.only(left: 4.0, bottom: 2.0),
+            decoration: new BoxDecoration(
+              image: new DecorationImage(
+                image: new AssetImage(attraction.GetImgPath()),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: ListTile(
+                title: new Text(attraction.GetName(),
+                    style: new TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20.0,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(offset: Offset(-1.5, -1.5), color: Colors.black),
+                        Shadow(offset: Offset(1.5, -1.5), color: Colors.black),
+                        Shadow(offset: Offset(1.5, 1.5), color: Colors.black),
+                        Shadow(offset: Offset(-1.5, 1.5), color: Colors.black),
+                      ],
+                    )),
+                trailing: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (data.getAttractions().contains(attraction)) {
+                          data.getAttractions().remove(attraction);
+                        } else {
+                          data.getAttractions().add(attraction);
+                        }
+                      });
+                    },
+                    child: Stack(
+                      children: <Widget>[
+                        Positioned(
+                          top: 1.0,
+                          left: 1.0,
+                          child: Icon(
+                            Icons.favorite,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Positioned(
+                          top: -1.0,
+                          left: 1.0,
+                          child: Icon(
+                            Icons.favorite,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Positioned(
+                          top: 1.0,
+                          left: -1.0,
+                          child: Icon(
+                            Icons.favorite,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Positioned(
+                          top: -1.0,
+                          left: -1.0,
+                          child: Icon(
+                            Icons.favorite,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Icon(
+                          Icons.favorite,
+                          color: data.getFavourites().contains(attraction)
+                              ? Colors.red
+                              : Colors.white,
+                        )
+                      ],
+                    )))),
+        ListTile(
+          title: Text('Rating: ' + attraction.GetRating().toString()),
+          subtitle: Text('Distance 0.8 km'),
+          trailing: Text(attraction.GetOpeningHours()),
+        ),
+      ],
+    );
+  }
+
+  Widget buildInteractiveRecTile(Attraction attraction) {
     return new GestureDetector(
         onTap: () {
           _detailedAttractionView(attraction);
         },
-        child: Column(
-          children: <Widget>[
-            Container(
-                constraints: new BoxConstraints.expand(
-                  height: 200.0,
-                ),
-                alignment: Alignment.bottomLeft,
-                padding: new EdgeInsets.only(left: 4.0, bottom: 2.0),
-                decoration: new BoxDecoration(
-                  image: new DecorationImage(
-                    image: new AssetImage(attraction.GetImgPath()),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                child: ListTile(
-                    title: new Text(attraction.GetName(),
-                        style: new TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20.0,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                                offset: Offset(-1.5, -1.5),
-                                color: Colors.black),
-                            Shadow(
-                                offset: Offset(1.5, -1.5), color: Colors.black),
-                            Shadow(
-                                offset: Offset(1.5, 1.5), color: Colors.black),
-                            Shadow(
-                                offset: Offset(-1.5, 1.5), color: Colors.black),
-                          ],
-                        )),
-                    trailing: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            if (likedAttractions.contains(attraction)) {
-                              likedAttractions.remove(attraction);
-                            } else {
-                              likedAttractions.add(attraction);
-                            }
-                          });
-                        },
-                        child: Stack(
-                          children: <Widget>[
-                            Positioned(
-                              top: 1.0,
-                              left: 1.0,
-                              child: Icon(
-                                Icons.favorite,
-                                color: Colors.black,
-                              ),
-                            ),
-                            Positioned(
-                              top: -1.0,
-                              left: 1.0,
-                              child: Icon(
-                                Icons.favorite,
-                                color: Colors.black,
-                              ),
-                            ),
-                            Positioned(
-                              top: 1.0,
-                              left: -1.0,
-                              child: Icon(
-                                Icons.favorite,
-                                color: Colors.black,
-                              ),
-                            ),
-                            Positioned(
-                              top: -1.0,
-                              left: -1.0,
-                              child: Icon(
-                                Icons.favorite,
-                                color: Colors.black,
-                              ),
-                            ),
-                            Icon(
-                              Icons.favorite,
-                              color: likedAttractions.contains(attraction)
-                                  ? Colors.red
-                                  : Colors.white,
-                            )
-                          ],
-                        )))),
-            ListTile(
-              title: Text('Rating: ' + attraction.GetRating().toString()),
-              subtitle: Text('Distance 0.8 km'),
-              trailing: Text(attraction.GetOpeningHours()),
-            ),
-          ],
-        ));
+        child: buildRecTile(attraction));
   }
 
   void _detailedAttractionView(Attraction attraction) {
@@ -449,6 +387,8 @@ class HomeScreen extends State<HomeScreenState> {
       return Scaffold(
         appBar: AppBar(title: Text(attraction.GetName())),
         body: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             buildRecTile(attraction),
             Divider(),
@@ -564,7 +504,6 @@ class HomeScreen extends State<HomeScreenState> {
                               ),
                         ),
                         new Marker(
-                          //Her skal det være userens placering
                           width: 200.0,
                           height: 200.0,
                           point: new LatLng(tempUserCoordinate.GetLat(),
@@ -616,7 +555,7 @@ class HomeScreen extends State<HomeScreenState> {
                       },
                     ),
                     new MarkerLayerOptions(
-                      markers: createMarkers(allAttractions),
+                      markers: createMarkers(/*allAttractions*/),
                     ),
                   ],
                 ),
@@ -625,7 +564,19 @@ class HomeScreen extends State<HomeScreenState> {
           }));
   }
 
-  List<Marker> createMarkers(List<Attraction> allAttractions) {
+  List<Marker> createMarkers(/*List<Attraction> allAttractions*/) {
+    ////////////////////////////////
+    DataContainer data = DataProvider.of(context).dataContainer;
+    List<Attraction> allAttractions = data.getAttractions();
+
+    ////////////////////////////////
+
+    final deviceSize = MediaQuery.of(context).size;
+    final dWidth = deviceSize.width;
+    final dWidth10 = dWidth * 0.1;
+
+    final dHeight = deviceSize.height;
+
     List<Marker> returnList = [];
     for (Attraction item in allAttractions) {
       returnList.add(
@@ -635,11 +586,25 @@ class HomeScreen extends State<HomeScreenState> {
           point: new LatLng(
               item.GetCoordinate().GetLat(), item.GetCoordinate().GetLong()),
           builder: (context) => new Container(
+                  child: GestureDetector(
+                onTap: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          content: buildRecCardTile(item),
+                          contentPadding:
+                              const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
+                        );
+                      });
+                },
                 child: Icon(
-                  Icons.location_on,
-                  color: Colors.red,
+                  item.GetIsFoodPlace()
+                      ? Icons.fastfood
+                      : Icons.account_balance,
+                  color: item.GetIsFoodPlace() ? Colors.red : Colors.green,
                 ),
-              ),
+              )),
         ),
       );
     }
@@ -654,6 +619,7 @@ class HomeScreen extends State<HomeScreenState> {
             ),
           ),
     ));
+    
     return returnList;
   }
 
@@ -666,12 +632,12 @@ class HomeScreen extends State<HomeScreenState> {
         : userLocation = new Coordinate(position.latitude, position.longitude);
   }
 
-
   @override
   Widget build(BuildContext context) {
     if (username == null) {
       return LogInState();
     }
+    
     return _homeScreen();
   }
   
@@ -682,6 +648,12 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Future<Post> post;
+  @override
+  void didChangeDependencoes(){
+    super.didChangeDependencies();
+    DataContainer data = DataProvider.of(context).dataContainer;
+  }
+
   @override
   void initState() {
     loadString('currentUser').then(loadUser);
