@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
 import 'utility.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'sign_in.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'data_provider.dart';
@@ -176,18 +177,55 @@ class HomeScreen extends State<HomeScreenState> {
   ];
 
   final foodPlaces = [
-    new Attraction('Mc Donald\'s', 'Open from 0:00 to 24:00', 'mcd.png', true,
-        3.8, 'Family restaurant', 'https://www.mcdonalds.com/'),
     new Attraction(
-        'Mc Donald\'s 2', 'Open from 0:00 to 24:00', 'mcd.png', true, 3.9),
+        'Mc Donald\'s',
+        'Open from 0:00 to 24:00',
+        'mcd.png',
+        true,
+        3.8,
+        'Family restaurant',
+        'https://www.mcdonalds.com/',
+        37.4242,
+        -122.0808),
     new Attraction(
-        'Mc Donald\'s 3', 'Open from 0:00 to 24:00', 'mcd.png', true, 3.2),
+        'Mc Donald\'s 2',
+        'Open from 0:00 to 24:00',
+        'mcd.png',
+        true,
+        3.9,
+        'Family restaurant',
+        'https://www.mcdonalds.com/',
+        37.4242,
+        -122.0808),
     new Attraction(
-        'Mc Donald\'s 4', 'Open from 0:00 to 24:00', 'mcd.png', true, 3.3),
+        'Mc Donald\'s 3', 'Open from 0:00 to 24:00', 'mcd.png', true, 3.2,
+    'Family restaurant',
+    'https://www.mcdonalds.com/',
+    37.4142,
+    -122.0858,),
     new Attraction(
-        'Mc Donald\'s 5', 'Open from 0:00 to 24:00', 'mcd.png', true, 4.2),
+        'Mc Donald\'s 4',
+        'Open from 0:00 to 24:00',
+        'mcd.png',
+        true,
+        3.3,
+        'Family restaurant',
+        'https://www.mcdonalds.com/',
+        37.4342,
+        -122.0808),
+    new Attraction(
+        'Mc Donald\'s 5',
+        'Open from 0:00 to 24:00',
+        'mcd.png',
+        true,
+        4.2,
+        'Family restaurant',
+        'https://www.mcdonalds.com/',
+        37.4248,
+        -122.0908),
   ];
   final likedAttractions = [];
+  Coordinate userLocation;
   String username = null;
   Widget _homeScreen() {
     return MaterialApp(
@@ -201,8 +239,14 @@ class HomeScreen extends State<HomeScreenState> {
                   //Tror ikke det er her den her funktionalitet skal være, men kunne ikke få lov til at lave en tab mere
                   icon: const Icon(Icons.map),
                   onPressed: () {
-                    _fullMapView(
-                        attractions); // Det her skal være en liste af alle attractions inden for en radius
+                    updateUserLocation();
+                    //sleepOne();
+                    userLocation == null
+                        ? displayMsg(
+                            'Your location is not available at the moment, please try again later',
+                            context)
+                        : _fullMapView(
+                            foodPlaces); // Det her skal være en liste af alle attractions inden for en radius
                   }),
               new IconButton(
                   icon: const Icon(Icons.settings),
@@ -549,10 +593,11 @@ class HomeScreen extends State<HomeScreenState> {
                 child: FlutterMap(
                   options: new MapOptions(
                     center: new LatLng(
-                        allAttractions[0].GetCoordinate().GetLat(),
+                        userLocation.GetLat(), userLocation.GetLong()),
+                    /*allAttractions[0].GetCoordinate().GetLat(),
                         allAttractions[0]
                             .GetCoordinate()
-                            .GetLong()), //Det her skal være userens placering
+                            .GetLong()), */ //Det her skal være userens placering
                     zoom: 15.0,
                   ),
                   layers: [
@@ -593,8 +638,29 @@ class HomeScreen extends State<HomeScreenState> {
         ),
       );
     }
+    returnList.add(new Marker(
+      width: 200.0,
+      height: 200.0,
+      point: new LatLng(userLocation.GetLat(), userLocation.GetLong()),
+      builder: (context) => new Container(
+            child: Icon(
+              Icons.my_location,
+              color: Colors.blue,
+            ),
+          ),
+    ));
     return returnList;
   }
+
+  void updateUserLocation() async {
+    Position position = await Geolocator()
+        .getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
+
+    position == null
+        ? displayMsg('Position not available', context)
+        : userLocation = new Coordinate(position.latitude, position.longitude);
+  }
+
 
   @override
   Widget build(BuildContext context) {
