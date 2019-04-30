@@ -25,7 +25,7 @@ namespace TripAdvisorCrawler
 
         public string city;
 
-        public string category;
+        public string category = "";
 
         public string imgURL;
 

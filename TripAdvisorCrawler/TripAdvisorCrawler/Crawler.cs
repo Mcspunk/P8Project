@@ -18,9 +18,9 @@ namespace TripAdvisorCrawler
     public class Crawler
     {
         private static int CLICK_WAIT = 4000;
-        private static int POI_SKIP = 1;
+        private static int POI_SKIP = 20;
         private static int MAX_REVIEWS = 500;
-        private static string connectionString = ""; //INSERT CONNECTION STRING HERE
+        private static string connectionString = "Host=jd-database.ccwvupidct47.eu-west-3.rds.amazonaws.com;Username=palminde;Password=sw_809_p8;Database=jd_database"; //INSERT CONNECTION STRING HERE
         private string seed;
         private string tripadvisor = "https://tripadvisor.com";
         public List<POI> results = new List<POI>();
@@ -68,16 +68,15 @@ namespace TripAdvisorCrawler
 
         public void Crawl()
         {
-            ProcessTop30Attractions(seed);
-            ProcessTop30RestaurantsPage("https://www.tripadvisor.com/Restaurants-g186338-London_England.html#EATERY_OVERVIEW_BOX");
-            ProcessOtherAttractions("https://www.tripadvisor.com/Attractions-g186338-Activities-oa30-London_England.html");
-            ProcessOtherRestaurants("https://www.tripadvisor.com/Restaurants-g186338-oa30-London_England.html#EATERY_OVERVIEW_BOX");
+            //ProcessTop30Attractions(seed);
+            //ProcessTop30RestaurantsPage("https://www.tripadvisor.com/Restaurants-g186338-London_England.html#EATERY_OVERVIEW_BOX");
+            //ProcessOtherAttractions("https://www.tripadvisor.com/Attractions-g186338-Activities-oa30-London_England.html");
+            ProcessOtherRestaurants("https://www.tripadvisor.com/Restaurants-g186338-oa180-London_England.html#EATERY_OVERVIEW_BOX");
 
         }
 
         public void ProcessTop30Attractions(string pageUrl)
         {
-
             var attractionElements = doc.DocumentNode.SelectNodes("//li[contains(@class,'attractions-attraction-overview-main-TopPOIs')]");
             foreach (var element in attractionElements.Skip(POI_SKIP))
             {
@@ -90,7 +89,6 @@ namespace TripAdvisorCrawler
                 ProcessReviews(poi, driver, attLink);
                 Console.WriteLine("=== Saving in DB ===");
                 SavePOIReviewsToDB(poi);
-
             }
         }
 
@@ -120,8 +118,6 @@ namespace TripAdvisorCrawler
                 pageUrl = pageUrl.Replace(("oa" + (i + 1) * startIndex), "oa" + ((i + 2) * startIndex));
                 
             }
-            
-            
         }
 
 
@@ -253,8 +249,7 @@ namespace TripAdvisorCrawler
                     {
                         newPOI.openingshours.Add(openingTimesDiv.ChildNodes[i].InnerText, new List<string>());
                         lastDayIndex = i;
-                    }
-                    
+                    } 
                 }
             }
             return newPOI;
@@ -508,10 +503,10 @@ namespace TripAdvisorCrawler
                 if (i != 0) doc = web.Load(pageUrl);
 
                 var attElements = doc.DocumentNode.SelectNodes("//div[contains(@id,'eatery_')]");
-                foreach (var element in attElements)
+                foreach (var element in attElements.Skip(9))
                 {
                     var attLink = element.ChildNodes[1].InnerHtml.Split('\"')[3];
-                    var poi = ProcessAttraction(attLink);
+                    var poi = ProcessRestaurant(attLink);
                     Console.WriteLine();
                     Console.WriteLine("===== Fetching Reviews: " + poi.name + " :: " + DateTime.Now);
                     ProcessRestaurantReviews(poi, attLink);
@@ -551,8 +546,18 @@ namespace TripAdvisorCrawler
             newPOI.city = array["address"]["addressLocality"];
 
             //måske ændres
-            var headerInfoNode = restaurantPage.GetElementbyId("taplc_resp_rr_top_info_rr_resp_0");
-            newPOI.category = headerInfoNode.ChildNodes[0].ChildNodes[2].ChildNodes[2].ChildNodes[0].ChildNodes[2].InnerText;
+            try
+            {
+                var headerInfoNode = restaurantPage.GetElementbyId("taplc_resp_rr_top_info_rr_resp_0");
+                newPOI.category = headerInfoNode.ChildNodes[0].ChildNodes[2].ChildNodes[2].ChildNodes[0].ChildNodes[2].InnerText;
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("CATEGORY NOT FOUND");
+            }
+            
+
+
             newPOI.openingshours = new Dictionary<string, List<string>>();
 
 
