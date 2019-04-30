@@ -4,6 +4,7 @@ import 'utility.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'sign_in.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
+import 'data_provider.dart';
 
 class RatingDialog extends State<RatingState> {
   //https://www.youtube.com/watch?v=MsycCv5r2Wo
