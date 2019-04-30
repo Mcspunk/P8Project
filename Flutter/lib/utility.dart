@@ -22,6 +22,16 @@ void displayMsg(String msg, BuildContext context) {
       });
 }
 
+
+  Future sleepX(int x) {
+    for (var i = 0; i < x; i++) {
+      sleepOne();
+    }
+  }
+  Future sleepOne() {
+  return new Future.delayed(const Duration(seconds: 1), () => "1");
+}
+
 void launchWebsite(String url, var context) async {
   if (await canLaunch(url)) {
     await launch(url);
