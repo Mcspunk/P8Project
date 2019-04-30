@@ -4,8 +4,134 @@ import 'utility.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'sign_in.dart';
+import 'package:smooth_star_rating/smooth_star_rating.dart';
+
+class RatingDialog extends State<RatingState> {
+  //https://www.youtube.com/watch?v=MsycCv5r2Wo
+  double attractionRating = 0;
+  String tripType = 'Solo';
+  DateTime selectedTime = DateTime.now();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Rate ' + widget.attraction.GetName()),
+      ),
+      body: ListView(
+        children: <Widget>[
+          Container(
+              constraints: new BoxConstraints.expand(
+                height: 200.0,
+              ),
+              alignment: Alignment.bottomLeft,
+              padding: new EdgeInsets.only(left: 4.0, bottom: 2.0),
+              decoration: new BoxDecoration(
+                image: new DecorationImage(
+                  image: new AssetImage(widget.attraction.GetImgPath()),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: ListTile(
+                title: new Text(widget.attraction.GetName(),
+                    style: new TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20.0,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(offset: Offset(-1.5, -1.5), color: Colors.black),
+                        Shadow(offset: Offset(1.5, -1.5), color: Colors.black),
+                        Shadow(offset: Offset(1.5, 1.5), color: Colors.black),
+                        Shadow(offset: Offset(-1.5, 1.5), color: Colors.black),
+                      ],
+                    )),
+              )),
+          ListTile(
+            title: Text('Your rating'),
+            trailing: SmoothStarRating(
+                rating: attractionRating,
+                size: 25,
+                starCount: 5,
+                color: Colors.orange[400],
+                borderColor: Colors.grey,
+                onRatingChanged: (value) {
+                  setState(() {
+                    attractionRating = value;
+                  });
+                }),
+          ),
+          Divider(),
+          ListTile(
+            title: Text('How were you traveling when visiting?'),
+            trailing: DropdownButton<String>(
+              value: tripType,
+              onChanged: (String newValue) {
+                setState(() {
+                  tripType = newValue;
+                });
+              },
+              items: <String>['Solo', 'Couple', 'Family', 'Business']
+                  .map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
+          ),
+          Divider(),
+          ListTile(
+              title: Text('When did you visit?'),
+              trailing: RaisedButton(
+                child: Text('Select date'),
+                onPressed: () async {
+                  Future<DateTime> chosenTime = showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2018),
+                    lastDate: DateTime(2030),
+                    builder: (BuildContext context, Widget child) {
+                      return Theme(
+                        data: ThemeData.dark(),
+                        child: child,
+                      );
+                    },
+                    
+                  );
+                  setState(() async {
+                    selectedTime = await chosenTime;
+                  });
+                },
+              )),
+          Divider(),
+          ListTile(
+            title: RaisedButton(
+              child: Text('Submit review'),
+              onPressed: () {
+                saveString(widget.attraction.GetName() + '%Rating', attractionRating.toString());
+                saveString(widget.attraction.GetName() + '%Date', selectedTime.day.toString() + '/' + selectedTime.month.toString());
+                saveString(widget.attraction.GetName() + '%TripType', tripType);
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class RatingState extends StatefulWidget {
+  final Attraction attraction;
+
+  RatingState({Key key, this.attraction}) : super(key: key);
+
+  @override
+  RatingDialog createState() => RatingDialog();
+}
 
 class HomeScreen extends State<HomeScreenState> {
+  double attractionRating = 0;
   final attractions = [
     new Attraction(
         'Tower of London',
@@ -364,13 +490,17 @@ class HomeScreen extends State<HomeScreenState> {
                 MaterialButton(
                   minWidth: 100,
                   height: 50,
-                  onPressed: () {
-                    displayMsg('WIP', context);
-                  },
                   child: const Text(
                     'Give review',
                     style: TextStyle(fontSize: 18.0),
                   ),
+                  onPressed: () {
+                    var route = MaterialPageRoute(
+                        builder: (BuildContext context) => RatingState(
+                              attraction: attraction,
+                            ));
+                    Navigator.of(context).push(route);
+                  },
                   color: Colors.lightBlue,
                 ),
               ],

@@ -19,70 +19,73 @@ class LogIn extends State<LogInState> {
     return Scaffold(
       backgroundColor: Color(0xFFCAF8F3),
       body: Center(
-        child: Column(children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-          ),
-          MaterialButton(
-            minWidth: 300,
-            height: 70,
-            onPressed: () {
-              displayMsg('Facebook not implemented yet', context);
-            },
-            child: const Text('Facebook',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24.0,
-                )),
-            color: Color(0xFF3C5A99),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-          ),
-          MaterialButton(
-            minWidth: 300,
-            height: 70,
-            onPressed: () {
-              displayMsg('Twitter not implemented yet', context);
-            },
-            child: const Text('Twitter',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24.0,
-                )),
-            color: Color(0xFF1DA1F2),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-          ),
-          MaterialButton(
-            minWidth: 300,
-            height: 70,
-            onPressed: () {
-              displayMsg('Google not implemented yet', context);
-            },
-            child: const Text('Google',
-                style: TextStyle(color: Colors.white, fontSize: 24.0)),
-            color: Color(0xFFD44638),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(112.0),
-          ),
-          MaterialButton(
-            minWidth: 300,
-            height: 70,
-            onPressed: () {
-              _pushNewUser();
-            },
-            child: const Text(
-              'New User',
-              style: TextStyle(
-                fontSize: 24.0,
-              ),
+        child: Container(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height),
+          child: Column(children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(16.0),
             ),
-            color: Color(0xFFFFFDD0),
-          ),
-        ]),
+            MaterialButton(
+              minWidth: 300,
+              height: 70,
+              onPressed: () {
+                displayMsg('Facebook not implemented yet', context);
+              },
+              child: const Text('Facebook',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24.0,
+                  )),
+              color: Color(0xFF3C5A99),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+            ),
+            MaterialButton(
+              minWidth: 300,
+              height: 70,
+              onPressed: () {
+                displayMsg('Twitter not implemented yet', context);
+              },
+              child: const Text('Twitter',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24.0,
+                  )),
+              color: Color(0xFF1DA1F2),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+            ),
+            MaterialButton(
+              minWidth: 300,
+              height: 70,
+              onPressed: () {
+                displayMsg('Google not implemented yet', context);
+              },
+              child: const Text('Google',
+                  style: TextStyle(color: Colors.white, fontSize: 24.0)),
+              color: Color(0xFFD44638),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+            ),
+            MaterialButton(
+              minWidth: 300,
+              height: 70,
+              onPressed: () {
+                _pushNewUser();
+              },
+              child: const Text(
+                'New User',
+                style: TextStyle(
+                  fontSize: 24.0,
+                ),
+              ),
+              color: Color(0xFFFFFDD0),
+            ),
+          ]),
+        ),
       ),
     );
   }
@@ -149,7 +152,7 @@ class LogIn extends State<LogInState> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(166.0),
+                padding: const EdgeInsets.all(8.0),
               ),
               MaterialButton(
                 minWidth: 300,

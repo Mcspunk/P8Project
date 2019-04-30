@@ -32,6 +32,7 @@ class MyApp extends StatelessWidget {
           case '/select_interests':
             return MaterialPageRoute(builder: (context) => InterestsState());
             break;
+          
         }
       },
     );

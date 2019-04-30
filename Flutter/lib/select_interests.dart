@@ -64,7 +64,8 @@ class SelectInterests extends State<InterestsState> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Rate recommendation categories'),
+        title: Text('Rate categories'),
+        leading: Container(),
       ),
       body: _interestList(),
       floatingActionButton: FloatingActionButton(
