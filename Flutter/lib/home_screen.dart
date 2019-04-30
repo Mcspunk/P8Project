@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'sign_in.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
+import 'data_provider.dart';
 import 'dart:io';
 
 class RatingDialog extends State<RatingState> {
