@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'select_interests.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
+import 'data_provider.dart';
+import 'data_container.dart';
 
 void clearSharedPrefs() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -51,7 +53,13 @@ class Settings extends State<SettingsState> {
       this._n = distance ?? 0;
     });
   }
-
+/*
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    DataContainer data = DataProvider.of(context).dataContainer;
+  }
+*/
   @override
   Widget build(BuildContext context) {
     return Scaffold(

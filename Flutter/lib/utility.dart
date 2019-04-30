@@ -1,6 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+class Post {
+  final int userId;
+  final int id;
+  final String title;
+  final String body;
+
+  Post({this.userId, this.id, this.title, this.body});
+
+  factory Post.fromJson(Map<String, dynamic> json) {
+    return Post(
+      userId: json['userId'],
+      id: json['id'],
+      title: json['title'],
+      body: json['body'],
+    );
+  }
+}
+
+Future<Post> fetchPost() async {
+  final response =
+      await http.get('https://jsonplaceholder.typicode.com/posts/1');
+
+  if (response.statusCode == 200) {
+    // If server returns an OK response, parse the JSON
+    return Post.fromJson(json.decode(response.body));
+  } else {
+    // If that response was not OK, throw an error.
+    throw Exception('Failed to load post');
+  }
+}
+
+Future<Post> checkSignUp(String username, String password, BuildContext context) async {
+  final response =
+    await http.get('');
+  if (response.statusCode == 200){
+    saveString('currentUser', username);
+  }
+  else if (response.statusCode == 208) {
+    displayMsg('Username already taken.', context);
+  }
+  else {
+    displayMsg('No connection to server.', context);
+  }
+}
+
+
+
+
 
 void saveString(String key, String value) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();

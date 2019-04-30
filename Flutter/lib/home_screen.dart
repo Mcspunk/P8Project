@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
+import 'package:test2/data_container.dart';
 import 'utility.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -132,6 +133,10 @@ class RatingState extends StatefulWidget {
 }
 
 class HomeScreen extends State<HomeScreenState> {
+  List<Attraction> fetchedAttractions;
+  Map fetchedRatings;
+
+
   double attractionRating = 0;
   final attractions = [
     new Attraction(
@@ -669,10 +674,18 @@ class HomeScreen extends State<HomeScreenState> {
     }
     return _homeScreen();
   }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    DataContainer data = DataProvider.of(context).dataContainer;
+  }
 
+  Future<Post> post;
   @override
   void initState() {
     loadString('currentUser').then(loadUser);
+    //post = fetchPost();
     super.initState();
   }
 
