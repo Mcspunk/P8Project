@@ -4,39 +4,37 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class Post {
-  final int userId;
-  final int id;
-  final String title;
-  final String body;
+Future<List<Attraction>> getRecommendations(Coordinate coordinate, BuildContext context) async{
 
-  Post({this.userId, this.id, this.title, this.body});
+  var jsonstring = {"lat":coordinate.GetLat(),"long":coordinate.GetLong()};
+  var jsonedString = jsonEncode(jsonstring);
+  try {    
+    var client = new http.Client();
+    var response = await client.post('http://10.0.2.2:5000/api/request-recommendations/',
+        body: jsonedString, headers: {"Content-Type": "application/json"});
+    if (response.statusCode == 200) {
+      
+      var attracts = response.headers['attractions'];
+      var decoded = json.decode(attracts);
+      displayMsg(decoded, context);
 
-  factory Post.fromJson(Map<String, dynamic> json) {
-    return Post(
-      userId: json['userId'],
-      id: json['id'],
-      title: json['title'],
-      body: json['body'],
-    );
+
+      client.close();
+    } else if (response.statusCode == 208) {
+      displayMsg('Username already taken.', context);
+      client.close();
+    } else {
+      displayMsg('No connection to server.', context);
+      client.close();
+    }
+  } catch (e) {
+    displayMsg(e.toString(), context);
   }
+
+
 }
 
-Future<Post> fetchPost() async {
-  final response =
-      await http.get('https://jsonplaceholder.typicode.com/posts/1');
-
-  if (response.statusCode == 200) {
-    // If server returns an OK response, parse the JSON
-    return Post.fromJson(json.decode(response.body));
-  } else {
-    // If that response was not OK, throw an error.
-    throw Exception('Failed to load post');
-  }
-}
-
-Future<Post> checkSignUp(
-    String username, String password, BuildContext context) async {
+Future<void> checkSignUp(String username, String password, BuildContext context) async {
   var jsonstring = {"username":username,"password":password};
   var jsonedString = jsonEncode(jsonstring);
   try {    
