@@ -158,8 +158,11 @@ class LogIn extends State<LogInState> {
                 minWidth: 300,
                 height: 70,
                 onPressed: () {       
-                  saveString('currentUser', userNameController.text);      
-                  Navigator.pushNamed(context, '/');
+                  checkSignUp(userNameController.text, emailController.text, context);
+                  var test = loadString(userNameController.text);
+                  if (test == null) {
+                    Navigator.pushNamed(context, '/');
+                  }                   
                 },
                 child: const Text(
                   'Next',

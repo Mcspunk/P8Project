@@ -35,23 +35,27 @@ Future<Post> fetchPost() async {
   }
 }
 
-Future<Post> checkSignUp(String username, String password, BuildContext context) async {
-  final response =
-    await http.get('');
-  if (response.statusCode == 200){
-    saveString('currentUser', username);
-  }
-  else if (response.statusCode == 208) {
-    displayMsg('Username already taken.', context);
-  }
-  else {
-    displayMsg('No connection to server.', context);
+Future<Post> checkSignUp(
+    String username, String password, BuildContext context) async {
+  var jsonstring = {"username":username,"password":password};
+  var jsonedString = jsonEncode(jsonstring);
+  try {    
+    var client = new http.Client();
+    var response = await client.post('http://10.0.2.2:5000/api/create-user/',
+        body: jsonedString, headers: {"Content-Type": "application/json"});
+    if (response.statusCode == 200) {
+      saveString('currentUser', username);
+      Navigator.pushNamed(context, '/select_interests');
+      client.close();
+    } else if (response.statusCode == 208) {
+      displayMsg('Username already taken.', context);
+    } else {
+      displayMsg('No connection to server.', context);
+    }
+  } catch (e) {
+    displayMsg(e.toString(), context);
   }
 }
-
-
-
-
 
 void saveString(String key, String value) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -73,13 +77,13 @@ void displayMsg(String msg, BuildContext context) {
       });
 }
 
-
-  Future sleepX(int x) {
-    for (var i = 0; i < x; i++) {
-      sleepOne();
-    }
+Future sleepX(int x) {
+  for (var i = 0; i < x; i++) {
+    sleepOne();
   }
-  Future sleepOne() {
+}
+
+Future sleepOne() {
   return new Future.delayed(const Duration(seconds: 1), () => "1");
 }
 
@@ -91,13 +95,16 @@ void launchWebsite(String url, var context) async {
   }
 }
 
-Coordinate findMiddlePoint(Coordinate one, Coordinate two){
-  double latdiff = one._lat < two._lat ? two._lat - one._lat : one._lat - two._lat;
-  double longdiff = one._long < two._long ? two._long - one._long : one._long - two._long;
+Coordinate findMiddlePoint(Coordinate one, Coordinate two) {
+  double latdiff =
+      one._lat < two._lat ? two._lat - one._lat : one._lat - two._lat;
+  double longdiff =
+      one._long < two._long ? two._long - one._long : one._long - two._long;
   longdiff = longdiff / 2;
   latdiff = latdiff / 2;
   double lat = one._lat < two._lat ? one._lat + latdiff : two._lat + latdiff;
-  double long = one._long < two._long ? one._long + longdiff : two._long + longdiff;
+  double long =
+      one._long < two._long ? one._long + longdiff : two._long + longdiff;
   return new Coordinate(lat, long);
 }
 

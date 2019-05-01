@@ -76,7 +76,9 @@ class SelectInterests extends State<InterestsState> {
           ),
           onPressed: () {
             saveCategoryRatings('Categories', this._categories, this._ratings);
+            
             Navigator.pop(context);
+            Navigator.pushNamed(context, '/');
           }),
     );
   }
