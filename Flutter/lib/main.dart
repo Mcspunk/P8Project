@@ -5,8 +5,42 @@ import 'sign_in.dart';
 import 'home_screen.dart';
 import 'data_provider.dart';
 import 'data_container.dart';
+import 'notification_helper.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:android_alarm_manager/android_alarm_manager.dart';
+import 'dart:async';
 
-void main() => runApp(MyApp());
+FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
+
+Future printHello() {
+  final DateTime now = DateTime.now();
+  singlePOINotif(flutterLocalNotificationsPlugin, title: 'Title', body: 'Body');  
+  print("[$now] Hello, world!");
+}
+
+main() async {
+  final int helloAlarmID = 0;
+  var initializationSettingsAndroid = new AndroidInitializationSettings('app_icon');
+  var initializationSettingsIOS = new IOSInitializationSettings(onDidReceiveLocalNotification: onDidRecieveLocationLocation);
+  var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);  
+  flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: onSelectNotification);
+
+  await AndroidAlarmManager.initialize();
+  runApp(MyApp());
+  await AndroidAlarmManager.periodic(const Duration(minutes: 1), helloAlarmID, printHello);
+}
+
+//TODO IOS specific navigation
+  Future onDidRecieveLocationLocation(int id, String title, String body, String payload) {
+     
+  }
+        
+  //Ikke sikker på at denne navigation er korrekt
+  Future onSelectNotification(String payload) {
+    MaterialPageRoute(builder: (context) => HomeScreenState());
+  }
+
+//void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   bool loggedIn = false;
