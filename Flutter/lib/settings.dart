@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
 import 'select_interests.dart';
+import 'utility.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
-import 'data_provider.dart';
-import 'data_container.dart';
-
-void clearSharedPrefs() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  prefs.clear();
-}
 
 void saveDistance(String key, int value) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -38,33 +32,26 @@ class Settings extends State<SettingsState> {
   void initState() {
     getDistance('dist').then(loadDistance);
     getTripType('tripType').then(loadTripType);
-    //clearSharedPrefs();
     super.initState();
   }
 
   void loadTripType(String tripType) {
     setState(() {
-      this.dropdownValue = tripType ?? 'Solo';
+      this.dropdownValue = tripType;
     });
   }
 
   void loadDistance(int distance) {
     setState(() {
-      this._n = distance ?? 0;
+      this._n = distance;
     });
   }
-/*
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    DataContainer data = DataProvider.of(context).dataContainer;
-  }
-*/
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: Center(child: Text('Settings')),
         backgroundColor: Colors.grey,
       ),
       body: _customSettings(),
@@ -80,6 +67,9 @@ class Settings extends State<SettingsState> {
         children: <Widget>[
           Divider(),
           ListTile(
+            //padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+            //margin: EdgeInsets.symmetric(vertical: 6.0),
+
             title: Container(
               constraints: BoxConstraints(maxWidth: width),
               child: Row(
@@ -161,35 +151,6 @@ class Settings extends State<SettingsState> {
             },
           ),
           Divider(),
-          ListTile(
-            title: Text('Delete all data'),
-            trailing: Icon(Icons.warning),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text('Delete app data?'),
-                    content: Text('This will remove all data from your device such as rating information, favorite places, login information etc.'),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: const Text('Delete'),
-                        onPressed: () {
-                          clearSharedPrefs();
-                          Navigator.of(context).pop();
-                          //Her skal vi måske gå til loginscreen TODO
-                        },
-                      ),
-                      FlatButton(
-                        child: const Text('Cancel'),
-                        onPressed: (){Navigator.of(context).pop();},
-                      ),
-                    ],
-                  );
-                }
-              );
-            },
-          ),
         ],
       ),
     );
