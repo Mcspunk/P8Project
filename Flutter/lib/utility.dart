@@ -202,3 +202,4 @@ class Attraction {
     return _coordinate;
   }
 }
+
