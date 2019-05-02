@@ -9,6 +9,7 @@ import 'notification_helper.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'dart:async';
+import 'utility.dart';
 
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
 
@@ -50,9 +51,7 @@ class MyApp extends StatelessWidget {
       dataContainer: DataContainer(),
       child: MaterialApp(
         title: 'Sign in',
-        theme: new ThemeData(
-          primaryColor: Colors.lightBlue,
-        ),
+        theme: utilTheme(),
         home: HomeScreenState(),
         onGenerateRoute: (RouteSettings settings) {
           switch (settings.name) {

@@ -9,11 +9,41 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+ThemeData utilTheme(){
+  return ThemeData(
+          // Define the default Brightness and Colors
+          brightness: Brightness.dark,
+          primaryColor: Colors.grey[850],
+          accentColor: Colors.green,
+          //backgroundColor: Colors.grey[300],
 
 Future<int> getRecommendations(
     Coordinate coordinate, BuildContext context) async {
   //var context = ctx == null ? BuildContext : ctx;
   var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong()};
+          primaryColorDark: Colors.grey[800],
+
+          hintColor: Colors.grey[500],
+
+          // Define the default Font Family
+          fontFamily: 'Montserrat',
+
+          // Define the default TextTheme. Use this to specify the default
+          // text styling for headlines, titles, bodies of text, and more.
+          textTheme: TextTheme(
+            headline: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
+            title: TextStyle(fontSize: 36.0, fontStyle: FontStyle.italic),
+            body1: TextStyle(fontSize: 14.0, fontFamily: 'Hind', color: Colors.black),
+            body2: TextStyle(fontSize: 14.0, fontFamily: 'Hind', color: Colors.grey[300]),
+          ),
+  );
+}
+
+
+
+
+Future<List<Attraction>> getRecommendations(Coordinate coordinate, BuildContext context) async{
+  var jsonstring = {"lat":coordinate.GetLat(),"long":coordinate.GetLong()};
   var jsonedString = jsonEncode(jsonstring);
   try {
     var response = await http.post(
@@ -80,6 +110,16 @@ Future<void> checkSignUp(
   } catch (e) {
     displayMsg(e.toString(), context);
   }
+}
+
+void clearSharedPreferences() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.clear();
+}
+
+void deleteString(String key) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.remove(key);
 }
 
 void saveString(String key, String value) async {

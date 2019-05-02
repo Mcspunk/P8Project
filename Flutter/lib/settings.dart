@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'data_provider.dart';
 import 'data_container.dart';
+import 'utility.dart';
 
 void clearSharedPrefs() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -64,8 +65,14 @@ class Settings extends State<SettingsState> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
-        backgroundColor: Colors.grey,
+        title: Row(
+          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            Text('Settings  '),
+            Icon(Icons.settings),
+          ],
+        )
+        
       ),
       body: _customSettings(),
       //primary: false,
@@ -98,7 +105,6 @@ class Settings extends State<SettingsState> {
                           child: Center(
                             child: Icon(
                               Icons.arrow_left,
-                              color: Colors.black,
                             ),
                           ),
                         ),
@@ -110,7 +116,6 @@ class Settings extends State<SettingsState> {
                           onPressed: increment,
                           child: Icon(
                             Icons.arrow_right,
-                            color: Colors.black,
                           ),
                         ),
                       ),
@@ -177,6 +182,7 @@ class Settings extends State<SettingsState> {
                         onPressed: () {
                           clearSharedPrefs();
                           Navigator.of(context).pop();
+                          
                           //Her skal vi måske gå til loginscreen TODO
                         },
                       ),
@@ -190,6 +196,37 @@ class Settings extends State<SettingsState> {
               );
             },
           ),
+          Divider(),
+          ListTile(
+            title: Text('Log out'),
+            trailing: Icon(Icons.exit_to_app),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text('Really log out?'),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: const Text('Log out'),
+                        onPressed: () {
+                          deleteString('currentUser');
+                          Navigator.of(context).pop();
+                          
+                          //Her skal vi måske gå til loginscreen TODO
+                        },
+                      ),
+                      FlatButton(
+                        child: const Text('Cancel'),
+                        onPressed: (){Navigator.of(context).pop();},
+                      ),
+                    ],
+                  );
+                }
+              );
+            },
+          ),
+          Divider(),
         ],
       ),
     );
