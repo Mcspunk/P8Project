@@ -6,7 +6,6 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
-import 'package:path_provider/path_provider.dart';
 
 ThemeData utilTheme(){
   return ThemeData(
@@ -34,33 +33,10 @@ ThemeData utilTheme(){
   );
 }
 
-class Post {
-  final int userId;
-  final int id;
-  final String title;
-  final String body;
+
+
+
 Future<List<Attraction>> getRecommendations(Coordinate coordinate, BuildContext context) async{
-
-Future<String> saveImage(BuildContext context, Image image) {
-  final completer = Completer<String>();
-
-  image.image.resolve(ImageConfiguration()).addListener((imageInfo, _) async {
-    final byteData =
-        await imageInfo.image.toByteData(format: ImageByteFormat.png);
-    final pngBytes = byteData.buffer.asUint8List();
-
-    final fileName = pngBytes.hashCode;
-    final directory = await getApplicationDocumentsDirectory();
-    final filePath = '${directory.path}/$fileName';
-    final file = File(filePath);
-    await file.writeAsBytes(pngBytes);
-
-    completer.complete(filePath);
-  });
-
-  return completer.future;
-}
-
   var jsonstring = {"lat":coordinate.GetLat(),"long":coordinate.GetLong()};
   var jsonedString = jsonEncode(jsonstring);
   try {    
