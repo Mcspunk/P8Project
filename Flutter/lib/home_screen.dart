@@ -169,7 +169,13 @@ class HomeScreen extends State<HomeScreenState> {
                   onPressed: () {
                     Navigator.pushNamed(context, '/settings');
                   }),
+              new IconButton(
+                  icon: const Icon(Icons.history),
+                  onPressed: () {
+                    getRecommendations(new Coordinate(0.0,0.0), context);
+                  }),
             ],
+            
             bottom: TabBar(tabs: [
               Tab(
                 icon: Icon(Icons.home),
@@ -682,7 +688,6 @@ class HomeScreen extends State<HomeScreenState> {
     DataContainer data = DataProvider.of(context).dataContainer;
   }
 
-  Future<Post> post;
   @override
   void didChangeDependencoes() {
     super.didChangeDependencies();
@@ -692,7 +697,6 @@ class HomeScreen extends State<HomeScreenState> {
   @override
   void initState() {
     loadString('currentUser').then(loadUser);
-    //post = fetchPost();
     super.initState();
   }
 
