@@ -17,10 +17,6 @@ ThemeData utilTheme(){
           accentColor: Colors.green,
           //backgroundColor: Colors.grey[300],
 
-Future<int> getRecommendations(
-    Coordinate coordinate, BuildContext context) async {
-  //var context = ctx == null ? BuildContext : ctx;
-  var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong()};
           primaryColorDark: Colors.grey[800],
 
           hintColor: Colors.grey[500],
@@ -40,10 +36,10 @@ Future<int> getRecommendations(
 }
 
 
-
-
-Future<List<Attraction>> getRecommendations(Coordinate coordinate, BuildContext context) async{
-  var jsonstring = {"lat":coordinate.GetLat(),"long":coordinate.GetLong()};
+Future<int> getRecommendations(
+    Coordinate coordinate, BuildContext context) async {
+  //var context = ctx == null ? BuildContext : ctx;
+  var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong()};
   var jsonedString = jsonEncode(jsonstring);
   try {
     var response = await http.post(
