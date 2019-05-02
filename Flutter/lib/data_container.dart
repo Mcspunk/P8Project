@@ -8,10 +8,10 @@ class DataContainer {
 
   DataContainer(){
     // udskiftes med API kald
-    _currentAttractions = [new Attraction(
+    _currentAttractions = [];     /*new Attraction(
         'Tower of London',
         '8:00 - 17:30',
-        'ToL.png',
+        'https://i.imgur.com/ZBAHIe0.jpg',
         false,
         4.8,
         'A tower in London',
@@ -128,10 +128,9 @@ class DataContainer {
         'Family restaurant',
         'https://www.mcdonalds.com/',
         37.4248,
-        -122.0908),];
+        -122.0908),];*/
     _favourites = [];
-    _categoryRatings = Map.fromIterables(['1','2','3','4','5'], [1,2,3,4,5]);
-    
+    _categoryRatings = Map.fromIterables(['1','2','3','4','5'], [1,2,3,4,5]);    
   }
 
   List<Attraction> getAttractions() => _currentAttractions;

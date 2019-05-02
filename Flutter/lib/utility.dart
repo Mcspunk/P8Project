@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:test2/data_container.dart';
+import 'package:test2/data_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -6,62 +8,63 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
-import 'package:path_provider/path_provider.dart';
 
-Future<List<Attraction>> getRecommendations(Coordinate coordinate, BuildContext context) async{
 
-Future<String> saveImage(BuildContext context, Image image) {
-  final completer = Completer<String>();
-
-  image.image.resolve(ImageConfiguration()).addListener((imageInfo, _) async {
-    final byteData =
-        await imageInfo.image.toByteData(format: ImageByteFormat.png);
-    final pngBytes = byteData.buffer.asUint8List();
-
-    final fileName = pngBytes.hashCode;
-    final directory = await getApplicationDocumentsDirectory();
-    final filePath = '${directory.path}/$fileName';
-    final file = File(filePath);
-    await file.writeAsBytes(pngBytes);
-
-    completer.complete(filePath);
-  });
-
-  return completer.future;
-}
-
-  var jsonstring = {"lat":coordinate.GetLat(),"long":coordinate.GetLong()};
+Future<int> getRecommendations(
+    Coordinate coordinate, BuildContext context) async {
+  //var context = ctx == null ? BuildContext : ctx;
+  var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong()};
   var jsonedString = jsonEncode(jsonstring);
-  try {    
-    var client = new http.Client();
-    var response = await client.post('http://10.0.2.2:5000/api/request-recommendations/',
-        body: jsonedString, headers: {"Content-Type": "application/json"});
+  try {
+    var response = await http.post(
+        'http://10.0.2.2:5000/api/request-recommendations/',
+        body: jsonedString,
+        headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
-      
       var attracts = response.headers['attractions'];
-      var decoded = json.decode(attracts);
-      displayMsg(decoded, context);
+      attracts = "[" + attracts + "]";
+      var decoded = jsonDecode(attracts);
+      var t = decoded as List;
+      var y = t[0];
+      List<Attraction> recAttractions = [];
+      y.forEach((k, v) => recAttractions.add(new Attraction(
+          v['name'],
+          v['opening_hours'],
+          v['img_path'],
+          v['isFoodPlace'] == "False" ? false : true,
+          double.parse(v['rating']),
+          v['description'],
+          v['url'],
+          double.parse(v['lat']),
+          double.parse(v['long']))));
 
+      DataContainer data = DataProvider.of(context).dataContainer;
+      print("B-recAtt: " + recAttractions.length.toString());
+      print("B-dataRac: " + data.getAttractions().length.toString());
+      if (recAttractions.length != 0) {
+        data.setAttractions(recAttractions);
+      }
+      print("A-recAtt: " + recAttractions.length.toString());
+      print("A-dataRac: " + data.getAttractions().length.toString());
 
-      client.close();
+      return recAttractions.length;
     } else if (response.statusCode == 208) {
       displayMsg('Username already taken.', context);
-      client.close();
     } else {
       displayMsg('No connection to server.', context);
-      client.close();
     }
   } catch (e) {
     displayMsg(e.toString(), context);
   }
 
-
+  return 0;
 }
 
-Future<void> checkSignUp(String username, String password, BuildContext context) async {
-  var jsonstring = {"username":username,"password":password};
+Future<void> checkSignUp(
+    String username, String password, BuildContext context) async {
+  var jsonstring = {"username": username, "password": password};
   var jsonedString = jsonEncode(jsonstring);
-  try {    
+  try {
     var client = new http.Client();
     var response = await client.post('http://10.0.2.2:5000/api/create-user/',
         body: jsonedString, headers: {"Content-Type": "application/json"});
@@ -107,13 +110,16 @@ void launchWebsite(String url, var context) async {
   }
 }
 
-Coordinate findMiddlePoint(Coordinate one, Coordinate two){
-  double latdiff = one._lat < two._lat ? two._lat - one._lat : one._lat - two._lat;
-  double longdiff = one._long < two._long ? two._long - one._long : one._long - two._long;
+Coordinate findMiddlePoint(Coordinate one, Coordinate two) {
+  double latdiff =
+      one._lat < two._lat ? two._lat - one._lat : one._lat - two._lat;
+  double longdiff =
+      one._long < two._long ? two._long - one._long : one._long - two._long;
   longdiff = longdiff / 2;
   latdiff = latdiff / 2;
   double lat = one._lat < two._lat ? one._lat + latdiff : two._lat + latdiff;
-  double long = one._long < two._long ? one._long + longdiff : two._long + longdiff;
+  double long =
+      one._long < two._long ? one._long + longdiff : two._long + longdiff;
   return new Coordinate(lat, long);
 }
 

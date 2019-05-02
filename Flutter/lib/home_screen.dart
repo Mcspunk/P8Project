@@ -301,7 +301,7 @@ class HomeScreen extends State<HomeScreenState> {
             padding: new EdgeInsets.only(left: 4.0, bottom: 2.0),
             decoration: new BoxDecoration(
               image: new DecorationImage(
-                image: new AssetImage(attraction.GetImgPath()),
+                image: new NetworkImage(attraction.GetImgPath()),//AssetImage(attraction.GetImgPath()),
                 fit: BoxFit.cover,
               ),
             ),
@@ -640,6 +640,7 @@ class HomeScreen extends State<HomeScreenState> {
 
   @override
   Widget build(BuildContext context) {
+    var a = getRecommendations(new Coordinate(0.0, 0.0), context);
     if (username == null) {
       return LogInState();
     }
