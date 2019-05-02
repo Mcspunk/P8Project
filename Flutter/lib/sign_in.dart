@@ -10,7 +10,7 @@ class LogIn extends State<LogInState> {
   final logInUsernamecontroller = TextEditingController();
   final logInPasswordcontroller = TextEditingController();
 
-  HomeScreen home = new HomeScreen();
+  HomeScreen home = HomeScreen();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -27,7 +27,6 @@ class LogIn extends State<LogInState> {
 
   Widget _logInScreen() {
     return Scaffold(
-      backgroundColor: Color(0xFFCAF8F3),
       body: Center(
         child: Container(
           constraints:
@@ -96,7 +95,7 @@ class LogIn extends State<LogInState> {
                         fontSize: 24.0,
                       ),
                     ),
-                    color: Color(0xFFFFFDD0),
+                    color: Theme.of(context).accentColor,
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -113,7 +112,7 @@ class LogIn extends State<LogInState> {
                         fontSize: 24.0,
                       ),
                     ),
-                    color: Color(0xFFFFFDD0),
+                    color: Theme.of(context).accentColor,
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -129,11 +128,10 @@ class LogIn extends State<LogInState> {
 
   void _pushLoginScreen() {
     Navigator.of(context)
-        .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
-      return new Scaffold(
-        appBar: new AppBar(
+        .push(MaterialPageRoute<void>(builder: (BuildContext context) {
+      return Scaffold(
+        appBar: AppBar(
           title: const Text('Log in'),
-          backgroundColor: Colors.lightBlue,
         ),
         body: Form(
           key: _formKey,
@@ -142,17 +140,18 @@ class LogIn extends State<LogInState> {
               children: <Widget>[
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: new Container(
+                  child: Container(
                     width: 375,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: logInUsernamecontroller,
-                      decoration: new InputDecoration(
+                      style: Theme.of(context).textTheme.body2,
+                      decoration: InputDecoration(
+                        labelStyle: Theme.of(context).textTheme.body2,
                         labelText: "Username",
-                        fillColor: Colors.white,
                         filled: true,
-                        border: new OutlineInputBorder(
-                          borderRadius: new BorderRadius.circular(25.0),
-                          borderSide: new BorderSide(),
+                        border: OutlineInputBorder(
+                          //borderRadius: BorderRadius.circular(10.0),
+                          borderSide: BorderSide(),
                         ),
                       ),
                       validator: (val) {
@@ -165,17 +164,17 @@ class LogIn extends State<LogInState> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: new Container(
+                  child: Container(
                     width: 375,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: logInPasswordcontroller,
-                      decoration: new InputDecoration(
+                       style: Theme.of(context).textTheme.body2,
+                      decoration: InputDecoration(
+                        labelStyle: Theme.of(context).textTheme.body2,
                         labelText: "Password",
-                        fillColor: Colors.white,
                         filled: true,
-                        border: new OutlineInputBorder(
-                          borderRadius: new BorderRadius.circular(25.0),
-                          borderSide: new BorderSide(),
+                        border: OutlineInputBorder(
+                          borderSide:BorderSide(),
                         ),
                       ),
                       validator: (val) {
@@ -194,33 +193,29 @@ class LogIn extends State<LogInState> {
                     onPressed: () {
                       if (_formKey.currentState.validate()) {
                         //TODO login stuff api makker
-                        // det herunder skal fjernes
-                        logInPasswordcontroller.text = 'det virker';
                       }
                     },
                     child: const Text(
                       'Log in',
                       style: TextStyle(fontSize: 24.0),
                     ),
-                    color: Color(0xFFFFFDD0),
+                    color: Theme.of(context).accentColor,
                   ),
                 ),
               ],
             ),
           ),
         ),
-        backgroundColor: Color(0xFFCAF8F3),
       );
     }));
   }
 
   void _pushNewUser() {
     Navigator.of(context)
-        .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
-      return new Scaffold(
-        appBar: new AppBar(
+        .push(MaterialPageRoute<void>(builder: (BuildContext context) {
+      return Scaffold(
+        appBar: AppBar(
           title: const Text('New user'),
-          backgroundColor: Colors.lightBlue,
         ),
         body: Form(
           key: _formKey,
@@ -229,17 +224,18 @@ class LogIn extends State<LogInState> {
               children: <Widget>[
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: new Container(
+                  child: Container(
                     width: 375,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: signUpUserNameController,
-                      decoration: new InputDecoration(
+                      style: Theme.of(context).textTheme.body2,
+                      decoration: InputDecoration(
+                        labelStyle: Theme.of(context).textTheme.body2,
                         labelText: "Username",
-                        fillColor: Colors.white,
                         filled: true,
-                        border: new OutlineInputBorder(
-                          borderRadius: new BorderRadius.circular(25.0),
-                          borderSide: new BorderSide(),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(),
+                          
                         ),
                       ),
                       validator: (val) {
@@ -254,17 +250,17 @@ class LogIn extends State<LogInState> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: new Container(
+                  child: Container(
                     width: 375,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: signUpEmailController,
-                      decoration: new InputDecoration(
+                     style: Theme.of(context).textTheme.body2,
+                      decoration: InputDecoration(
+                        labelStyle: Theme.of(context).textTheme.body2,
                         labelText: "Email",
-                        fillColor: Colors.white,
                         filled: true,
-                        border: new OutlineInputBorder(
-                          borderRadius: new BorderRadius.circular(25.0),
-                          borderSide: new BorderSide(),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(),
                         ),
                       ),
                       validator: (val) {
@@ -279,17 +275,17 @@ class LogIn extends State<LogInState> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: new Container(
+                  child: Container(
                     width: 375,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: signUpPasswordController,
-                      decoration: new InputDecoration(
+                      style: Theme.of(context).textTheme.body2,
+                      decoration: InputDecoration(
+                        labelStyle: Theme.of(context).textTheme.body2,
                         labelText: "Password",
-                        fillColor: Colors.white,
                         filled: true,
-                        border: new OutlineInputBorder(
-                          borderRadius: new BorderRadius.circular(25.0),
-                          borderSide: new BorderSide(),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(),
                         ),
                       ),
                       validator: (val) {
@@ -304,17 +300,17 @@ class LogIn extends State<LogInState> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: new Container(
+                  child: Container(
                     width: 375,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: signUpPasswordControllerRepeat,
-                      decoration: new InputDecoration(
-                        labelText: "Repeat password",
-                        fillColor: Colors.white,
+                      style: Theme.of(context).textTheme.body2,
+                      decoration: InputDecoration(
+                        labelStyle: Theme.of(context).textTheme.body2,
+                        labelText: "Repeat Password",
                         filled: true,
-                        border: new OutlineInputBorder(
-                          borderRadius: new BorderRadius.circular(25.0),
-                          borderSide: new BorderSide(),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(),
                         ),
                       ),
                       validator: (val) {
@@ -334,23 +330,21 @@ class LogIn extends State<LogInState> {
                       //TODO vi mangler password felt og ændre streng herunder
                       //checkSignUp(signUpUserNameController.text, 'tbd', context);
                       if (_formKey.currentState.validate()) {
-                        saveString(
-                            'currentUser', signUpPasswordController.text);
-                        Navigator.pushNamed(context, '/');
+                        saveString('currentUser', signUpPasswordController.text);
+                        Navigator.pushNamedAndRemoveUntil(context, '/', (Route<dynamic> route) => false);
                       }
                     },
                     child: const Text(
                       'Next',
                       style: TextStyle(fontSize: 24.0),
                     ),
-                    color: Color(0xFFFFFDD0),
+                    color: Theme.of(context).accentColor,
                   ),
                 ),
               ],
             ),
           ),
         ),
-        backgroundColor: Color(0xFFCAF8F3),
       );
     }));
   }

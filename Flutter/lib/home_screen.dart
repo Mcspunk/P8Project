@@ -24,20 +24,20 @@ class RatingDialog extends State<RatingState> {
       body: ListView(
         children: <Widget>[
           Container(
-              constraints: new BoxConstraints.expand(
+              constraints: BoxConstraints.expand(
                 height: 200.0,
               ),
               alignment: Alignment.bottomLeft,
-              padding: new EdgeInsets.only(left: 4.0, bottom: 2.0),
-              decoration: new BoxDecoration(
-                image: new DecorationImage(
-                  image: new AssetImage(widget.attraction.GetImgPath()),
+              padding: EdgeInsets.only(left: 4.0, bottom: 2.0),
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(widget.attraction.GetImgPath()),
                   fit: BoxFit.cover,
                 ),
               ),
               child: ListTile(
-                title: new Text(widget.attraction.GetName(),
-                    style: new TextStyle(
+                title: Text(widget.attraction.GetName(),
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 20.0,
                       color: Colors.white,
@@ -138,19 +138,20 @@ class RatingState extends StatefulWidget {
 }
 
 class HomeScreen extends State<HomeScreenState> {
-  double attractionRating = 0;  
+  double attractionRating = 0;
   Coordinate userLocation;
   String username = null;
   Widget _homeScreen() {
     DataContainer data = DataProvider.of(context).dataContainer;
     return MaterialApp(
+      theme: utilTheme(),
       home: DefaultTabController(
         length: 4,
         child: Scaffold(
           appBar: AppBar(
             title: Text('Home'),
             actions: <Widget>[
-              new IconButton(
+              IconButton(
                   //Tror ikke det er her den her funktionalitet skal være, men kunne ikke få lov til at lave en tab mere
                   icon: const Icon(Icons.map),
                   onPressed: () {
@@ -160,10 +161,10 @@ class HomeScreen extends State<HomeScreenState> {
                         ? displayMsg(
                             'Your location is not available at the moment, please try again later',
                             context)
-                        : _fullMapView(
-                            data.getAttractions()); // Det her skal være en liste af alle attractions inden for en radius
+                        : _fullMapView(data
+                            .getAttractions()); // Det her skal være en liste af alle attractions inden for en radius
                   }),
-              new IconButton(
+              IconButton(
                   icon: const Icon(Icons.settings),
                   onPressed: () {
                     Navigator.pushNamed(context, '/settings');
@@ -214,8 +215,14 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _attractionView() {
-    DataContainer data = DataProvider.of(context).dataContainer;
-    return _buildRecList(data.getAttractions().where((x) => x.GetIsFoodPlace() == false));
+    List<Attraction> data = DataProvider.of(context).dataContainer.getAttractions();
+    List<Attraction> attractions = [];
+    for (var attraction in data) {
+      if (!attraction.GetIsFoodPlace()){
+        attractions.add(attraction);
+      }
+    }
+    return _buildRecList(attractions);
   }
 
   Widget _allView() {
@@ -224,15 +231,21 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _restaurantView() {
-    DataContainer data = DataProvider.of(context).dataContainer;
-    return _buildRecList(data.getAttractions().where((x) => x.GetIsFoodPlace() == true));
+    List<Attraction> data = DataProvider.of(context).dataContainer.getAttractions();
+    List<Attraction> restaurants = [];
+    for (var attraction in data) {
+      if (attraction.GetIsFoodPlace()){
+        restaurants.add(attraction);
+      }
+    }
+    return _buildRecList(restaurants);
   }
 
   Widget _likeView() {
     DataContainer data = DataProvider.of(context).dataContainer;
-    return data.getAttractions().length != 0
-        ? _buildRecList(data.getAttractions())
-        : new ListTile(
+    return data.getFavourites().length != 0
+        ? _buildRecList(data.getFavourites())
+        : ListTile(
             title: Text('No liked attractions'),
             subtitle: Text(
                 'Tap the heart icon on the attractions to save them to your list of liked attractions'),
@@ -251,33 +264,37 @@ class HomeScreen extends State<HomeScreenState> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Container(
-              constraints:
-                  new BoxConstraints.expand(height: deviceSize.height * 0.3, width: deviceSize.width * 0.85),
+              constraints: BoxConstraints.expand(
+                  height: deviceSize.height * 0.3,
+                  width: deviceSize.width * 0.85),
               alignment: Alignment.bottomLeft,
-              padding: new EdgeInsets.only(left: 4.0, bottom: 2.0),
-              decoration: new BoxDecoration(
-                image: new DecorationImage(
-                  image: new AssetImage(attraction.GetImgPath()),
+              padding: EdgeInsets.only(left: 4.0, bottom: 2.0),
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(attraction.GetImgPath()),
                   fit: BoxFit.cover,
                 ),
               ),
               child: ListTile(
-                  title: new Text(attraction.GetName(),
-                      style: new TextStyle(
+                  title: Text(attraction.GetName(),
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20.0,
                         color: Colors.white,
                         shadows: [
-                          Shadow(offset: Offset(-1.5, -1.5), color: Colors.black),
-                          Shadow(offset: Offset(1.5, -1.5), color: Colors.black),
+                          Shadow(
+                              offset: Offset(-1.5, -1.5), color: Colors.black),
+                          Shadow(
+                              offset: Offset(1.5, -1.5), color: Colors.black),
                           Shadow(offset: Offset(1.5, 1.5), color: Colors.black),
-                          Shadow(offset: Offset(-1.5, 1.5), color: Colors.black),
+                          Shadow(
+                              offset: Offset(-1.5, 1.5), color: Colors.black),
                         ],
                       )))),
           ListTile(
               title: Text('Rating: ' + attraction.GetRating().toString()),
-              subtitle: Text('Distance 0.8 km'),
-              trailing: Text(attraction.GetOpeningHours())),
+              subtitle: Text('Distance: 0.8 km'),
+              trailing: Text(attraction.GetOpeningHours()))
         ],
       ),
     );
@@ -286,95 +303,113 @@ class HomeScreen extends State<HomeScreenState> {
   Widget buildRecTile(Attraction attraction) {
     DataContainer data = DataProvider.of(context).dataContainer;
     final deviceSize = MediaQuery.of(context).size;
-    return Column(
-      children: <Widget>[
-        Container(
-            constraints:
-                new BoxConstraints.expand(height: deviceSize.height * 0.3),
-            alignment: Alignment.bottomLeft,
-            padding: new EdgeInsets.only(left: 4.0, bottom: 2.0),
-            decoration: new BoxDecoration(
-              image: new DecorationImage(
-                image: new AssetImage(attraction.GetImgPath()),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: ListTile(
-                title: new Text(attraction.GetName(),
-                    style: new TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20.0,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(offset: Offset(-1.5, -1.5), color: Colors.black),
-                        Shadow(offset: Offset(1.5, -1.5), color: Colors.black),
-                        Shadow(offset: Offset(1.5, 1.5), color: Colors.black),
-                        Shadow(offset: Offset(-1.5, 1.5), color: Colors.black),
-                      ],
-                    )),
-                trailing: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (data.getAttractions().contains(attraction)) {
-                          data.getAttractions().remove(attraction);
-                        } else {
-                          data.getAttractions().add(attraction);
-                        }
-                      });
-                    },
-                    child: Stack(
-                      children: <Widget>[
-                        Positioned(
-                          top: 1.0,
-                          left: 1.0,
-                          child: Icon(
-                            Icons.favorite,
-                            color: Colors.black,
-                          ),
-                        ),
-                        Positioned(
-                          top: -1.0,
-                          left: 1.0,
-                          child: Icon(
-                            Icons.favorite,
-                            color: Colors.black,
-                          ),
-                        ),
-                        Positioned(
-                          top: 1.0,
-                          left: -1.0,
-                          child: Icon(
-                            Icons.favorite,
-                            color: Colors.black,
-                          ),
-                        ),
-                        Positioned(
-                          top: -1.0,
-                          left: -1.0,
-                          child: Icon(
-                            Icons.favorite,
-                            color: Colors.black,
-                          ),
-                        ),
-                        Icon(
-                          Icons.favorite,
-                          color: data.getFavourites().contains(attraction)
-                              ? Colors.red
-                              : Colors.white,
-                        )
-                      ],
-                    )))),
-        ListTile(
-          title: Text('Rating: ' + attraction.GetRating().toString()),
-          subtitle: Text('Distance 0.8 km'),
-          trailing: Text(attraction.GetOpeningHours()),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+        color: Theme.of(context).primaryColorDark,
+        border: Border.all(
+          color: Theme.of(context).hintColor,
         ),
-      ],
+        /*gradient: new LinearGradient(
+            colors: [Colors.black, Colors.blue],
+            begin: Alignment.centerRight,
+            end: new Alignment(0.8, 0.0),
+            tileMode: TileMode.mirror),*/
+      ),
+      child: Column(
+        children: <Widget>[
+          Container(
+              constraints:
+                  BoxConstraints.expand(height: deviceSize.height * 0.3),
+              alignment: Alignment.bottomLeft,
+              padding: EdgeInsets.only(left: 4.0, bottom: 2.0),
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(attraction.GetImgPath()),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: ListTile(
+                  title: Text(attraction.GetName(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20.0,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                              offset: Offset(-1.5, -1.5), color: Colors.black),
+                          Shadow(
+                              offset: Offset(1.5, -1.5), color: Colors.black),
+                          Shadow(offset: Offset(1.5, 1.5), color: Colors.black),
+                          Shadow(
+                              offset: Offset(-1.5, 1.5), color: Colors.black),
+                        ],
+                      )),
+                  trailing: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (data.getFavourites().contains(attraction)) {
+                            data.getFavourites().remove(attraction);
+                          } else {
+                            data.getFavourites().add(attraction);
+                          }
+                        });
+                      },
+                      child: Stack(
+                        children: <Widget>[
+                          Positioned(
+                            top: 1.0,
+                            left: 1.0,
+                            child: Icon(
+                              Icons.favorite,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Positioned(
+                            top: -1.0,
+                            left: 1.0,
+                            child: Icon(
+                              Icons.favorite,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Positioned(
+                            top: 1.0,
+                            left: -1.0,
+                            child: Icon(
+                              Icons.favorite,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Positioned(
+                            top: -1.0,
+                            left: -1.0,
+                            child: Icon(
+                              Icons.favorite,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Icon(
+                            Icons.favorite,
+                            color: data.getFavourites().contains(attraction)
+                                ? Colors.red
+                                : Colors.white,
+                          )
+                        ],
+                      )))),
+          ListTile(
+            title: Text('Rating: ' + attraction.GetRating().toString()),
+            subtitle: Text('Distance 0.8 km'),
+            trailing: Text(attraction.GetOpeningHours(),
+                style: Theme.of(context).textTheme.body2),
+          ),
+        ],
+      ),
     );
   }
 
   Widget buildInteractiveRecTile(Attraction attraction) {
-    return new GestureDetector(
+    return GestureDetector(
         onTap: () {
           _detailedAttractionView(attraction);
         },
@@ -458,7 +493,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _mapView(Attraction attraction) {
-    Coordinate tempUserCoordinate = new Coordinate(
+    Coordinate tempUserCoordinate = Coordinate(
         attraction.GetCoordinate().GetLat() + 0.01,
         attraction.GetCoordinate().GetLong() + 0.01);
     Coordinate tempCoordinate =
@@ -468,19 +503,19 @@ class HomeScreen extends State<HomeScreenState> {
         ? displayMsg('Location for attraction is unknown', context)
         : Navigator.of(context)
             .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
-            return new Scaffold(
+            return Scaffold(
               appBar: AppBar(
                 title: Text(attraction.GetName()),
               ),
               body: Container(
                 child: FlutterMap(
-                  options: new MapOptions(
-                    center: new LatLng(
+                  options: MapOptions(
+                    center: LatLng(
                         tempCoordinate.GetLat(), tempCoordinate.GetLong()),
                     zoom: 15.0,
                   ),
                   layers: [
-                    new TileLayerOptions(
+                    TileLayerOptions(
                       urlTemplate: "https://api.tiles.mapbox.com/v4/"
                           "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
                       additionalOptions: {
@@ -489,26 +524,26 @@ class HomeScreen extends State<HomeScreenState> {
                         'id': 'mapbox.streets',
                       },
                     ),
-                    new MarkerLayerOptions(
+                    MarkerLayerOptions(
                       markers: [
-                        new Marker(
+                        Marker(
                           width: 200.0,
                           height: 200.0,
-                          point: new LatLng(attraction.GetCoordinate().GetLat(),
+                          point: LatLng(attraction.GetCoordinate().GetLat(),
                               attraction.GetCoordinate().GetLong()),
-                          builder: (context) => new Container(
+                          builder: (context) => Container(
                                 child: Icon(
                                   Icons.location_on,
                                   color: Colors.red,
                                 ),
                               ),
                         ),
-                        new Marker(
+                        Marker(
                           width: 200.0,
                           height: 200.0,
-                          point: new LatLng(tempUserCoordinate.GetLat(),
+                          point: LatLng(tempUserCoordinate.GetLat(),
                               tempUserCoordinate.GetLong()),
-                          builder: (context) => new Container(
+                          builder: (context) => Container(
                                 child: Icon(
                                   Icons.my_location,
                                   color: Colors.red,
@@ -529,15 +564,15 @@ class HomeScreen extends State<HomeScreenState> {
         ? displayMsg('No attractions nearby', context)
         : Navigator.of(context)
             .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
-            return new Scaffold(
+            return Scaffold(
               appBar: AppBar(
                 title: Text('Nearby attractions'),
               ),
               body: Container(
                 child: FlutterMap(
-                  options: new MapOptions(
-                    center: new LatLng(
-                        userLocation.GetLat(), userLocation.GetLong()),
+                  options: MapOptions(
+                    center:
+                        LatLng(userLocation.GetLat(), userLocation.GetLong()),
                     /*allAttractions[0].GetCoordinate().GetLat(),
                         allAttractions[0]
                             .GetCoordinate()
@@ -545,7 +580,7 @@ class HomeScreen extends State<HomeScreenState> {
                     zoom: 15.0,
                   ),
                   layers: [
-                    new TileLayerOptions(
+                    TileLayerOptions(
                       urlTemplate: "https://api.tiles.mapbox.com/v4/"
                           "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
                       additionalOptions: {
@@ -554,7 +589,7 @@ class HomeScreen extends State<HomeScreenState> {
                         'id': 'mapbox.streets',
                       },
                     ),
-                    new MarkerLayerOptions(
+                    MarkerLayerOptions(
                       markers: createMarkers(/*allAttractions*/),
                     ),
                   ],
@@ -580,12 +615,12 @@ class HomeScreen extends State<HomeScreenState> {
     List<Marker> returnList = [];
     for (Attraction item in allAttractions) {
       returnList.add(
-        new Marker(
+        Marker(
           width: 200.0,
           height: 200.0,
-          point: new LatLng(
+          point: LatLng(
               item.GetCoordinate().GetLat(), item.GetCoordinate().GetLong()),
-          builder: (context) => new Container(
+          builder: (context) => Container(
                   child: GestureDetector(
                 onTap: () {
                   showDialog(
@@ -611,15 +646,15 @@ class HomeScreen extends State<HomeScreenState> {
     returnList.add(new Marker(
       width: 200.0,
       height: 200.0,
-      point: new LatLng(userLocation.GetLat(), userLocation.GetLong()),
-      builder: (context) => new Container(
+      point: LatLng(userLocation.GetLat(), userLocation.GetLong()),
+      builder: (context) => Container(
             child: Icon(
               Icons.my_location,
               color: Colors.blue,
             ),
           ),
     ));
-    
+
     return returnList;
   }
 
@@ -629,7 +664,7 @@ class HomeScreen extends State<HomeScreenState> {
 
     position == null
         ? displayMsg('Position not available', context)
-        : userLocation = new Coordinate(position.latitude, position.longitude);
+        : userLocation = Coordinate(position.latitude, position.longitude);
   }
 
   @override
@@ -637,10 +672,10 @@ class HomeScreen extends State<HomeScreenState> {
     if (username == null) {
       return LogInState();
     }
-    
+
     return _homeScreen();
   }
-  
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -649,7 +684,7 @@ class HomeScreen extends State<HomeScreenState> {
 
   Future<Post> post;
   @override
-  void didChangeDependencoes(){
+  void didChangeDependencoes() {
     super.didChangeDependencies();
     DataContainer data = DataProvider.of(context).dataContainer;
   }

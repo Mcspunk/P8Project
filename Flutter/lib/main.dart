@@ -5,6 +5,7 @@ import 'sign_in.dart';
 import 'home_screen.dart';
 import 'data_provider.dart';
 import 'data_container.dart';
+import 'utility.dart';
 
 void main() => runApp(MyApp());
 
@@ -16,9 +17,7 @@ class MyApp extends StatelessWidget {
       dataContainer: DataContainer(),
       child: MaterialApp(
         title: 'Sign in',
-        theme: new ThemeData(
-          primaryColor: Colors.lightBlue,
-        ),
+        theme: utilTheme(),
         home: HomeScreenState(),
         onGenerateRoute: (RouteSettings settings) {
           switch (settings.name) {
