@@ -57,12 +57,15 @@ Future<int> getRecommendations(
           v['name'],
           v['opening_hours'],
           v['img_path'],
-          v['isFoodPlace'] == "False" ? false : true,
-          double.parse(v['rating']),
+          v['isFoodPlace'],
+          //double.parse(v['rating']),
+          v['rating'],
           v['description'],
           v['url'],
-          double.parse(v['lat']),
-          double.parse(v['long']))));
+          v['lat'],
+          v['long'])));
+          //double.parse(v['lat']),
+          //double.parse(v['long']))));
 
       DataContainer data = DataProvider.of(context).dataContainer;
       print("B-recAtt: " + recAttractions.length.toString());

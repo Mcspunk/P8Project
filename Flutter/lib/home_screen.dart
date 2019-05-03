@@ -31,7 +31,7 @@ class RatingDialog extends State<RatingState> {
               padding: EdgeInsets.only(left: 4.0, bottom: 2.0),
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(widget.attraction.GetImgPath()),
+                  image: NetworkImage(widget.attraction.GetImgPath()),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -172,7 +172,9 @@ class HomeScreen extends State<HomeScreenState> {
               new IconButton(
                   icon: const Icon(Icons.history),
                   onPressed: () {
-                    getRecommendations(new Coordinate(0.0,0.0), context);
+                    setState(() {
+                      getRecommendations(new Coordinate(0.0,0.0), context);
+                    });
                   }),
             ],
             
@@ -277,7 +279,7 @@ class HomeScreen extends State<HomeScreenState> {
               padding: EdgeInsets.only(left: 4.0, bottom: 2.0),
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(attraction.GetImgPath()),
+                  image: NetworkImage(attraction.GetImgPath()),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -331,7 +333,7 @@ class HomeScreen extends State<HomeScreenState> {
               padding: EdgeInsets.only(left: 4.0, bottom: 2.0),
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(attraction.GetImgPath()),
+                  image: NetworkImage(attraction.GetImgPath()),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -675,7 +677,7 @@ class HomeScreen extends State<HomeScreenState> {
 
   @override
   Widget build(BuildContext context) {
-    var a = getRecommendations(new Coordinate(0.0, 0.0), context);
+    
     if (username == null) {
       return LogInState();
     }
@@ -686,18 +688,13 @@ class HomeScreen extends State<HomeScreenState> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    DataContainer data = DataProvider.of(context).dataContainer;
-  }
-
-  @override
-  void didChangeDependencoes() {
-    super.didChangeDependencies();
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainer data = DataProvider.of(context).dataContainer;   
   }
 
   @override
   void initState() {
     loadString('currentUser').then(loadUser);
+    var a = getRecommendations(new Coordinate(0.0, 0.0), context);
     super.initState();
   }
 
