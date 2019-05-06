@@ -173,7 +173,11 @@ class HomeScreen extends State<HomeScreenState> {
                   icon: const Icon(Icons.history),
                   onPressed: () {
                     setState(() {
-                      getRecommendations(new Coordinate(0.0,0.0), context);
+                      //getRecommendations(new Coordinate(0.0,0.0), context);
+                      //updatePreferences(context);
+                      //getPreferences(context);
+                      //updatePreferences(context);
+                      displayMsg('Debug mode\nCurrent user: ' + username, context);
                     });
                   }),
             ],
@@ -694,13 +698,14 @@ class HomeScreen extends State<HomeScreenState> {
   @override
   void initState() {
     loadString('currentUser').then(loadUser);
-    var a = getRecommendations(new Coordinate(0.0, 0.0), context);
+    var a = getRecommendations(userLocation, context);
     super.initState();
   }
 
   void loadUser(String userName) {
     setState(() {
       this.username = userName;
+      updateUserLocation();
     });
   }
 }

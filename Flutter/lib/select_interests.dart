@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:test2/data_container.dart';
+import 'package:test2/data_provider.dart';
+import 'utility.dart';
 
 void saveCategoryRatings(
     String key, List<String> categories, List<double> ratings) async {
@@ -19,25 +22,42 @@ void saveRatings(String key, List<double> ratings) async {
   prefs.setStringList(key, stringRatings);
 }
 
-Future<List<String>> getCategories(String key) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getStringList(key);
+Future<List<String>> getCategories(BuildContext context) async {
+  DataContainer data = DataProvider.of(context).dataContainer;
+  var temp = data.getCategoryRatings().keys;
+  List<String> result = [];
+  for (var item in temp) {
+    result.add(item);
+  }  
+  return result;
+
+
+  //SharedPreferences prefs = await SharedPreferences.getInstance();
+  //return prefs.getStringList(key);
 }
 
-Future<List<String>> getRatings(String key) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getStringList(key);
+Future<List<String>> getRatings(BuildContext context) async {  
+  DataContainer data = DataProvider.of(context).dataContainer;
+  var temp = data.getCategoryRatings().values;
+  List<String> result = [];
+  for (var item in temp) {
+    result.add(item.toString());
+  }  
+  return result;
+
+
+  //SharedPreferences prefs = await SharedPreferences.getInstance();
+  //return prefs.getStringList(key);
 }
 
 class SelectInterests extends State<InterestsState> {
-  List<String> _categories = [ 'Park', 'Zoo', 'Museum', 'Casino', 'Indian', '1', '1', '1', '1'
-  ];
-  List<double> _ratings = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  List<String> _categories = []; //'Park', 'Zoo', 'Museum', 'Casino', 'Indian', '1', '1', '1', '1'];
+  List<double> _ratings = [];//0, 0, 0, 0, 0, 0, 0, 0, 0];
 
   @override
   void initState() {
-    getCategories('Categories').then(loadCategories);
-    getRatings('Ratings').then(loadRatings);
+    getCategories(context).then(loadCategories);
+    getRatings(context).then(loadRatings);
     super.initState();
   }
 
@@ -64,6 +84,8 @@ class SelectInterests extends State<InterestsState> {
 
   @override
   Widget build(BuildContext context) {
+    getCategories(context).then(loadCategories);
+    getRatings(context).then(loadRatings);
     return Scaffold(
       appBar: AppBar(
         title: Text('Rate recommendation categories'),
@@ -76,13 +98,15 @@ class SelectInterests extends State<InterestsState> {
             size: 40,
           ),
           onPressed: () {
-            saveCategoryRatings('Categories', this._categories, this._ratings);
+            updatePreferences(context);
+            //saveCategoryRatings('Categories', this._categories, this._ratings);
             Navigator.pop(context);
           }),
     );
   }
 
   Widget _interestList() {
+    DataContainer data = DataProvider.of(context).dataContainer;
     List<Widget> widgetList = new List<Widget>();
     widgetList.add(new ListTile(
       title: Text(
@@ -100,7 +124,7 @@ class SelectInterests extends State<InterestsState> {
             borderColor: Colors.grey,
             onRatingChanged: (value) {
               setState(() {
-                _ratings[i] = value;
+                data.getCategoryRatings()[_categories[i]] = value;
               });
             }),
       ));

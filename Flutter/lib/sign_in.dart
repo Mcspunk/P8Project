@@ -193,6 +193,11 @@ class LogIn extends State<LogInState> {
                     onPressed: () {
                       if (_formKey.currentState.validate()) {
                         //TODO login stuff api makker
+
+
+                        checkLogIn(logInUsernamecontroller.text, logInPasswordcontroller.text, context);
+
+
                       }
                     },
                     child: const Text(
@@ -330,7 +335,7 @@ class LogIn extends State<LogInState> {
                       //TODO vi mangler password felt og ændre streng herunder
                       //checkSignUp(signUpUserNameController.text, 'tbd', context);
                       if (_formKey.currentState.validate()) {
-                        saveString('currentUser', signUpPasswordController.text);
+                        saveString('currentUser', signUpUserNameController.text);
                         Navigator.pushNamedAndRemoveUntil(context, '/', (Route<dynamic> route) => false);
                       }
                     },
