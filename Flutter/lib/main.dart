@@ -9,37 +9,18 @@ import 'notification_helper.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'dart:async';
+import 'location_manager.dart';
 import 'utility.dart';
 
-FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
-
-Future printHello() {
-  final DateTime now = DateTime.now();
-  singlePOINotif(flutterLocalNotificationsPlugin, title: 'Title', body: 'Body');  
-  print("[$now] Hello, world!");
-}
+AndroidAlarmManager aAM = new AndroidAlarmManager();
 
 main() async {
   final int helloAlarmID = 0;
-  var initializationSettingsAndroid = new AndroidInitializationSettings('app_icon');
-  var initializationSettingsIOS = new IOSInitializationSettings(onDidReceiveLocalNotification: onDidRecieveLocationLocation);
-  var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);  
-  flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: onSelectNotification);
-
   await AndroidAlarmManager.initialize();
   runApp(MyApp());
-  await AndroidAlarmManager.periodic(const Duration(minutes: 1), helloAlarmID, printHello);
+  getUserLocationAndGPSPermissionAndInitPushNotif();
+  await AndroidAlarmManager.periodic(const Duration(seconds: 10), helloAlarmID, locationChecker);    
 }
-
-//TODO IOS specific navigation
-  Future onDidRecieveLocationLocation(int id, String title, String body, String payload) {
-     
-  }
-        
-  //Ikke sikker på at denne navigation er korrekt
-  Future onSelectNotification(String payload) {
-    MaterialPageRoute(builder: (context) => HomeScreenState());
-  }
 
 //void main() => runApp(MyApp());
 
