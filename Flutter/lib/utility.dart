@@ -37,6 +37,33 @@ ThemeData utilTheme() {
   );
 }
 
+
+Future<void> giveReview(double rating, DateTime date, String triptype, String attraction, BuildContext context) async {
+  
+  
+  Map months = {1:"January", 2:"Febuary", 3:"March", 4:"April", 5:"May", 6:"June", 7:"July", 8:"August", 9:"September", 10:"October", 11:"November", 12:"December"};
+
+  String _date = months[date.month] + " " + date.year.toString();
+
+
+  var preEncode = {"rating":rating, "date": _date, "triptype": triptype, "attraction":attraction, "username":await loadString("currentUser")};
+  var postEncode = jsonEncode(preEncode);
+  
+  
+  try {
+    var response = await http.post(
+        'http://10.0.2.2:5000/api/update-preferences/',
+        body: postEncode,
+        headers: {"Content-Type": "application/json"});
+
+    if (response.statusCode != 200) {
+      print('Error: ' + response.statusCode.toString());
+    }
+  } catch (e) {
+    displayMsg(e, context);
+  }
+}
+
 Future<void> updatePreferences(BuildContext context) async {
   DataContainer data = DataProvider.of(context).dataContainer;
 
