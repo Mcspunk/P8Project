@@ -457,7 +457,6 @@ class HomeScreen extends State<HomeScreenState> {
                     'Location',
                     style: TextStyle(fontSize: 18.0),
                   ),
-                  color: Colors.lightBlue,
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -475,7 +474,6 @@ class HomeScreen extends State<HomeScreenState> {
                     'Website',
                     style: TextStyle(fontSize: 18.0),
                   ),
-                  color: Colors.lightBlue,
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -494,7 +492,6 @@ class HomeScreen extends State<HomeScreenState> {
                             ));
                     Navigator.of(context).push(route);
                   },
-                  color: Colors.lightBlue,
                 ),
               ],
             )

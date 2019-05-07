@@ -26,6 +26,16 @@ main() async {
 
 class MyApp extends StatelessWidget {
   bool loggedIn = false;
+
+  static Widget determineHome(){
+    if (loadString('currentUser') == null){
+      return LogInState();
+    }
+    else{
+      return HomeScreenState();
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return DataProvider(
@@ -33,7 +43,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Sign in',
         theme: utilTheme(),
-        home: HomeScreenState(),
+        home: determineHome(),
         onGenerateRoute: (RouteSettings settings) {
           switch (settings.name) {
             case '/':

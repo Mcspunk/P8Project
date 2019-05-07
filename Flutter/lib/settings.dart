@@ -181,9 +181,7 @@ class Settings extends State<SettingsState> {
                         child: const Text('Delete'),
                         onPressed: () {
                           clearSharedPrefs();
-                          Navigator.of(context).pop();
-                          
-                          //Her skal vi måske gå til loginscreen TODO
+                          Navigator.pushNamedAndRemoveUntil(context, '/LogIn', (Route<dynamic> route) => false);
                         },
                       ),
                       FlatButton(
@@ -211,8 +209,7 @@ class Settings extends State<SettingsState> {
                         child: const Text('Log out'),
                         onPressed: () {
                           deleteString('currentUser');
-                          Navigator.of(context).pop();
-                          
+                          Navigator.pushNamedAndRemoveUntil(context, '/LogIn', (Route<dynamic> route) => false);
                           //Her skal vi måske gå til loginscreen TODO
                         },
                       ),

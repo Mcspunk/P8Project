@@ -337,6 +337,7 @@ class LogIn extends State<LogInState> {
                       if (_formKey.currentState.validate()) {
                         saveString('currentUser', signUpUserNameController.text);
                         Navigator.pushNamedAndRemoveUntil(context, '/', (Route<dynamic> route) => false);
+                        Navigator.pushNamed(context, '/select_interests');
                       }
                     },
                     child: const Text(
