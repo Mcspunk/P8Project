@@ -16,16 +16,26 @@ AndroidAlarmManager aAM = new AndroidAlarmManager();
 
 main() async {
   final int helloAlarmID = 0;
-  await AndroidAlarmManager.initialize();
+  //await AndroidAlarmManager.initialize();
   runApp(MyApp());
   getUserLocationAndGPSPermissionAndInitPushNotif();
-  await AndroidAlarmManager.periodic(const Duration(seconds: 10), helloAlarmID, locationChecker);    
+  //await AndroidAlarmManager.periodic(const Duration(seconds: 10), helloAlarmID, locationChecker);    
 }
 
 //void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   bool loggedIn = false;
+
+  static Widget determineHome(){
+    if (loadString('currentUser') == null){
+      return LogInState();
+    }
+    else{
+      return HomeScreenState();
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return DataProvider(
@@ -33,7 +43,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Sign in',
         theme: utilTheme(),
-        home: HomeScreenState(),
+        home: determineHome(),
         onGenerateRoute: (RouteSettings settings) {
           switch (settings.name) {
             case '/':
