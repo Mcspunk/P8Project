@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'select_interests.dart';
 import 'settings.dart';
 import 'sign_in.dart';
@@ -16,18 +17,24 @@ AndroidAlarmManager aAM = new AndroidAlarmManager();
 
 main() async {
   final int helloAlarmID = 0;
-  await AndroidAlarmManager.initialize();
+  //await AndroidAlarmManager.initialize();
   runApp(MyApp());
   getUserLocationAndGPSPermissionAndInitPushNotif();
-  await AndroidAlarmManager.periodic(const Duration(seconds: 10), helloAlarmID, locationChecker);    
+  //await AndroidAlarmManager.periodic(const Duration(seconds: 60), helloAlarmID, locationChecker);
 }
-
 //void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
+void getrecinit(BuildContext context) async {
+  var _geolocator = Geolocator();
+  Position position = await _geolocator.getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
+
+  getRecommendations(new Coordinate(position.latitude, position.longitude), context);
+}
+
+class MyApp extends StatelessWidget {  
   bool loggedIn = false;
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {    
     return DataProvider(
       dataContainer: DataContainer(),
       child: MaterialApp(
@@ -37,6 +44,7 @@ class MyApp extends StatelessWidget {
         onGenerateRoute: (RouteSettings settings) {
           switch (settings.name) {
             case '/':
+              getrecinit(context);
               return MaterialPageRoute(builder: (context) => HomeScreenState());
               break;
             case '/LogIn':

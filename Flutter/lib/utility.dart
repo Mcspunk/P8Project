@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
+import 'dart:math';
 
 ThemeData utilTheme() {
   return ThemeData(
@@ -92,7 +93,64 @@ Future<void> getPreferences(BuildContext context) async {
   }
 }
 
-Future<int> getRecommendations(
+Future<int> getRecCount(Coordinate coordinate) async {
+  var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong()};
+  var jsonedString = jsonEncode(jsonstring);
+  try {
+    var response = await http.post(
+        'http://10.0.2.2:5000/api/request-recommendations/',
+        body: jsonedString,
+        headers: {"Content-Type": "application/json"});
+    var attracts = response.headers['attractions'];
+    var decoded = jsonDecode(attracts);
+    var t = decoded as List;
+    return t.length;
+  }
+  catch(e){
+    print(e);
+  }
+  return 0;
+}
+
+Future<void> getAllAttractions(Coordinate coordinate, BuildContext context) async{
+    var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong()};
+  var jsonedString = jsonEncode(jsonstring);
+  try {
+    var response = await http.post(
+        'http://10.0.2.2:5000/api/request-all-recommendations/',
+        body: jsonedString,
+        headers: {"Content-Type": "application/json"});
+    if (response.statusCode == 200) {
+      var attracts = response.headers['attractions'];
+      var decoded = jsonDecode(attracts);
+      var t = decoded as List;
+      List<Attraction> recAttractions = [];
+      for (var i = 0; i < t.length; i++) {
+        recAttractions.add(new Attraction(
+            t[i]['name'],
+            t[i]['opening_hours'],
+            t[i]['img_path'],
+            !t[i]['isFoodPlace'],
+            t[i]['rating'],
+            t[i]['description'],
+            t[i]['url'],
+            t[i]['lat'],
+            t[i]['long']));
+      }
+
+      DataContainer data = DataProvider.of(context).dataContainer;
+      if (recAttractions.length != 0) {
+        data.setAllNearbyAttractions(recAttractions);
+      }
+    } else {
+      displayMsg('No connection to server.', context);
+    }
+  } catch (e) {
+    displayMsg(e.toString(), context);
+  }
+}
+
+Future<void> getRecommendations(
     Coordinate coordinate, BuildContext context) async {
   var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong()};
   var jsonedString = jsonEncode(jsonstring);
@@ -120,15 +178,10 @@ Future<int> getRecommendations(
       }
 
       DataContainer data = DataProvider.of(context).dataContainer;
-      print("B-recAtt: " + recAttractions.length.toString());
-      print("B-dataRac: " + data.getAttractions().length.toString());
       if (recAttractions.length != 0) {
         data.setAttractions(recAttractions);
       }
-      print("A-recAtt: " + recAttractions.length.toString());
-      print("A-dataRac: " + data.getAttractions().length.toString());
 
-      return recAttractions.length;
     } else if (response.statusCode == 208) {
       displayMsg('Username already taken.', context);
     } else {
@@ -137,8 +190,6 @@ Future<int> getRecommendations(
   } catch (e) {
     displayMsg(e.toString(), context);
   }
-
-  return 0;
 }
 
 Future<void> checkLogIn(
@@ -235,6 +286,24 @@ Coordinate findMiddlePoint(Coordinate one, Coordinate two) {
   return new Coordinate(lat, long);
 }
 
+double distanceBetweenCoordinates(Coordinate c1, Coordinate c2){
+  var r = 6371000;
+  double phi_1 = c1.GetLat() * (pi / 180);
+  double phi_2 = c2.GetLat() * (pi / 180);
+  double deltaPhi = (c2.GetLat() - c1.GetLat()) *(pi / 180);
+  double deltaLambda = (c2.GetLong() - c1.GetLong()) * (pi / 180);
+
+  var a = sin(deltaPhi/2) * sin(deltaPhi/2) + cos(phi_1) * cos(phi_2) * sin(deltaLambda/2) *sin(deltaLambda/2);
+  var c = 2 * atan2(sqrt(a), sqrt(1-a));
+
+  return r * c;
+}
+
+double zoomLevel(double distance){
+  var dist = (6371000 / distance);
+  return log(dist) * 1.7;
+}
+
 class Coordinate {
   double _lat;
   double _long;
@@ -328,4 +397,10 @@ class Attraction {
   Coordinate GetCoordinate() {
     return _coordinate;
   }
+
+  @override
+  bool operator ==(other){
+    return (other is Attraction && this._name == other.GetName());
+  }
+
 }
