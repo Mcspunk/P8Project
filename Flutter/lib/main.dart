@@ -12,14 +12,14 @@ import 'dart:async';
 import 'location_manager.dart';
 import 'utility.dart';
 
-AndroidAlarmManager aAM = new AndroidAlarmManager();
+//AndroidAlarmManager aAM = new AndroidAlarmManager();
 
 main() async {
   final int helloAlarmID = 0;
-  await AndroidAlarmManager.initialize();
+  //await AndroidAlarmManager.initialize();
   runApp(MyApp());
   getUserLocationAndGPSPermissionAndInitPushNotif();
-  await AndroidAlarmManager.periodic(const Duration(seconds: 10), helloAlarmID, locationChecker);    
+  //await AndroidAlarmManager.periodic(const Duration(seconds: 10), helloAlarmID, locationChecker);    
 }
 
 //void main() => runApp(MyApp());
