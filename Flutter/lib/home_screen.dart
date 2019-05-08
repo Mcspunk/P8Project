@@ -169,6 +169,7 @@ class HomeScreen extends State<HomeScreenState> {
                   onPressed: () {
                     Navigator.pushNamed(context, '/settings');
                   }),
+              /*
               new IconButton(
                   icon: const Icon(Icons.history),
                   onPressed: () {
@@ -177,11 +178,11 @@ class HomeScreen extends State<HomeScreenState> {
                       //updatePreferences(context);
                       //getPreferences(context);
                       //updatePreferences(context);
-                      displayMsg('Debug mode\nCurrent user: ' + username, context);
+                      displayMsg(zoomLevel(distanceBetweenCoordinates(data.getAttractions()[0].GetCoordinate(), userLocation)).toStringAsFixed(2) , context);
                     });
                   }),
+              */
             ],
-            
             bottom: TabBar(tabs: [
               Tab(
                 icon: Icon(Icons.home),
@@ -227,10 +228,11 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _attractionView() {
-    List<Attraction> data = DataProvider.of(context).dataContainer.getAttractions();
+    List<Attraction> data =
+        DataProvider.of(context).dataContainer.getAttractions();
     List<Attraction> attractions = [];
     for (var attraction in data) {
-      if (!attraction.GetIsFoodPlace()){
+      if (!attraction.GetIsFoodPlace()) {
         attractions.add(attraction);
       }
     }
@@ -243,10 +245,11 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _restaurantView() {
-    List<Attraction> data = DataProvider.of(context).dataContainer.getAttractions();
+    List<Attraction> data =
+        DataProvider.of(context).dataContainer.getAttractions();
     List<Attraction> restaurants = [];
     for (var attraction in data) {
-      if (attraction.GetIsFoodPlace()){
+      if (attraction.GetIsFoodPlace()) {
         restaurants.add(attraction);
       }
     }
@@ -439,8 +442,6 @@ class HomeScreen extends State<HomeScreenState> {
           children: <Widget>[
             buildRecTile(attraction),
             Divider(),
-            Text(attraction.GetDescription()),
-            Divider(),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -505,11 +506,8 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _mapView(Attraction attraction) {
-    Coordinate tempUserCoordinate = Coordinate(
-        attraction.GetCoordinate().GetLat() + 0.01,
-        attraction.GetCoordinate().GetLong() + 0.01);
     Coordinate tempCoordinate =
-        findMiddlePoint(attraction.GetCoordinate(), tempUserCoordinate);
+        findMiddlePoint(attraction.GetCoordinate(), userLocation);
 
     attraction.GetCoordinate() == null
         ? displayMsg('Location for attraction is unknown', context)
@@ -524,7 +522,7 @@ class HomeScreen extends State<HomeScreenState> {
                   options: MapOptions(
                     center: LatLng(
                         tempCoordinate.GetLat(), tempCoordinate.GetLong()),
-                    zoom: 15.0,
+                    zoom: zoomLevel(distanceBetweenCoordinates(attraction.GetCoordinate(), userLocation)).toDouble(),
                   ),
                   layers: [
                     TileLayerOptions(
@@ -553,8 +551,8 @@ class HomeScreen extends State<HomeScreenState> {
                         Marker(
                           width: 200.0,
                           height: 200.0,
-                          point: LatLng(tempUserCoordinate.GetLat(),
-                              tempUserCoordinate.GetLong()),
+                          point: LatLng(
+                              userLocation.GetLat(), userLocation.GetLong()),
                           builder: (context) => Container(
                                 child: Icon(
                                   Icons.my_location,
@@ -571,7 +569,15 @@ class HomeScreen extends State<HomeScreenState> {
           }));
   }
 
+  //List<Marker> markers;
+
+
   Widget _fullMapView(List<Attraction> allAttractions) {
+    bool isSwitched = false;
+    DataContainer data = DataProvider.of(context).dataContainer;
+		MapController mapController = MapController();
+		List<Marker> markers = createMarkers(isSwitched);
+
     allAttractions.length == 0 || allAttractions == null
         ? displayMsg('No attractions nearby', context)
         : Navigator.of(context)
@@ -580,49 +586,68 @@ class HomeScreen extends State<HomeScreenState> {
               appBar: AppBar(
                 title: Text('Nearby attractions'),
               ),
-              body: Container(
-                child: FlutterMap(
-                  options: MapOptions(
-                    center:
-                        LatLng(userLocation.GetLat(), userLocation.GetLong()),
-                    /*allAttractions[0].GetCoordinate().GetLat(),
-                        allAttractions[0]
-                            .GetCoordinate()
-                            .GetLong()), */ //Det her skal være userens placering
-                    zoom: 15.0,
-                  ),
-                  layers: [
-                    TileLayerOptions(
-                      urlTemplate: "https://api.tiles.mapbox.com/v4/"
-                          "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
-                      additionalOptions: {
-                        'accessToken':
-                            'pk.eyJ1IjoibTQ5OTEiLCJhIjoiY2p1c2QzNnltMGlqcjQzcDVoa3Z1dWk4cSJ9.OI1Jbas1lQYDVp0-W5Xs7g',
-                        'id': 'mapbox.streets',
-                      },
+              body: Stack(
+                children: <Widget>[
+                  Container(
+                    child: FlutterMap(
+											mapController: mapController,
+                      options: MapOptions(
+                        center: LatLng(
+                            userLocation.GetLat(), userLocation.GetLong()),
+                        zoom: 15.0,
+                      ),
+                      layers: [
+                        TileLayerOptions(
+                          urlTemplate: "https://api.tiles.mapbox.com/v4/"
+                              "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
+                          additionalOptions: {
+                            'accessToken':
+                                'pk.eyJ1IjoibTQ5OTEiLCJhIjoiY2p1c2QzNnltMGlqcjQzcDVoa3Z1dWk4cSJ9.OI1Jbas1lQYDVp0-W5Xs7g',
+                            'id': 'mapbox.streets',
+                          },
+                        ),
+                        MarkerLayerOptions(
+                            markers: markers,  //data.getMarkers() //createMarkers(/*allAttractions*/),
+                            ),
+                      ],
                     ),
-                    MarkerLayerOptions(
-                      markers: createMarkers(/*allAttractions*/),
+									),/*
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      color: Colors.grey[850],
+                      child: SwitchListTile(
+                        title: Text('Show only recommended attractions'),
+                        secondary: Icon(Icons.loupe),
+                        value: isSwitched,
+                        onChanged: (value) {
+                          setState(() {
+                            isSwitched = !isSwitched;
+														//Navigator.pop(context);
+														//Navigator.of(context).push(new MaterialPageRoute<void>(builder: (BuildContext context) {return _fullfullMapView(allAttractions);}));
+
+														/*
+                            print(isSwitched);
+                            print(markers.length);
+                            markers =  createMarkers(isSwitched);
+                            print(markers.length);
+														mapController.move(mapController.center, mapController.zoom+0.001);
+														*/
+                          });
+                        },
+                      ),
                     ),
-                  ],
-                ),
+                  )*/
+                ],
               ),
             );
           }));
   }
 
-  List<Marker> createMarkers(/*List<Attraction> allAttractions*/) {
-    ////////////////////////////////
+  List<Marker> createMarkers(bool recOnly /*List<Attraction> allAttractions*/) {
     DataContainer data = DataProvider.of(context).dataContainer;
-    List<Attraction> allAttractions = data.getAttractions();
-
-    ////////////////////////////////
-
-    final deviceSize = MediaQuery.of(context).size;
-    final dWidth = deviceSize.width;
-    final dWidth10 = dWidth * 0.1;
-
-    final dHeight = deviceSize.height;
+    List<Attraction> allAttractions =
+        recOnly ? data.getAttractions() : data.getAllNearbyAttractions();
 
     List<Marker> returnList = [];
     for (Attraction item in allAttractions) {
@@ -667,6 +692,7 @@ class HomeScreen extends State<HomeScreenState> {
           ),
     ));
 
+    //data.setMarkers(returnList);
     return returnList;
   }
 
@@ -681,25 +707,28 @@ class HomeScreen extends State<HomeScreenState> {
 
   @override
   Widget build(BuildContext context) {
-    
+    getRecommendations(userLocation, context);		
+    getAllAttractions(userLocation, context);
     if (username == null) {
       return LogInState();
     }
-
     return _homeScreen();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    DataContainer data = DataProvider.of(context).dataContainer;   
+    DataContainer data = DataProvider.of(context).dataContainer;
   }
 
   @override
   void initState() {
-    loadString('currentUser').then(loadUser);
-    var a = getRecommendations(userLocation, context);
     super.initState();
+    loadString('currentUser').then(loadUser);
+    new Future.delayed(Duration.zero,(){
+      getRecommendations(userLocation, context);
+      getAllAttractions(userLocation, context);    
+    });
   }
 
   void loadUser(String userName) {
@@ -714,5 +743,3 @@ class HomeScreenState extends StatefulWidget {
   @override
   HomeScreen createState() => HomeScreen();
 }
-
-//Lav map over alt der er i nærheden
