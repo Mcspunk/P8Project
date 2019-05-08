@@ -11,8 +11,8 @@ import 'dart:io';
 
 class RatingDialog extends State<RatingState> {
   //https://www.youtube.com/watch?v=MsycCv5r2Wo
-  double attractionRating = 0;
-  String tripType = 'Solo';
+  double attractionRating = loadString('dist') ?? 0;
+  String tripType = loadString('tripType') ??  'Solo';
   DateTime selectedTime = DateTime.now();
 
   @override
@@ -110,6 +110,8 @@ class RatingDialog extends State<RatingState> {
             title: RaisedButton(
               child: Text('Submit review'),
               onPressed: () {
+                giveReview(attractionRating, selectedTime, tripType, widget.attraction.GetName(), context);
+                /*
                 saveString(widget.attraction.GetName() + '%Rating',
                     attractionRating.toString());
                 saveString(
@@ -118,6 +120,7 @@ class RatingDialog extends State<RatingState> {
                         '/' +
                         selectedTime.month.toString());
                 saveString(widget.attraction.GetName() + '%TripType', tripType);
+                */
                 Navigator.pop(context);
               },
             ),
@@ -507,7 +510,7 @@ class HomeScreen extends State<HomeScreenState> {
         findMiddlePoint(attraction.GetCoordinate(), userLocation);
 
     attraction.GetCoordinate() == null
-        ? displayMsg('Location for attraction is unknown', context)
+        ? displayMsg('The location for this attraction is not available', context)
         : Navigator.of(context)
             .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
             return Scaffold(
@@ -570,7 +573,7 @@ class HomeScreen extends State<HomeScreenState> {
 
 
   Widget _fullMapView(List<Attraction> allAttractions) {
-    bool isSwitched = false;
+    bool isSwitched = true;
     DataContainer data = DataProvider.of(context).dataContainer;
 		MapController mapController = MapController();
 		List<Marker> markers = createMarkers(isSwitched);
@@ -701,11 +704,34 @@ class HomeScreen extends State<HomeScreenState> {
         ? displayMsg('Position not available', context)
         : userLocation = Coordinate(position.latitude, position.longitude);
   }
+  
+DateTime lastupdatedRec = DateTime.now();
+DateTime lastupdatedAll = DateTime.now();
 
   @override
-  Widget build(BuildContext context) {
-    getRecommendations(userLocation, context);		
-    getAllAttractions(userLocation, context);
+  Widget build(BuildContext context) {    
+    DataContainer data = DataProvider.of(context).dataContainer;
+    //print("rec: " + data.getAttractions().length.toString() + " | all: " + data.getAllNearbyAttractions().length.toString());
+    
+    DateTime currentTime = DateTime.now();
+    var diffRec = currentTime.minute - lastupdatedRec.minute;
+    if (diffRec < 0){
+      diffRec += 60;
+    }
+    var diffAll = currentTime.minute - lastupdatedAll.minute;
+    if (diffAll < 0){
+      diffAll += 60;
+    }
+
+    if(data.getAttractions().length == 0 || diffRec > 5){
+      getRecommendations(userLocation, data.getDist(), context);	
+      lastupdatedRec = DateTime.now();
+    }
+    if(data.getAllNearbyAttractions().length == 0 || diffAll > 5 ){
+      getAllAttractions(userLocation, data.getDist(), context);
+      lastupdatedAll = DateTime.now();
+    }
+    
     if (username == null) {
       return LogInState();
     }
@@ -723,8 +749,8 @@ class HomeScreen extends State<HomeScreenState> {
     super.initState();
     loadString('currentUser').then(loadUser);
     new Future.delayed(Duration.zero,(){
-      getRecommendations(userLocation, context);
-      getAllAttractions(userLocation, context);    
+      getRecommendations(userLocation, 1, context);
+      getAllAttractions(userLocation, 1, context);    
     });
   }
 

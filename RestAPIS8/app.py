@@ -4,6 +4,7 @@ from flask_cors import CORS
 from flask import request, Response
 import psycopg2 as psy
 import datetime
+import math
 
 host = "jd-database.ccwvupidct47.eu-west-3.rds.amazonaws.com"
 database = "jd_database"
@@ -65,7 +66,7 @@ def update_preferences():
 
 
 
-@app.route('/api/give-review', methods=['POST'])
+@app.route('/api/give-review/', methods=['POST'])
 def give_review():
     json_data = request.get_json(force=True)
 
@@ -78,16 +79,21 @@ def give_review():
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
 
-    maxIDSQL = "SELECT MAX(id) FROM justdiscover.review;"
-    attracIDSQL = "SELECT id FROM justdiscover.poi WHERE name = " + attraction + ";"
-    userIDSQL = "SELECT id FROM justdiscover.users WHERE user_name = "+ username + ";"
+    maxIDSQL = "SELECT MAX(id) FROM justdiscover.reviews;"
+    attracIDSQL = "SELECT id FROM justdiscover.poi WHERE name = '" + attraction + "';"
+    userIDSQL = "SELECT id FROM justdiscover.users WHERE user_name = '"+ username + "';"
 
+    TreviewID = cursor.execute(maxIDSQL)
+    reviewID = cursor.fetchone()
+    rID = reviewID[0]
+    rID = rID + 1
+    TpoiID = cursor.execute(attracIDSQL)
+    poiID = cursor.fetchone()[0]
+    TuserID = cursor.execute(userIDSQL)
+    userID = cursor.fetchone()[0]
 
-    reviewID = cursor.execute(maxIDSQL) + 1
-    attractionID = cursor.execute(attracIDSQL)
-    userID = cursor.execute(userIDSQL)
-
-
+    insertSQL = "INSERT INTO justdiscover.reviews VALUES " + str(rID) + ", " + str(rating) + ", " + date + ", " + triptype + ", " + userID + ", " + str(poiID) + ";"
+    #cursor.execute(insertSQL)
 
 
 
@@ -105,16 +111,42 @@ def get_all_recommendations():
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
 
+    lat = json_data['lat']
+    long = json_data['long']
+    dist = json_data['dist']
+
+    latDegree = math.radians(lat)
+    longDegree = math.radians(long)
+    kmAtEq = 69.172*1.609
+    longdist = (1/1.38458)*((((dist/(((lat*math.pi)/180)*kmAtEq))/kmAtEq)*180)/math.pi)
+    latdist = dist/kmAtEq
+
+
+    maxlong = long + longdist
+    minlong = long - longdist
+    maxlat = lat + latdist
+    minlat = lat - latdist
 
 
     #Det her skal være alle dem inden for en hvis radius
-    recs = [1, 3, 5, 2, 22, 10, 12, 32, 99, 23, 41]
+    recs = []     #1, 3, 5, 2, 22, 10, 12, 32, 99, 23, 41]
     attracs = []
 
-    for r in recs:
-        sqlstring = "SELECT * FROM justdiscover.poi WHERE id = " + str(r) + ";"
-        cursor.execute(sqlstring)
-        attraction = cursor.fetchone()
+    sqlstring = "SELECT * FROM justdiscover.poi WHERE lat > "+ str(minlat) +" AND lat < " + str(maxlat) +" AND lng > " + str(minlong) +" AND lng < " + str(maxlong) + ";"
+
+    cursor.execute(sqlstring)
+
+    attraction = cursor.fetchone
+    counter = 0
+
+    #Linjen her under skal fjernes når db er good to go
+    return Response(headers={"attractions": attracs}, content_type='text/json', status=200)
+
+
+    while(attraction != None and counter < 20):
+        #sqlstring = "SELECT * FROM justdiscover.poi WHERE id = " + str(r) + ";"
+        #cursor.execute(sqlstring)
+        #attraction = cursor.fetchone()
         tempAttraction = {"name": attraction[9],
                           "opening_hours": attraction[4],
                           "img_path": attraction[8],
@@ -125,17 +157,8 @@ def get_all_recommendations():
                           "lat": float(attraction[1]),
                           "long": float(attraction[2])}
         attracs.append(tempAttraction)
-
-    tempAttraction = {"name": "test",
-                      "opening_hours": "test",
-                      "img_path": "test",
-                      "description": "test",
-                      "rating": float(2),
-                      "isFoodPlace": True,
-                      "url": "test",  # Skal ikke være det her....
-                      "lat": float(0.001),
-                      "long": float(-0.001)}
-    attracs.append(tempAttraction)
+        cursor.fetchone
+        counter += 1
 
     attracs = json.dumps(attracs)
 
@@ -153,7 +176,7 @@ def get_recommendations():
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
 
-
+    dist = json_data['dist']
 
     #Kald recommendation metoden her sådan at den liste der bliver returneret bliver sat til at være lig recs
     recs = [1, 3, 5, 2, 22, 10]

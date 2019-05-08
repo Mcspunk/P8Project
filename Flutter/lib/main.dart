@@ -28,7 +28,7 @@ void getrecinit(BuildContext context) async {
   var _geolocator = Geolocator();
   Position position = await _geolocator.getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
 
-  getRecommendations(new Coordinate(position.latitude, position.longitude), context);
+  getRecommendations(new Coordinate(position.latitude, position.longitude), 1, context);
 }
 
 class MyApp extends StatelessWidget {  

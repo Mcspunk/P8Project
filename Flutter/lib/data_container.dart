@@ -8,6 +8,8 @@ class DataContainer {
   List<Attraction> _favourites = [];
   List<Attraction> _allNearbyAttractions = [];
   List<Marker> _markers = [];
+  int _dist = 1;
+  String _triptype = 'Solo';
   Map _categoryRatings;
 
 
@@ -33,6 +35,12 @@ class DataContainer {
     _markers = markers;
   }
 
+  int getDist() => _dist;
+
+  void setDist(distance){
+    _dist = distance;
+  }
+
   List<Attraction> getAllNearbyAttractions() => _allNearbyAttractions;
 
   void setAllNearbyAttractions(nearbyAttractions){
@@ -41,4 +49,9 @@ class DataContainer {
 
   Map getCategoryRatings() => _categoryRatings;
 
+  String getTripType() => _triptype;
+
+  void setTripType(tripType){
+    _triptype = tripType;
+  }
 }

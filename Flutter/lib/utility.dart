@@ -37,7 +37,6 @@ ThemeData utilTheme() {
   );
 }
 
-
 Future<void> giveReview(double rating, DateTime date, String triptype, String attraction, BuildContext context) async {
   
   
@@ -52,7 +51,7 @@ Future<void> giveReview(double rating, DateTime date, String triptype, String at
   
   try {
     var response = await http.post(
-        'http://10.0.2.2:5000/api/update-preferences/',
+        'http://10.0.2.2:5000/api/give-review/',
         body: postEncode,
         headers: {"Content-Type": "application/json"});
 
@@ -60,7 +59,7 @@ Future<void> giveReview(double rating, DateTime date, String triptype, String at
       print('Error: ' + response.statusCode.toString());
     }
   } catch (e) {
-    displayMsg(e, context);
+    print(e);
   }
 }
 
@@ -92,7 +91,7 @@ Future<void> updatePreferences(BuildContext context) async {
       displayMsg('Error: ' + response.statusCode.toString(), context);
     }
   } catch (e) {
-    displayMsg(e, context);
+    print(e);
   }
 }
 
@@ -116,12 +115,12 @@ Future<void> getPreferences(BuildContext context) async {
     data.getCategoryRatings()['pref_5'] = prefspost['pref_5'];
     data.getCategoryRatings()['pref_6'] = prefspost['pref_6'];
   } catch (e) {
-    displayMsg(e, context);
+    print(e);
   }
 }
 
 Future<int> getRecCount(Coordinate coordinate) async {
-  var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong()};
+  var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong(), "distance":await loadString("dist")};
   var jsonedString = jsonEncode(jsonstring);
   try {
     var response = await http.post(
@@ -139,8 +138,8 @@ Future<int> getRecCount(Coordinate coordinate) async {
   return 0;
 }
 
-Future<void> getAllAttractions(Coordinate coordinate, BuildContext context) async{
-    var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong()};
+Future<void> getAllAttractions(Coordinate coordinate, int dist, BuildContext context) async{
+    var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong(), "dist":dist ?? 1};
   var jsonedString = jsonEncode(jsonstring);
   try {
     var response = await http.post(
@@ -149,7 +148,7 @@ Future<void> getAllAttractions(Coordinate coordinate, BuildContext context) asyn
         headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
       var attracts = response.headers['attractions'];
-      var decoded = jsonDecode(attracts);
+      var decoded = attracts == null ? [] : jsonDecode(attracts);
       var t = decoded as List;
       List<Attraction> recAttractions = [];
       for (var i = 0; i < t.length; i++) {
@@ -173,13 +172,13 @@ Future<void> getAllAttractions(Coordinate coordinate, BuildContext context) asyn
       displayMsg('No connection to server.', context);
     }
   } catch (e) {
-    displayMsg(e.toString(), context);
+    print(e);
   }
 }
 
 Future<void> getRecommendations(
-    Coordinate coordinate, BuildContext context) async {
-  var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong()};
+    Coordinate coordinate, int dist, BuildContext context) async {
+  var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong(), "dist":dist ?? 1};
   var jsonedString = jsonEncode(jsonstring);
   try {
     var response = await http.post(
@@ -188,7 +187,7 @@ Future<void> getRecommendations(
         headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
       var attracts = response.headers['attractions'];
-      var decoded = jsonDecode(attracts);
+      var decoded = attracts == null ? [] : jsonDecode(attracts);
       var t = decoded as List;
       List<Attraction> recAttractions = [];
       for (var i = 0; i < t.length; i++) {
@@ -208,14 +207,11 @@ Future<void> getRecommendations(
       if (recAttractions.length != 0) {
         data.setAttractions(recAttractions);
       }
-
-    } else if (response.statusCode == 208) {
-      displayMsg('Username already taken.', context);
     } else {
       displayMsg('No connection to server.', context);
     }
   } catch (e) {
-    displayMsg(e.toString(), context);
+    print(e);
   }
 }
 
@@ -227,7 +223,7 @@ Future<void> checkLogIn(
     var response = await http.post('http://10.0.2.2:5000/api/login/',
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
-      saveString('currentUser', username);
+      saveString('currentUser', username.toString());
       getPreferences(context);
       Navigator.pushNamed(context, '/');
     } else if (response.statusCode == 204) {
@@ -238,7 +234,7 @@ Future<void> checkLogIn(
       displayMsg('No connection to server.', context);
     }
   } catch (e) {
-    displayMsg(e.toString(), context);
+    print(e);
   }
 }
 
@@ -250,7 +246,7 @@ Future<void> checkSignUp(
     var response = await http.post('http://10.0.2.2:5000/api/create-user/',
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
-      saveString('currentUser', username);
+      saveString('currentUser', username.toString());
       Navigator.pushNamed(context, '/select_interests');
     } else if (response.statusCode == 208) {
       displayMsg('Username already taken.', context);
@@ -258,7 +254,7 @@ Future<void> checkSignUp(
       displayMsg('No connection to server.', context);
     }
   } catch (e) {
-    displayMsg(e.toString(), context);
+    print(e);
   }
 }
 
@@ -296,7 +292,7 @@ void launchWebsite(String url, var context) async {
   if (await canLaunch(url)) {
     await launch(url);
   } else {
-    displayMsg('Could not launch $url', context);
+    displayMsg('Could not connect to $url', context);
   }
 }
 
