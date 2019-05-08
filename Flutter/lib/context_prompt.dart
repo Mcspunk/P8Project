@@ -1,15 +1,7 @@
 import 'package:flutter/material.dart';
-import 'select_interests.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:async';
-import 'data_provider.dart';
-import 'data_container.dart';
 import 'utility.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void clearSharedPrefs() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  prefs.clear();
-}
 
 void saveDistance(String key, int value) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -31,8 +23,14 @@ Future<String> getTripType(String key) async {
   return prefs.getString(key);
 }
 
-class Settings extends State<SettingsState> {
-  int _n = 0;
+class PromptContextState extends StatefulWidget {
+  @override
+  PromptContext createState() => PromptContext();
+}
+
+class PromptContext extends State<PromptContextState>{
+  
+   int _n = 0;
   String dropdownValue = 'Solo';
 
   @override
@@ -54,37 +52,16 @@ class Settings extends State<SettingsState> {
       this._n = distance ?? 0;
     });
   }
-/*
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    DataContainer data = DataProvider.of(context).dataContainer;
-  }
-*/
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            Text('Settings  '),
-            Icon(Icons.settings),
-          ],
-        )
-        
-      ),
-      body: _customSettings(),
-      //primary: false,
-    );
-  }
 
-  Widget _customSettings() {
+  @override Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
-    return SizedBox(
-      width: width,
-      child: ListView(
+    return Scaffold(
+      appBar: AppBar(title: Text('Initial information'),),
+      body: ListView(
         children: <Widget>[
+          ListTile(
+            title: Text('Enter your context. This can also be changed later in settings.'),
+          ),
           Divider(),
           ListTile(
             title: Container(
@@ -157,89 +134,22 @@ class Settings extends State<SettingsState> {
           ),
           Divider(),
           ListTile(
-            title: Text('Change your category ratings'),
-            trailing: Icon(Icons.arrow_right),
-            onTap: () {
-              saveDistance('dist', _n);
-              saveTripType('tripType', dropdownValue);
-              Navigator.pushNamed(context, '/select_interests');
-            },
-          ),
-          Divider(),
-          ListTile(
             title: MaterialButton(
               color: Theme.of(context).accentColor,
-              child: Text('Save settings'),
+              child: Text('Continue'),
               onPressed: () {
                 saveDistance('dist', _n);
                 saveTripType('tripType', dropdownValue);
+                Navigator.pushNamedAndRemoveUntil(context, '/', (Route<dynamic> route) => false);
+                Navigator.pushNamed(context, '/select_interests');
               },
             ),
-          ),
-          Divider(),
-          ListTile(
-            title: Text('Delete all data'),
-            trailing: Icon(Icons.warning),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text('Delete app data?'),
-                    content: Text('This will remove all data from your device such as rating information, favorite places, login information etc.'),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: const Text('Delete'),
-                        onPressed: () {
-                          clearSharedPrefs();
-                          Navigator.pushNamedAndRemoveUntil(context, '/LogIn', (Route<dynamic> route) => false);
-                        },
-                      ),
-                      FlatButton(
-                        child: const Text('Cancel'),
-                        onPressed: (){Navigator.of(context).pop();},
-                      ),
-                    ],
-                  );
-                }
-              );
-            },
-          ),
-          Divider(),
-          ListTile(
-            title: Text('Log out'),
-            trailing: Icon(Icons.exit_to_app),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text('Really log out?'),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: const Text('Log out'),
-                        onPressed: () {
-                          deleteString('currentUser');
-                          Navigator.pushNamedAndRemoveUntil(context, '/LogIn', (Route<dynamic> route) => false);
-                          //Her skal vi måske gå til loginscreen TODO
-                        },
-                      ),
-                      FlatButton(
-                        child: const Text('Cancel'),
-                        onPressed: (){Navigator.of(context).pop();},
-                      ),
-                    ],
-                  );
-                }
-              );
-            },
           ),
         ],
       ),
     );
   }
-
-  void decrement() {
+    void decrement() {
     setState(() {
       if (_n != 0) _n--;
     });
@@ -250,9 +160,4 @@ class Settings extends State<SettingsState> {
       if (_n != 9) _n++;
     });
   }
-}
-
-class SettingsState extends StatefulWidget {
-  @override
-  Settings createState() => Settings();
 }

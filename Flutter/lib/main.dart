@@ -11,6 +11,7 @@ import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'dart:async';
 import 'location_manager.dart';
 import 'utility.dart';
+import 'context_prompt.dart';
 
 //AndroidAlarmManager aAM = new AndroidAlarmManager();
 
@@ -57,6 +58,9 @@ class MyApp extends StatelessWidget {
               break;
             case '/select_interests':
               return MaterialPageRoute(builder: (context) => InterestsState());
+              break;
+            case '/context_prompt':
+              return MaterialPageRoute(builder: (context) => PromptContextState());
               break;
           }
         },

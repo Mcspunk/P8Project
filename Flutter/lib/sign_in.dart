@@ -336,8 +336,7 @@ class LogIn extends State<LogInState> {
                       //checkSignUp(signUpUserNameController.text, 'tbd', context);
                       if (_formKey.currentState.validate()) {
                         saveString('currentUser', signUpUserNameController.text);
-                        Navigator.pushNamedAndRemoveUntil(context, '/', (Route<dynamic> route) => false);
-                        Navigator.pushNamed(context, '/select_interests');
+                        Navigator.pushNamedAndRemoveUntil(context, '/context_prompt', (Route<dynamic> route) => false);
                       }
                     },
                     child: const Text(

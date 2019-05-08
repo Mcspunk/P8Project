@@ -445,6 +445,7 @@ class HomeScreen extends State<HomeScreenState> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 MaterialButton(
+                  color: Theme.of(context).accentColor,
                   minWidth: 100,
                   height: 50,
                   onPressed: () {
@@ -462,6 +463,7 @@ class HomeScreen extends State<HomeScreenState> {
                   padding: const EdgeInsets.all(8.0),
                 ),
                 MaterialButton(
+                  color: Theme.of(context).accentColor,
                   minWidth: 100,
                   height: 50,
                   onPressed: () {
@@ -479,6 +481,7 @@ class HomeScreen extends State<HomeScreenState> {
                   padding: const EdgeInsets.all(8.0),
                 ),
                 MaterialButton(
+                  color: Theme.of(context).accentColor,
                   minWidth: 100,
                   height: 50,
                   child: const Text(
