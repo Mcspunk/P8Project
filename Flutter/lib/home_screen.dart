@@ -8,6 +8,8 @@ import 'sign_in.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'data_provider.dart';
 import 'dart:io';
+import 'location_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class RatingDialog extends State<RatingState> {
   //https://www.youtube.com/watch?v=MsycCv5r2Wo
@@ -159,7 +161,7 @@ class HomeScreen extends State<HomeScreenState> {
 
                     userLocation == null
                         ? displayMsg(
-                            'Your location is not available at the moment, please try again later',
+                            'This feature requires access to your current location. Either you have not given us permission to use you location, or you location is currently not available.',
                             context)
                         : _fullMapView(data
                             .getAttractions()); // Det her skal være en liste af alle attractions inden for en radius
@@ -667,12 +669,17 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   void updateUserLocation() async {
-    Position position = await Geolocator()
-        .getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
-
-    position == null
-        ? displayMsg('Position not available', context)
-        : userLocation = Coordinate(position.latitude, position.longitude);
+    if(await PermissionHandler().checkPermissionStatus(PermissionGroup.location) == PermissionStatus.granted) {
+      Position position = await Geolocator().getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
+      userLocation = Coordinate(position.latitude, position.longitude);
+    }
+/* To be used, when we fix ERROR_ALREADY_REQUESTING_PERMISSIONS error z.z
+    else {
+      Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.location]);
+      if(permissions[PermissionGroup.location] == PermissionStatus.granted) {
+        Position position = await Geolocator().getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
+        userLocation = Coordinate(position.latitude, position.longitude);
+      }*/         
   }
 
   @override

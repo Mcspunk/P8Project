@@ -5,39 +5,19 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'home_screen.dart';
 import 'dart:async';
 import 'utility.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 
 
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
+  
   double _distanceLimit = 0; //meters
   Geolocator _geolocator = Geolocator()..forceAndroidLocationManager = true;
-
-  void getUserLocationAndGPSPermissionAndInitPushNotif() async {
-    Position position = await Geolocator()
-        .getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
-
-    //Initialize push notification settings
-    var initializationSettingsAndroid = new AndroidInitializationSettings('app_icon');
-    var initializationSettingsIOS = new IOSInitializationSettings(onDidReceiveLocalNotification: onDidRecieveLocationLocation);
-    var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);  
-    flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: onSelectNotification);
-  }
-
-  Future<bool> checkLocationStatus() async {  
-    GeolocationStatus geolocationStatusA = await Geolocator().checkGeolocationPermissionStatus(locationPermission: GeolocationPermission.locationAlways);
-    GeolocationStatus geolocationStatusW = await Geolocator().checkGeolocationPermissionStatus(locationPermission: GeolocationPermission.locationWhenInUse);
-    
-    if (geolocationStatusA == GeolocationStatus.granted && geolocationStatusW == GeolocationStatus.granted ) {
-      return true;
-    }
-    return false; 
-  }
 
   void locationChecker() async {
     double distanceInMeters;
     Position _currentUserLocation;
     
-    if (await checkLocationStatus() == true) {
+    if (await PermissionHandler().checkPermissionStatus(PermissionGroup.location) == PermissionStatus.granted) {
       _currentUserLocation = await _geolocator.getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
 
       if (await loadString('latestUserLocationlat') == null) {
@@ -57,6 +37,9 @@ import 'utility.dart';
         print('Distance in meters: ' + distanceInMeters.toString());
       }
     }
+    else {
+      print('No permission');
+    }
 
     if (distanceInMeters == _distanceLimit) {
       saveString('latestUserLocationLat', _currentUserLocation.latitude.toString());
@@ -65,15 +48,9 @@ import 'utility.dart';
       if (a > 0) {
         singlePOINotif(flutterLocalNotificationsPlugin, title: a.toString() + ' New sights to discover!', body: 'We have found ' + a.toString() + ' new places that we think you might be interested in! Check them out in the app.');  
       }
-    }  
+    } 
+    else {
+      print('Distance from prev location not larger than distance limit');
+    } 
   }
 
-  //TODO IOS specific navigation
-  Future onDidRecieveLocationLocation(int id, String title, String body, String payload) {
-      
-  }
-          
-  //Ikke sikker på at denne navigation er korrekt
-  Future onSelectNotification(String payload) {
-    MaterialPageRoute(builder: (context) => HomeScreenState());
-  }
