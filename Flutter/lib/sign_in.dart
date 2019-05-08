@@ -330,9 +330,8 @@ class LogIn extends State<LogInState> {
                       //TODO vi mangler password felt og ændre streng herunder
                       //checkSignUp(signUpUserNameController.text, 'tbd', context);
                       if (_formKey.currentState.validate()) {
-                        saveString('currentUser', signUpUserNameController.text.toString());
-                        Navigator.pushNamedAndRemoveUntil(context, '/', (Route<dynamic> route) => false);
-                        Navigator.pushNamed(context, '/select_interests');
+                        saveString('currentUser', signUpUserNameController.text);
+                        Navigator.pushNamedAndRemoveUntil(context, '/context_prompt', (Route<dynamic> route) => false);
                       }
                     },
                     child: const Text(

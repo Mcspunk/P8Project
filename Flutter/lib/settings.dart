@@ -230,7 +230,6 @@ class Settings extends State<SettingsState> {
               );
             },
           ),
-          Divider(),
         ],
       ),
     );
