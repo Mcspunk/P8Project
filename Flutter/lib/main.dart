@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'select_interests.dart';
 import 'settings.dart';
 import 'sign_in.dart';
@@ -14,8 +15,9 @@ import 'utility.dart';
 import 'dart:io' show Platform;
 import 'package:background_fetch/background_fetch.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'context_prompt.dart';
 
-AndroidAlarmManager aAM = new AndroidAlarmManager();
+//AndroidAlarmManager aAM = new AndroidAlarmManager();
 
 main() async {
   final int helloAlarmID = 0;
@@ -34,22 +36,39 @@ main() async {
    // BackgroundFetch.registerHeadlessTask(locationChecker);
   }
 }
-
 //void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
+void getrecinit(BuildContext context) async {
+  var _geolocator = Geolocator();
+  Position position = await _geolocator.getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
+
+  getRecommendations(new Coordinate(position.latitude, position.longitude), 1, context);
+}
+
+class MyApp extends StatelessWidget {  
   bool loggedIn = false;
+
+  static Widget determineHome(){
+    if (loadString('currentUser') == null){
+      return LogInState();
+    }
+    else{
+      return HomeScreenState();
+    }
+  }
+  
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {    
     return DataProvider(
       dataContainer: DataContainer(),
       child: MaterialApp(
         title: 'Sign in',
         theme: utilTheme(),
-        home: HomeScreenState(),
+        home: determineHome(),
         onGenerateRoute: (RouteSettings settings) {
           switch (settings.name) {
             case '/':
+              getrecinit(context);
               return MaterialPageRoute(builder: (context) => HomeScreenState());
               break;
             case '/LogIn':
@@ -60,6 +79,9 @@ class MyApp extends StatelessWidget {
               break;
             case '/select_interests':
               return MaterialPageRoute(builder: (context) => InterestsState());
+              break;
+            case '/context_prompt':
+              return MaterialPageRoute(builder: (context) => PromptContextState());
               break;
           }
         },
