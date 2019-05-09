@@ -32,7 +32,7 @@ Future<String> getTripType(String key) async {
 }
 
 class Settings extends State<SettingsState> {
-  int _n = 0;
+  int _n =  1;
   String dropdownValue = 'Solo';
 
   @override
@@ -51,7 +51,7 @@ class Settings extends State<SettingsState> {
 
   void loadDistance(int distance) {
     setState(() {
-      this._n = distance ?? 0;
+      this._n = distance ?? 1;
     });
   }
 /*
@@ -63,6 +63,7 @@ class Settings extends State<SettingsState> {
 */
   @override
   Widget build(BuildContext context) {
+    DataContainer data = DataProvider.of(context).dataContainer;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -71,10 +72,19 @@ class Settings extends State<SettingsState> {
             Text('Settings  '),
             Icon(Icons.settings),
           ],
-        )
-        
+        )        
       ),
-      body: _customSettings(),
+      body: WillPopScope(
+        onWillPop: (){
+          data.setDist(_n);
+          saveDistance('dist', _n);
+          data.setTripType(dropdownValue);
+          saveTripType('tripType', dropdownValue);
+          print('saved');
+          return new Future.value(true);
+        },
+        child:_customSettings(),
+      )
       //primary: false,
     );
   }
@@ -158,23 +168,21 @@ class Settings extends State<SettingsState> {
           Divider(),
           ListTile(
             title: Text('Change your category ratings'),
-            trailing: Icon(Icons.arrow_right),
+            trailing: Icon(Icons.border_color),
             onTap: () {
-              saveDistance('dist', _n);
-              saveTripType('tripType', dropdownValue);
               Navigator.pushNamed(context, '/select_interests');
             },
           ),
           Divider(),
           ListTile(
-            title: Text('Delete all data'),
+            title: Text('Delete local data'),
             trailing: Icon(Icons.warning),
             onTap: () {
               showDialog(
                 context: context,
                 builder: (context) {
                   return AlertDialog(
-                    title: Text('Delete app data?'),
+                    title: Text('Delete local data?'),
                     content: Text('This will remove all data from your device such as rating information, favorite places, login information etc.'),
                     actions: <Widget>[
                       FlatButton(
@@ -203,14 +211,13 @@ class Settings extends State<SettingsState> {
                 context: context,
                 builder: (context) {
                   return AlertDialog(
-                    title: Text('Really log out?'),
+                    title: Text('Are you sure you want to log out?'),
                     actions: <Widget>[
                       FlatButton(
                         child: const Text('Log out'),
                         onPressed: () {
                           deleteString('currentUser');
                           Navigator.pushNamedAndRemoveUntil(context, '/LogIn', (Route<dynamic> route) => false);
-                          //Her skal vi måske gå til loginscreen TODO
                         },
                       ),
                       FlatButton(
@@ -223,7 +230,6 @@ class Settings extends State<SettingsState> {
               );
             },
           ),
-          Divider(),
         ],
       ),
     );
@@ -231,7 +237,7 @@ class Settings extends State<SettingsState> {
 
   void decrement() {
     setState(() {
-      if (_n != 0) _n--;
+      if (_n != 1) _n--;
     });
   }
 

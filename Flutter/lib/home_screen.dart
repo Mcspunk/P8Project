@@ -8,15 +8,19 @@ import 'sign_in.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'data_provider.dart';
 import 'dart:io';
+import 'location_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class RatingDialog extends State<RatingState> {
   //https://www.youtube.com/watch?v=MsycCv5r2Wo
-  double attractionRating = 0;
-  String tripType = 'Solo';
-  DateTime selectedTime = DateTime.now();
+  
 
   @override
   Widget build(BuildContext context) {
+    DataContainer data = DataProvider.of(context).dataContainer;
+    double attractionRating = 0;
+    String tripType = data.getTripType() ??  'Solo';
+    DateTime selectedTime = DateTime.now();
     return Scaffold(
       appBar: AppBar(
         title: Text('Rate ' + widget.attraction.GetName()),
@@ -87,6 +91,7 @@ class RatingDialog extends State<RatingState> {
               title: Text('When did you visit?'),
               trailing: RaisedButton(
                 child: Text('Select date'),
+                color: Theme.of(context).accentColor,
                 onPressed: () async {
                   Future<DateTime> chosenTime = showDatePicker(
                     context: context,
@@ -109,7 +114,10 @@ class RatingDialog extends State<RatingState> {
           ListTile(
             title: RaisedButton(
               child: Text('Submit review'),
+              color: Theme.of(context).accentColor,
               onPressed: () {
+                giveReview(attractionRating, selectedTime, tripType, widget.attraction.GetName(), context);
+                /*
                 saveString(widget.attraction.GetName() + '%Rating',
                     attractionRating.toString());
                 saveString(
@@ -118,6 +126,7 @@ class RatingDialog extends State<RatingState> {
                         '/' +
                         selectedTime.month.toString());
                 saveString(widget.attraction.GetName() + '%TripType', tripType);
+                */
                 Navigator.pop(context);
               },
             ),
@@ -159,7 +168,7 @@ class HomeScreen extends State<HomeScreenState> {
 
                     userLocation == null
                         ? displayMsg(
-                            'Your location is not available at the moment, please try again later',
+                            'This feature requires access to your current location. Either you have not given us permission to use you location, or you location is currently not available.',
                             context)
                         : _fullMapView(data
                             .getAttractions()); // Det her skal være en liste af alle attractions inden for en radius
@@ -178,10 +187,12 @@ class HomeScreen extends State<HomeScreenState> {
                       //updatePreferences(context);
                       //getPreferences(context);
                       //updatePreferences(context);
-                      displayMsg(zoomLevel(distanceBetweenCoordinates(data.getAttractions()[0].GetCoordinate(), userLocation)).toStringAsFixed(2) , context);
+                      //displayMsg(zoomLevel(distanceBetweenCoordinates(data.getAttractions()[0].GetCoordinate(), userLocation)).toStringAsFixed(2) , context);
+                      getLikedAttraction(context);
                     });
                   }),
-              */
+                */
+              
             ],
             bottom: TabBar(tabs: [
               Tab(
@@ -236,12 +247,30 @@ class HomeScreen extends State<HomeScreenState> {
         attractions.add(attraction);
       }
     }
-    return _buildRecList(attractions);
+    return  Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: attractions.length != 0 ? _buildRecList(attractions)
+      : ListTile(
+              title: Text('No attractions found'),
+              subtitle: Text(
+                  'Try going to a different area, or adjust your settings, in order to find some nearby attractions'),
+              trailing: Icon(Icons.info_outline),
+            ),
+    );
   }
 
   Widget _allView() {
     DataContainer data = DataProvider.of(context).dataContainer;
-    return _buildRecList(data.getAttractions());
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: data.getAttractions().length != 0 ? _buildRecList(data.getAttractions())
+      : ListTile(
+              title: Text('No attractions found'),
+              subtitle: Text(
+                  'Try going to a different area, or adjust your settings, in order to find some nearby attractions'),
+              trailing: Icon(Icons.info_outline),
+            ),
+    );
   }
 
   Widget _restaurantView() {
@@ -253,19 +282,31 @@ class HomeScreen extends State<HomeScreenState> {
         restaurants.add(attraction);
       }
     }
-    return _buildRecList(restaurants);
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: restaurants.length != 0 ? _buildRecList(restaurants)
+      : ListTile(            
+              title: Text('No restaurants found'),
+              subtitle: Text(
+                  'Try going to a different area, or adjust your settings, in order to find some nearby restaurants'),
+              trailing: Icon(Icons.info_outline),
+            ),
+    );
   }
 
   Widget _likeView() {
     DataContainer data = DataProvider.of(context).dataContainer;
-    return data.getFavourites().length != 0
-        ? _buildRecList(data.getFavourites())
-        : ListTile(
-            title: Text('No liked attractions'),
-            subtitle: Text(
-                'Tap the heart icon on the attractions to save them to your list of liked attractions'),
-            trailing: Icon(Icons.info_outline),
-          );
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: data.getFavourites().length != 0
+          ? _buildRecList(data.getFavourites())
+          : ListTile(
+              title: Text('No liked attractions'),
+              subtitle: Text(
+                  'Tap the heart icon on the attractions to save them to your list of liked attractions'),
+              trailing: Icon(Icons.info_outline),
+            ),
+    );
   }
 
   Widget buildRecCardTile(Attraction attraction) {
@@ -325,11 +366,6 @@ class HomeScreen extends State<HomeScreenState> {
         border: Border.all(
           color: Theme.of(context).hintColor,
         ),
-        /*gradient: new LinearGradient(
-            colors: [Colors.black, Colors.blue],
-            begin: Alignment.centerRight,
-            end: new Alignment(0.8, 0.0),
-            tileMode: TileMode.mirror),*/
       ),
       child: Column(
         children: <Widget>[
@@ -365,8 +401,10 @@ class HomeScreen extends State<HomeScreenState> {
                         setState(() {
                           if (data.getFavourites().contains(attraction)) {
                             data.getFavourites().remove(attraction);
+                            updateLikedAttraction(context);
                           } else {
                             data.getFavourites().add(attraction);
+                            updateLikedAttraction(context);
                           }
                         });
                       },
@@ -446,6 +484,7 @@ class HomeScreen extends State<HomeScreenState> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 MaterialButton(
+                  color: Theme.of(context).accentColor,
                   minWidth: 100,
                   height: 50,
                   onPressed: () {
@@ -463,6 +502,7 @@ class HomeScreen extends State<HomeScreenState> {
                   padding: const EdgeInsets.all(8.0),
                 ),
                 MaterialButton(
+                  color: Theme.of(context).accentColor,
                   minWidth: 100,
                   height: 50,
                   onPressed: () {
@@ -480,6 +520,7 @@ class HomeScreen extends State<HomeScreenState> {
                   padding: const EdgeInsets.all(8.0),
                 ),
                 MaterialButton(
+                  color: Theme.of(context).accentColor,
                   minWidth: 100,
                   height: 50,
                   child: const Text(
@@ -507,7 +548,7 @@ class HomeScreen extends State<HomeScreenState> {
         findMiddlePoint(attraction.GetCoordinate(), userLocation);
 
     attraction.GetCoordinate() == null
-        ? displayMsg('Location for attraction is unknown', context)
+        ? displayMsg('The location for this attraction is not available', context)
         : Navigator.of(context)
             .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
             return Scaffold(
@@ -570,7 +611,7 @@ class HomeScreen extends State<HomeScreenState> {
 
 
   Widget _fullMapView(List<Attraction> allAttractions) {
-    bool isSwitched = false;
+    bool isSwitched = true;
     DataContainer data = DataProvider.of(context).dataContainer;
 		MapController mapController = MapController();
 		List<Marker> markers = createMarkers(isSwitched);
@@ -694,18 +735,54 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   void updateUserLocation() async {
-    Position position = await Geolocator()
-        .getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
-
-    position == null
-        ? displayMsg('Position not available', context)
-        : userLocation = Coordinate(position.latitude, position.longitude);
+    if(await PermissionHandler().checkPermissionStatus(PermissionGroup.location) == PermissionStatus.granted) {
+      Position position = await Geolocator().getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
+      userLocation = Coordinate(position.latitude, position.longitude);
+    }
+/* To be used, when we fix ERROR_ALREADY_REQUESTING_PERMISSIONS error z.z
+    else {
+      Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.location]);
+      if(permissions[PermissionGroup.location] == PermissionStatus.granted) {
+        Position position = await Geolocator().getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
+        userLocation = Coordinate(position.latitude, position.longitude);
+      }*/         
   }
+  
+DateTime lastupdatedRec = DateTime.now();
+DateTime lastupdatedAll = DateTime.now();
+//bool initLoad = true;
 
   @override
-  Widget build(BuildContext context) {
-    getRecommendations(userLocation, context);		
-    getAllAttractions(userLocation, context);
+  Widget build(BuildContext context) {    
+    DataContainer data = DataProvider.of(context).dataContainer;
+    //print("rec: " + data.getAttractions().length.toString() + " | all: " + data.getAllNearbyAttractions().length.toString());
+    
+    DateTime currentTime = DateTime.now();
+    var diffRec = currentTime.minute - lastupdatedRec.minute;
+    if (diffRec < 0){
+      diffRec += 60;
+    }
+    var diffAll = currentTime.minute - lastupdatedAll.minute;
+    if (diffAll < 0){
+      diffAll += 60;
+    }
+
+    if(data.getAttractions().length == 0 || diffRec > 5){
+      getRecommendations(userLocation, data.getDist(), context);	
+      lastupdatedRec = DateTime.now();
+    }
+    if(data.getAllNearbyAttractions().length == 0 || diffAll > 5 ){
+      getAllAttractions(userLocation, data.getDist(), context);
+      lastupdatedAll = DateTime.now();
+    }
+    /*
+    if(initLoad){
+      getLikedAttraction(context);
+
+      initLoad = false;
+    }
+    */
+
     if (username == null) {
       return LogInState();
     }
@@ -723,8 +800,9 @@ class HomeScreen extends State<HomeScreenState> {
     super.initState();
     loadString('currentUser').then(loadUser);
     new Future.delayed(Duration.zero,(){
-      getRecommendations(userLocation, context);
-      getAllAttractions(userLocation, context);    
+      getRecommendations(userLocation, 1, context);
+      getAllAttractions(userLocation, 1, context);
+      getLikedAttraction(context);
     });
   }
 

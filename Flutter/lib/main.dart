@@ -11,6 +11,11 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'dart:async';
 import 'location_manager.dart';
+import 'utility.dart';
+import 'dart:io' show Platform;
+import 'package:background_fetch/background_fetch.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'context_prompt.dart';
 import 'utility.dart'; 
 import 'package:background_fetch/background_fetch.dart';
 import 'dart:io' show Platform;
@@ -23,33 +28,16 @@ main() async {
   if (Platform.isAndroid) {
     await AndroidAlarmManager.initialize();
     runApp(MyApp());
-    getUserLocationAndGPSPermissionAndInitPushNotif();
-    await AndroidAlarmManager.periodic(const Duration(seconds: 60), helloAlarmID, locationChecker);
-  } else {
-    
-    runApp(MyApp());
-    getUserLocationAndGPSPermissionAndInitPushNotif();
-
-  /*  
-    PermissionStatus permissionA = await PermissionHandler().checkPermissionStatus(PermissionGroup.locationAlways);
-    PermissionStatus permissionWIU = await PermissionHandler().checkPermissionStatus(PermissionGroup.locationWhenInUse);
-    print('A: ' + permissionA.toString() + ' WIU: ' + permissionWIU.toString());
-
-    
+    await PermissionHandler().checkPermissionStatus(PermissionGroup.location);
+    initPushNotif();
     Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.location]);
-
-
-    PermissionStatus permissionA1 = await PermissionHandler().checkPermissionStatus(PermissionGroup.locationAlways);
-    PermissionStatus permissionWIU1 = await PermissionHandler().checkPermissionStatus(PermissionGroup.locationWhenInUse);
-    print('A1: ' + permissionA1.toString() + ' WIU1: ' + permissionWIU1.toString());
-*/
-
-    
-
-    BackgroundFetch.registerHeadlessTask(bgfFired);
-    
-    print('bgf started');
-
+    await AndroidAlarmManager.periodic(const Duration(minutes: 1), helloAlarmID, locationChecker);    
+ 
+  }
+  else {
+    runApp(MyApp());
+    initPushNotif();
+   // BackgroundFetch.registerHeadlessTask(locationChecker);
   }
 }
 
@@ -61,16 +49,7 @@ void bgfFired() {
 
 //void main() => runApp(MyApp());
 
-void getrecinit(BuildContext context) async {
-  var _geolocator = Geolocator();
-  Position position = await _geolocator.getLastKnownPosition(
-      desiredAccuracy: LocationAccuracy.high);
-
-  getRecommendations(
-      new Coordinate(position.latitude, position.longitude), context);
-}
-
-class MyApp extends StatelessWidget {
+class MyApp extends StatelessWidget {  
   bool loggedIn = false;
 
   static Widget determineHome() {
@@ -92,7 +71,6 @@ class MyApp extends StatelessWidget {
         onGenerateRoute: (RouteSettings settings) {
           switch (settings.name) {
             case '/':
-              getrecinit(context);
               return MaterialPageRoute(builder: (context) => HomeScreenState());
               break;
             case '/LogIn':
@@ -103,6 +81,9 @@ class MyApp extends StatelessWidget {
               break;
             case '/select_interests':
               return MaterialPageRoute(builder: (context) => InterestsState());
+              break;
+            case '/context_prompt':
+              return MaterialPageRoute(builder: (context) => PromptContextState());
               break;
           }
         },
