@@ -861,7 +861,7 @@ DateTime lastupdatedAll = DateTime.now();
   void loadUser(String userName) {
     setState(() {
       this.username = userName;
-      updateUserLocation();
+      //updateUserLocation();
     });
   }
 }

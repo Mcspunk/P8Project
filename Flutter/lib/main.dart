@@ -16,6 +16,10 @@ import 'dart:io' show Platform;
 import 'package:background_fetch/background_fetch.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'context_prompt.dart';
+import 'utility.dart'; 
+import 'package:background_fetch/background_fetch.dart';
+import 'dart:io' show Platform;
+//import 'package:permission_handler/permission_handler.dart';
 
 //AndroidAlarmManager aAM = new AndroidAlarmManager();
 
@@ -36,22 +40,28 @@ main() async {
    // BackgroundFetch.registerHeadlessTask(locationChecker);
   }
 }
+
+void bgfFired() {
+  DateTime a = new DateTime.now();
+  print(a.toString() + ' backgroundFetch fired-------------------------------------');
+  BackgroundFetch.finish();
+}
+
 //void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {  
   bool loggedIn = false;
 
-  static Widget determineHome(){
-    if (loadString('currentUser') == null){
+  static Widget determineHome() {
+    if (loadString('currentUser') == null) {
       return LogInState();
-    }
-    else{
+    } else {
       return HomeScreenState();
     }
   }
-  
+
   @override
-  Widget build(BuildContext context) {    
+  Widget build(BuildContext context) {
     return DataProvider(
       dataContainer: DataContainer(),
       child: MaterialApp(
