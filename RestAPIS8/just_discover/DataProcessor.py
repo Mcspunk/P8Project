@@ -213,6 +213,8 @@ def transform_reviews_table_to_binary():
     while True:
         values = list()
         row = cursor.fetchone()
+        if row is None:
+            break
         values.append(row[0])
         values.append(row[1])
         values.append(row[2])
@@ -230,8 +232,6 @@ def transform_reviews_table_to_binary():
         cursor2.execute(query, (values_tuple,))
         if row_number % 100000 is 0:
             conn.commit()
-        if row is None:
-            break
     conn.commit()
     conn.close()
 

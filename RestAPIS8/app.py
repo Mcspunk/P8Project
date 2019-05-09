@@ -6,6 +6,8 @@ import psycopg2 as psy
 import datetime
 import just_discover.Recommender as recommender
 import just_discover.DataProcessor as dataprocessor
+import requests
+import pickle
 
 host = "jd-database.ccwvupidct47.eu-west-3.rds.amazonaws.com"
 database = "jd_database"
@@ -383,7 +385,62 @@ def train_recommender():
     recommender.execute(k_fold=5, regularizer=0.01, learning_rate=0.03, num_factors=10, iterations=100)
 
 
-if __name__ == '__main__':
-    app.run()
+def geocoding_of_poi():
+    api_key = "Insert_API_KEY"
 
-update_binary_review_table()
+    conn = psy.connect(host=host, database=database, user=user, password=password)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT justdiscover.poi_backup.id,justdiscover.poi_backup.name, justdiscover.poi_backup.address FROM justdiscover.poi_backup")
+    id_name_address_tuple_list = list()
+    while True:
+        row = cursor.fetchone()
+        if row is None:
+            break
+        poi_id = row[0]
+        name = row[1]
+        address = row[2]
+        id_name_address_tuple_list.append((poi_id,name,address))
+
+    id_geocoding_json_list = list()
+    params = dict()
+    params['key'] = api_key
+    endpoint = "https://maps.googleapis.com/maps/api/geocode/json"
+    for tuple in id_name_address_tuple_list:
+        location = tuple[1] + " " + tuple[2]
+        params['address'] = location
+        r = requests.get(url=endpoint, params=params, )
+        data = r.json()
+        id_geocoding_json_list.append((tuple[0],data))
+    cursor.close()
+    conn.close()
+
+    return id_geocoding_json_list
+
+
+def insert_geocoding_database():
+    conn = psy.connect(host=host, database=database, user=user, password=password)
+    cursor = conn.cursor()
+
+
+    id_geocoding_json_list = pickle.load(open("poi_id_geocoding.p", "rb"))
+    poi_no_results = list()
+    for poi_id, geocoding in id_geocoding_json_list:
+        if geocoding['status'] == "ZERO_RESULTS":
+            poi_no_results.append(poi_id)
+            continue
+        formatted_address = geocoding['results'][0]['formatted_address']
+        latitude = geocoding['results'][0]['geometry']['location']['lat']
+        longitude = geocoding['results'][0]['geometry']['location']['lng']
+        point = (latitude, longitude)
+        cursor.execute("UPDATE justdiscover.poi_backup SET address = %s, location_coordinate = POINT %s WHERE justdiscover.poi_backup.id = %s ", (formatted_address, (point), poi_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+if __name__ == '__main__':
+    #icamf_recommender = pickle.load(open("icamf_model.p", "rb"))
+    update_binary_review_table()
+    app.run()
