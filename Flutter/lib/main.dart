@@ -12,16 +12,29 @@ import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'dart:async';
 import 'location_manager.dart';
 import 'utility.dart';
+import 'dart:io' show Platform;
+import 'package:background_fetch/background_fetch.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'context_prompt.dart';
 
 //AndroidAlarmManager aAM = new AndroidAlarmManager();
 
 main() async {
   final int helloAlarmID = 0;
-  //await AndroidAlarmManager.initialize();
-  runApp(MyApp());
-  getUserLocationAndGPSPermissionAndInitPushNotif();
-  //await AndroidAlarmManager.periodic(const Duration(seconds: 60), helloAlarmID, locationChecker);
+  if (Platform.isAndroid) {
+    await AndroidAlarmManager.initialize();
+    runApp(MyApp());
+    await PermissionHandler().checkPermissionStatus(PermissionGroup.location);
+    initPushNotif();
+    Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.location]);
+    await AndroidAlarmManager.periodic(const Duration(minutes: 1), helloAlarmID, locationChecker);    
+ 
+  }
+  else {
+    runApp(MyApp());
+    initPushNotif();
+   // BackgroundFetch.registerHeadlessTask(locationChecker);
+  }
 }
 //void main() => runApp(MyApp());
 
