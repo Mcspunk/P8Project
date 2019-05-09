@@ -121,7 +121,7 @@ Future<int> getRecCount(Coordinate coordinate) async {
   var jsonstring = {
     "lat": coordinate.GetLat(),
     "long": coordinate.GetLong(),
-    "distance": await loadString("dist")
+    "distance": await loadInt("dist")
   };
   var jsonedString = jsonEncode(jsonstring);
   try {
@@ -347,6 +347,11 @@ void saveString(String key, String value) async {
   prefs.setString(key, value);
 }
 
+Future<int> loadInt(String key) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getInt(key);
+}
+
 Future<String> loadString(String key) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getString(key);
@@ -450,7 +455,7 @@ class Attraction {
       double long]) {
     _id = id;
     _name = name;
-    _openingHours = openingHours;
+    _openingHours = openingHours == "" ? "Opening hours are not available" : openingHours.replaceAll(';', ' ');
     _imgPath = imgPath;
     rating != null ? _rating = rating : _rating = 0;
     description != null

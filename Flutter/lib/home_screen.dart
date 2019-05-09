@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test2/data_container.dart';
 import 'utility.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -13,13 +14,22 @@ import 'package:permission_handler/permission_handler.dart';
 
 class RatingDialog extends State<RatingState> {
   //https://www.youtube.com/watch?v=MsycCv5r2Wo
-  
+  double attractionRating = 0;
+  String tripType = '';
+  String dateText = 'Select date';
 
   @override
   Widget build(BuildContext context) {
     DataContainer data = DataProvider.of(context).dataContainer;
-    double attractionRating = 0;
-    String tripType = data.getTripType() ??  'Solo';
+    tripType = data.getTripType();
+
+    void setDateText(String date){
+      setState(() {
+        dateText = date;
+      });
+      
+    }
+    
     DateTime selectedTime = DateTime.now();
     return Scaffold(
       appBar: AppBar(
@@ -75,6 +85,7 @@ class RatingDialog extends State<RatingState> {
               onChanged: (String newValue) {
                 setState(() {
                   tripType = newValue;
+                  data.setTripType(tripType);
                 });
               },
               items: <String>['Solo', 'Couple', 'Family', 'Business']
@@ -90,7 +101,7 @@ class RatingDialog extends State<RatingState> {
           ListTile(
               title: Text('When did you visit?'),
               trailing: RaisedButton(
-                child: Text('Select date'),
+                child: Text(dateText),
                 color: Theme.of(context).accentColor,
                 onPressed: () async {
                   Future<DateTime> chosenTime = showDatePicker(
@@ -107,6 +118,7 @@ class RatingDialog extends State<RatingState> {
                   );
                   setState(() async {
                     selectedTime = await chosenTime;
+                    setDateText(selectedTime.day.toString() + '-' + selectedTime.month.toString() + '-' + selectedTime.year.toString());
                   });
                 },
               )),
@@ -453,8 +465,11 @@ class HomeScreen extends State<HomeScreenState> {
           ListTile(
             title: Text('Rating: ' + attraction.GetRating().toString()),
             subtitle: Text('Distance 0.8 km'),
-            trailing: Text(attraction.GetOpeningHours(),
-                style: Theme.of(context).textTheme.body2),
+            trailing: Container(
+              width: deviceSize.width * (4/7),
+              child: Text('\n' + attraction.GetOpeningHours(),
+                  style: Theme.of(context).textTheme.body2),
+            ),
           ),
         ],
       ),
@@ -607,14 +622,37 @@ class HomeScreen extends State<HomeScreenState> {
           }));
   }
 
-  //List<Marker> markers;
+  bool createRecAttOnly = true;
+  List<Marker> markers = [];
+  MapController mapController = MapController();
 
+  void switchBool(){
+    setState(() {
+     createRecAttOnly = !createRecAttOnly; 
+    });
+  }
 
-  Widget _fullMapView(List<Attraction> allAttractions) {
-    bool isSwitched = true;
+  void updateMarkers(){
+    setState(() {
+     markers = createMarkers(createRecAttOnly); 
+    });
+  }
+
+  Widget forceRefresh(){    
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('you have not seen anything'),
+      ),
+      body: Column(
+
+      ),
+    );
+  }
+
+  Widget _fullMapView(List<Attraction> allAttractions) {    
     DataContainer data = DataProvider.of(context).dataContainer;
-		MapController mapController = MapController();
-		List<Marker> markers = createMarkers(isSwitched);
+		
+    //markers = createMarkers(createRecAttOnly);
 
     allAttractions.length == 0 || allAttractions == null
         ? displayMsg('No attractions nearby', context)
@@ -632,7 +670,7 @@ class HomeScreen extends State<HomeScreenState> {
                       options: MapOptions(
                         center: LatLng(
                             userLocation.GetLat(), userLocation.GetLong()),
-                        zoom: 15.0,
+                        zoom: 15.0,                        
                       ),
                       layers: [
                         TileLayerOptions(
@@ -645,11 +683,11 @@ class HomeScreen extends State<HomeScreenState> {
                           },
                         ),
                         MarkerLayerOptions(
-                            markers: markers,  //data.getMarkers() //createMarkers(/*allAttractions*/),
+                            markers: markers, //data.getMarkers() //createMarkers(/*allAttractions*/),
                             ),
                       ],
                     ),
-									),/*
+									),
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Container(
@@ -657,10 +695,24 @@ class HomeScreen extends State<HomeScreenState> {
                       child: SwitchListTile(
                         title: Text('Show only recommended attractions'),
                         secondary: Icon(Icons.loupe),
-                        value: isSwitched,
+                        value: createRecAttOnly,
                         onChanged: (value) {
+                          
+                          print(createRecAttOnly);
+                          switchBool();
+                          print(createRecAttOnly);
+                          print(markers.length.toString());
+                          //updateMarkers();
+                            
+                          var tempmarkers = createMarkers(createRecAttOnly);
+                          markers = tempmarkers;
+                          print(markers.length.toString());
                           setState(() {
-                            isSwitched = !isSwitched;
+                            mapController.move(mapController.center, mapController.zoom + 0.001);
+                            
+
+                            //Navigator.of(context).push(new MaterialPageRoute<void>(builder: (BuildContext context) {return forceRefresh();}));
+                            
 														//Navigator.pop(context);
 														//Navigator.of(context).push(new MaterialPageRoute<void>(builder: (BuildContext context) {return _fullfullMapView(allAttractions);}));
 
@@ -675,7 +727,7 @@ class HomeScreen extends State<HomeScreenState> {
                         },
                       ),
                     ),
-                  )*/
+                  )
                 ],
               ),
             );
