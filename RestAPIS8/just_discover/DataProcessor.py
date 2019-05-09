@@ -11,6 +11,7 @@ np.random.seed(seed=8)
 ContextRatingPair = namedtuple("ContextRatingPair", "context rating")
 ItemRatingPair = namedtuple("ItemRatingPair", "item rating")
 
+
 class RatingObj:
     # row:User_Item column:ctx_index, data: rating
     rate_matrix: scipy.sparse.csr_matrix
@@ -205,7 +206,7 @@ def transform_reviews_table_to_binary():
     limit = traditional_reviews_count - binary_reviews_count
     offset = binary_reviews_count
 
-    cursor.execute("SELECT justdiscover.reviews.id, justdiscover.users.id_sk, justdiscover.reviews.poi_id, justdiscover.reviews.rating, justdiscover.reviews.month_visited, justdiscover.reviews.company FROM justdiscover.reviews, justdiscover.users WHERE users.id = reviews.user_id ORDER BY reviews.id LIMIT %s OFFSET %s", (limit, offset))
+    cursor.execute("SELECT justdiscover.reviews_backup.id, justdiscover.users.id_sk, justdiscover.reviews_backup.poi_id, justdiscover.reviews_backup.rating, justdiscover.reviews_backup.month_visited, justdiscover.reviews_backup.company FROM justdiscover.reviews_backup, justdiscover.users WHERE users.id = reviews_backup.user_id ORDER BY reviews_backup.id LIMIT %s OFFSET %s", (limit, offset))
 
     ctx_dims: List[str] = [desc[0] for desc in cursor.description[4:]]
     row_number = 0

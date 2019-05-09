@@ -4,7 +4,8 @@ from flask_cors import CORS
 from flask import request, Response
 import psycopg2 as psy
 import datetime
-import math
+import just_discover.Recommender as recommender
+import just_discover.DataProcessor as dataprocessor
 
 host = "jd-database.ccwvupidct47.eu-west-3.rds.amazonaws.com"
 database = "jd_database"
@@ -374,5 +375,15 @@ def hello_world():
     return 'Hello World!'
 
 
+def update_binary_review_table():
+    dataprocessor.transform_reviews_table_to_binary()
+
+
+def train_recommender():
+    recommender.execute(k_fold=5, regularizer=0.01, learning_rate=0.03, num_factors=10, iterations=100)
+
+
 if __name__ == '__main__':
     app.run()
+
+update_binary_review_table()
