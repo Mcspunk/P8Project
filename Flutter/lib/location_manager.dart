@@ -13,7 +13,8 @@ import 'utility.dart';
   Geolocator _geolocator = Geolocator()..forceAndroidLocationManager = true;
 
   void getUserLocationAndGPSPermissionAndInitPushNotif() async {
-    Position position = await _geolocator.getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
+
+  //  Position position = await _geolocator.getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
 
     //Initialize push notification settings
     var initializationSettingsAndroid = new AndroidInitializationSettings('app_icon');
@@ -70,7 +71,7 @@ import 'utility.dart';
 
   //TODO IOS specific navigation
   Future onDidRecieveLocationLocation(int id, String title, String body, String payload) {
-      
+    MaterialPageRoute(builder: (context) => HomeScreenState());
   }
           
   //Ikke sikker på at denne navigation er korrekt

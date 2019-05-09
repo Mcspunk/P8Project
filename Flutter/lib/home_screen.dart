@@ -731,7 +731,7 @@ class HomeScreen extends State<HomeScreenState> {
   void loadUser(String userName) {
     setState(() {
       this.username = userName;
-      updateUserLocation();
+      //updateUserLocation();
     });
   }
 }
