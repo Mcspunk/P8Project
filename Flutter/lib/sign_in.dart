@@ -330,7 +330,7 @@ class LogIn extends State<LogInState> {
                       //TODO vi mangler password felt og ændre streng herunder
                       //checkSignUp(signUpUserNameController.text, 'tbd', context);
                       if (_formKey.currentState.validate()) {
-                        saveString('currentUser', signUpUserNameController.text);
+                        saveString('currentUser', signUpUserNameController.text.toString());
                         Navigator.pushNamedAndRemoveUntil(context, '/context_prompt', (Route<dynamic> route) => false);
                       }
                     },

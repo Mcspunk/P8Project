@@ -11,12 +11,14 @@ import 'dart:io';
 
 class RatingDialog extends State<RatingState> {
   //https://www.youtube.com/watch?v=MsycCv5r2Wo
-  double attractionRating = loadString('dist') ?? 0;
-  String tripType = loadString('tripType') ??  'Solo';
-  DateTime selectedTime = DateTime.now();
+  
 
   @override
   Widget build(BuildContext context) {
+    DataContainer data = DataProvider.of(context).dataContainer;
+    double attractionRating = 0;
+    String tripType = data.getTripType() ??  'Solo';
+    DateTime selectedTime = DateTime.now();
     return Scaffold(
       appBar: AppBar(
         title: Text('Rate ' + widget.attraction.GetName()),
@@ -87,6 +89,7 @@ class RatingDialog extends State<RatingState> {
               title: Text('When did you visit?'),
               trailing: RaisedButton(
                 child: Text('Select date'),
+                color: Theme.of(context).accentColor,
                 onPressed: () async {
                   Future<DateTime> chosenTime = showDatePicker(
                     context: context,
@@ -109,6 +112,7 @@ class RatingDialog extends State<RatingState> {
           ListTile(
             title: RaisedButton(
               child: Text('Submit review'),
+              color: Theme.of(context).accentColor,
               onPressed: () {
                 giveReview(attractionRating, selectedTime, tripType, widget.attraction.GetName(), context);
                 /*
@@ -181,10 +185,12 @@ class HomeScreen extends State<HomeScreenState> {
                       //updatePreferences(context);
                       //getPreferences(context);
                       //updatePreferences(context);
-                      displayMsg(zoomLevel(distanceBetweenCoordinates(data.getAttractions()[0].GetCoordinate(), userLocation)).toStringAsFixed(2) , context);
+                      //displayMsg(zoomLevel(distanceBetweenCoordinates(data.getAttractions()[0].GetCoordinate(), userLocation)).toStringAsFixed(2) , context);
+                      getLikedAttraction(context);
                     });
                   }),
-              */
+                */
+              
             ],
             bottom: TabBar(tabs: [
               Tab(
@@ -239,12 +245,30 @@ class HomeScreen extends State<HomeScreenState> {
         attractions.add(attraction);
       }
     }
-    return _buildRecList(attractions);
+    return  Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: attractions.length != 0 ? _buildRecList(attractions)
+      : ListTile(
+              title: Text('No attractions found'),
+              subtitle: Text(
+                  'Try going to a different area, or adjust your settings, in order to find some nearby attractions'),
+              trailing: Icon(Icons.info_outline),
+            ),
+    );
   }
 
   Widget _allView() {
     DataContainer data = DataProvider.of(context).dataContainer;
-    return _buildRecList(data.getAttractions());
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: data.getAttractions().length != 0 ? _buildRecList(data.getAttractions())
+      : ListTile(
+              title: Text('No attractions found'),
+              subtitle: Text(
+                  'Try going to a different area, or adjust your settings, in order to find some nearby attractions'),
+              trailing: Icon(Icons.info_outline),
+            ),
+    );
   }
 
   Widget _restaurantView() {
@@ -256,19 +280,31 @@ class HomeScreen extends State<HomeScreenState> {
         restaurants.add(attraction);
       }
     }
-    return _buildRecList(restaurants);
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: restaurants.length != 0 ? _buildRecList(restaurants)
+      : ListTile(            
+              title: Text('No restaurants found'),
+              subtitle: Text(
+                  'Try going to a different area, or adjust your settings, in order to find some nearby restaurants'),
+              trailing: Icon(Icons.info_outline),
+            ),
+    );
   }
 
   Widget _likeView() {
     DataContainer data = DataProvider.of(context).dataContainer;
-    return data.getFavourites().length != 0
-        ? _buildRecList(data.getFavourites())
-        : ListTile(
-            title: Text('No liked attractions'),
-            subtitle: Text(
-                'Tap the heart icon on the attractions to save them to your list of liked attractions'),
-            trailing: Icon(Icons.info_outline),
-          );
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: data.getFavourites().length != 0
+          ? _buildRecList(data.getFavourites())
+          : ListTile(
+              title: Text('No liked attractions'),
+              subtitle: Text(
+                  'Tap the heart icon on the attractions to save them to your list of liked attractions'),
+              trailing: Icon(Icons.info_outline),
+            ),
+    );
   }
 
   Widget buildRecCardTile(Attraction attraction) {
@@ -328,11 +364,6 @@ class HomeScreen extends State<HomeScreenState> {
         border: Border.all(
           color: Theme.of(context).hintColor,
         ),
-        /*gradient: new LinearGradient(
-            colors: [Colors.black, Colors.blue],
-            begin: Alignment.centerRight,
-            end: new Alignment(0.8, 0.0),
-            tileMode: TileMode.mirror),*/
       ),
       child: Column(
         children: <Widget>[
@@ -368,8 +399,10 @@ class HomeScreen extends State<HomeScreenState> {
                         setState(() {
                           if (data.getFavourites().contains(attraction)) {
                             data.getFavourites().remove(attraction);
+                            updateLikedAttraction(context);
                           } else {
                             data.getFavourites().add(attraction);
+                            updateLikedAttraction(context);
                           }
                         });
                       },
@@ -710,6 +743,7 @@ class HomeScreen extends State<HomeScreenState> {
   
 DateTime lastupdatedRec = DateTime.now();
 DateTime lastupdatedAll = DateTime.now();
+//bool initLoad = true;
 
   @override
   Widget build(BuildContext context) {    
@@ -734,7 +768,14 @@ DateTime lastupdatedAll = DateTime.now();
       getAllAttractions(userLocation, data.getDist(), context);
       lastupdatedAll = DateTime.now();
     }
-    
+    /*
+    if(initLoad){
+      getLikedAttraction(context);
+
+      initLoad = false;
+    }
+    */
+
     if (username == null) {
       return LogInState();
     }
@@ -753,7 +794,8 @@ DateTime lastupdatedAll = DateTime.now();
     loadString('currentUser').then(loadUser);
     new Future.delayed(Duration.zero,(){
       getRecommendations(userLocation, 1, context);
-      getAllAttractions(userLocation, 1, context);    
+      getAllAttractions(userLocation, 1, context);
+      getLikedAttraction(context);
     });
   }
 

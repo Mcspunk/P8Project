@@ -37,23 +37,34 @@ ThemeData utilTheme() {
   );
 }
 
-Future<void> giveReview(double rating, DateTime date, String triptype, String attraction, BuildContext context) async {
-  
-  
-  Map months = {1:"January", 2:"Febuary", 3:"March", 4:"April", 5:"May", 6:"June", 7:"July", 8:"August", 9:"September", 10:"October", 11:"November", 12:"December"};
-
+Future<void> giveReview(double rating, DateTime date, String triptype,
+    String attraction, BuildContext context) async {
+  Map months = {
+    1: "January",
+    2: "Febuary",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December"
+  };
   String _date = months[date.month] + " " + date.year.toString();
-
-
-  var preEncode = {"rating":rating, "date": _date, "triptype": triptype, "attraction":attraction, "username":await loadString("currentUser")};
+  var preEncode = {
+    "rating": rating,
+    "date": _date,
+    "triptype": triptype,
+    "attraction": attraction,
+    "username": await loadString("currentUser")
+  };
   var postEncode = jsonEncode(preEncode);
-  
-  
   try {
-    var response = await http.post(
-        'http://10.0.2.2:5000/api/give-review/',
-        body: postEncode,
-        headers: {"Content-Type": "application/json"});
+    var response = await http.post('http://10.0.2.2:5000/api/give-review/',
+        body: postEncode, headers: {"Content-Type": "application/json"});
 
     if (response.statusCode != 200) {
       print('Error: ' + response.statusCode.toString());
@@ -65,22 +76,14 @@ Future<void> giveReview(double rating, DateTime date, String triptype, String at
 
 Future<void> updatePreferences(BuildContext context) async {
   DataContainer data = DataProvider.of(context).dataContainer;
-
   var ratings = data.getCategoryRatings();
-
   var preEncode = {
     "username": await loadString('currentUser'),
-    "pref_0": ratings['pref_0'],
-    "pref_1": ratings['pref_1'],
-    "pref_2": ratings['pref_2'],
-    "pref_3": ratings['pref_3'],
-    "pref_4": ratings['pref_4'],
-    "pref_5": ratings['pref_5'],
-    "pref_6": ratings['pref_6']
+    "Museum": ratings['Museum'],
+    "Parks": ratings['Parks'],
+    "Ferris_wheel": ratings['Ferris Wheel'],
   };
-
   var postEncode = jsonEncode(preEncode);
-
   try {
     var response = await http.post(
         'http://10.0.2.2:5000/api/update-preferences/',
@@ -97,30 +100,29 @@ Future<void> updatePreferences(BuildContext context) async {
 
 Future<void> getPreferences(BuildContext context) async {
   DataContainer data = DataProvider.of(context).dataContainer;
-
   try {
     String user = await loadString('currentUser');
     var preEncode = {"username": user, "un": user};
     var postEncode = jsonEncode(preEncode);
     var response = await http.post('http://10.0.2.2:5000/api/get-preferences/',
         body: postEncode, headers: {"Content-Type": "application/json"});
-
     var prefspre = response.headers['prefs'];
     var prefspost = jsonDecode(prefspre);
-    data.getCategoryRatings()['pref_0'] = prefspost['pref_0'];
-    data.getCategoryRatings()['pref_1'] = prefspost['pref_1'];
-    data.getCategoryRatings()['pref_2'] = prefspost['pref_2'];
-    data.getCategoryRatings()['pref_3'] = prefspost['pref_3'];
-    data.getCategoryRatings()['pref_4'] = prefspost['pref_4'];
-    data.getCategoryRatings()['pref_5'] = prefspost['pref_5'];
-    data.getCategoryRatings()['pref_6'] = prefspost['pref_6'];
+
+    data.getCategoryRatings()['Museum'] = prefspost['Museum'];
+    data.getCategoryRatings()['Parks'] = prefspost['Parks'];
+    data.getCategoryRatings()['Ferris Wheel'] = prefspost['Ferris_wheel'];
   } catch (e) {
     print(e);
   }
 }
 
 Future<int> getRecCount(Coordinate coordinate) async {
-  var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong(), "distance":await loadString("dist")};
+  var jsonstring = {
+    "lat": coordinate.GetLat(),
+    "long": coordinate.GetLong(),
+    "distance": await loadString("dist")
+  };
   var jsonedString = jsonEncode(jsonstring);
   try {
     var response = await http.post(
@@ -131,15 +133,19 @@ Future<int> getRecCount(Coordinate coordinate) async {
     var decoded = jsonDecode(attracts);
     var t = decoded as List;
     return t.length;
-  }
-  catch(e){
+  } catch (e) {
     print(e);
   }
   return 0;
 }
 
-Future<void> getAllAttractions(Coordinate coordinate, int dist, BuildContext context) async{
-    var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong(), "dist":dist ?? 1};
+Future<void> getAllAttractions(
+    Coordinate coordinate, int dist, BuildContext context) async {
+  var jsonstring = {
+    "lat": coordinate.GetLat(),
+    "long": coordinate.GetLong(),
+    "dist": dist ?? 1
+  };
   var jsonedString = jsonEncode(jsonstring);
   try {
     var response = await http.post(
@@ -153,6 +159,7 @@ Future<void> getAllAttractions(Coordinate coordinate, int dist, BuildContext con
       List<Attraction> recAttractions = [];
       for (var i = 0; i < t.length; i++) {
         recAttractions.add(new Attraction(
+            t[i]['id'],
             t[i]['name'],
             t[i]['opening_hours'],
             t[i]['img_path'],
@@ -163,13 +170,12 @@ Future<void> getAllAttractions(Coordinate coordinate, int dist, BuildContext con
             t[i]['lat'],
             t[i]['long']));
       }
-
       DataContainer data = DataProvider.of(context).dataContainer;
       if (recAttractions.length != 0) {
         data.setAllNearbyAttractions(recAttractions);
       }
     } else {
-      displayMsg('No connection to server.', context);
+      displayMsg('No connection to server.\nGAA', context);
     }
   } catch (e) {
     print(e);
@@ -178,7 +184,11 @@ Future<void> getAllAttractions(Coordinate coordinate, int dist, BuildContext con
 
 Future<void> getRecommendations(
     Coordinate coordinate, int dist, BuildContext context) async {
-  var jsonstring = {"lat": coordinate.GetLat(), "long": coordinate.GetLong(), "dist":dist ?? 1};
+  var jsonstring = {
+    "lat": coordinate.GetLat(),
+    "long": coordinate.GetLong(),
+    "dist": dist ?? 1
+  };
   var jsonedString = jsonEncode(jsonstring);
   try {
     var response = await http.post(
@@ -192,6 +202,7 @@ Future<void> getRecommendations(
       List<Attraction> recAttractions = [];
       for (var i = 0; i < t.length; i++) {
         recAttractions.add(new Attraction(
+            t[i]['id'],
             t[i]['name'],
             t[i]['opening_hours'],
             t[i]['img_path'],
@@ -202,13 +213,76 @@ Future<void> getRecommendations(
             t[i]['lat'],
             t[i]['long']));
       }
-
       DataContainer data = DataProvider.of(context).dataContainer;
       if (recAttractions.length != 0) {
         data.setAttractions(recAttractions);
       }
     } else {
-      displayMsg('No connection to server.', context);
+      displayMsg('No connection to server\nGR', context);
+    }
+  } catch (e) {
+    print(e);
+  }
+}
+
+Future<void> updateLikedAttraction(BuildContext context) async {
+  DataContainer data = DataProvider.of(context).dataContainer;
+  String liked = "";
+  for (var item in data.getFavourites()) {
+    liked += (item.GetID().toString() + "|");
+  }
+  if (liked.length != 0) {
+    var preEncode = {
+      "username": await loadString('currentUser'),
+      "liked": liked
+    };
+    var postEncode = jsonEncode(preEncode);
+    try {
+      var response = await http.post(
+          'http://10.0.2.2:5000/api/update-liked-attractions/',
+          body: postEncode,
+          headers: {"Content-Type": "application/json"});
+      if (response.statusCode != 200) {
+        displayMsg('Error: ' + response.statusCode.toString(), context);
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+}
+
+Future<void> getLikedAttraction(BuildContext context) async {
+  var jsonstring = {"username": await loadString('currentUser')};
+  var jsonedString = jsonEncode(jsonstring);
+  try {
+    var response = await http.post(
+        'http://10.0.2.2:5000/api/request-liked-attractions/',
+        body: jsonedString,
+        headers: {"Content-Type": "application/json"});
+    if (response.statusCode == 200) {
+      var attracts = response.headers['attractions'];
+      var decoded = attracts == null ? [] : jsonDecode(attracts);
+      var t = decoded as List;
+      List<Attraction> recAttractions = [];
+      for (var i = 0; i < t.length; i++) {
+        recAttractions.add(new Attraction(
+            t[i]['id'],
+            t[i]['name'],
+            t[i]['opening_hours'],
+            t[i]['img_path'],
+            !t[i]['isFoodPlace'],
+            t[i]['rating'],
+            t[i]['description'],
+            t[i]['url'],
+            t[i]['lat'],
+            t[i]['long']));
+      }
+      DataContainer data = DataProvider.of(context).dataContainer;
+      if (recAttractions.length != 0) {
+        data.setFavourites(recAttractions);
+      }
+    } else {
+      displayMsg('No connection to server.\nGLA', context);
     }
   } catch (e) {
     print(e);
@@ -231,7 +305,7 @@ Future<void> checkLogIn(
           'Coulnd\'t find a user with that username, or the password was wrong',
           context);
     } else {
-      displayMsg('No connection to server.', context);
+      displayMsg('No connection to server.\nLI', context);
     }
   } catch (e) {
     print(e);
@@ -251,7 +325,7 @@ Future<void> checkSignUp(
     } else if (response.statusCode == 208) {
       displayMsg('Username already taken.', context);
     } else {
-      displayMsg('No connection to server.', context);
+      displayMsg('No connection to server.\nSU', context);
     }
   } catch (e) {
     print(e);
@@ -298,31 +372,30 @@ void launchWebsite(String url, var context) async {
 
 Coordinate findMiddlePoint(Coordinate one, Coordinate two) {
   double latdiff =
-      one._lat < two._lat ? two._lat - one._lat : one._lat - two._lat;
+      one.GetLat() < two.GetLat() ? two.GetLat() - one.GetLat() : one.GetLat() - two.GetLat();
   double longdiff =
-      one._long < two._long ? two._long - one._long : one._long - two._long;
+      one.GetLong() < two.GetLong() ? two.GetLong() - one.GetLong() : one.GetLong() - two.GetLong();
   longdiff = longdiff / 2;
   latdiff = latdiff / 2;
-  double lat = one._lat < two._lat ? one._lat + latdiff : two._lat + latdiff;
+  double lat = one.GetLat() < two.GetLat() ? one.GetLat() + latdiff : two.GetLat() + latdiff;
   double long =
-      one._long < two._long ? one._long + longdiff : two._long + longdiff;
+      one.GetLong() < two.GetLong() ? one.GetLong() + longdiff : two.GetLong() + longdiff;
   return new Coordinate(lat, long);
 }
 
-double distanceBetweenCoordinates(Coordinate c1, Coordinate c2){
+double distanceBetweenCoordinates(Coordinate c1, Coordinate c2) {
   var r = 6371000;
   double phi_1 = c1.GetLat() * (pi / 180);
   double phi_2 = c2.GetLat() * (pi / 180);
-  double deltaPhi = (c2.GetLat() - c1.GetLat()) *(pi / 180);
+  double deltaPhi = (c2.GetLat() - c1.GetLat()) * (pi / 180);
   double deltaLambda = (c2.GetLong() - c1.GetLong()) * (pi / 180);
-
-  var a = sin(deltaPhi/2) * sin(deltaPhi/2) + cos(phi_1) * cos(phi_2) * sin(deltaLambda/2) *sin(deltaLambda/2);
-  var c = 2 * atan2(sqrt(a), sqrt(1-a));
-
+  var a = sin(deltaPhi / 2) * sin(deltaPhi / 2) +
+      cos(phi_1) * cos(phi_2) * sin(deltaLambda / 2) * sin(deltaLambda / 2);
+  var c = 2 * atan2(sqrt(a), sqrt(1 - a));
   return r * c;
 }
 
-double zoomLevel(double distance){
+double zoomLevel(double distance) {
   var dist = (6371000 / distance);
   return log(dist) * 1.7;
 }
@@ -358,6 +431,7 @@ class User {
 }
 
 class Attraction {
+  int _id;
   String _name;
   String _openingHours;
   String _imgPath;
@@ -367,12 +441,14 @@ class Attraction {
   String _url;
   Coordinate _coordinate;
 
-  Attraction(String name, String openingHours, String imgPath, bool isFoodPlace,
+  Attraction(int id, String name, String openingHours, String imgPath,
+      bool isFoodPlace,
       [double rating,
       String description,
       String url,
       double lat,
       double long]) {
+    _id = id;
     _name = name;
     _openingHours = openingHours;
     _imgPath = imgPath;
@@ -387,6 +463,10 @@ class Attraction {
         ? _coordinate = new Coordinate(lat, long)
         : _coordinate = null;
     _isFoodPlace = isFoodPlace;
+  }
+
+  int GetID() {
+    return _id;
   }
 
   String GetName() {
@@ -422,8 +502,7 @@ class Attraction {
   }
 
   @override
-  bool operator ==(other){
-    return (other is Attraction && this._name == other.GetName());
+  bool operator ==(other) {
+    return (other is Attraction && this._id == other.GetID());
   }
-
 }

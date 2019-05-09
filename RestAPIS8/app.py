@@ -26,10 +26,17 @@ def get_preferences():
     sqlString = "SELECT * FROM justdiscover.users WHERE user_name = '" + name + "';"
     cursor.execute(sqlString)
 
-    res = cursor.fetchone()
+    DBres = cursor.fetchone()
 
-    result = {"pref_0":res[6], "pref_1":res[7], "pref_2":res[8], "pref_3":res[9], "pref_4":res[10], "pref_5":res[11], "pref_6":res[12]}
-    result = json.dumps(result)
+    result = DBres[3]
+    #{"pref_0":res[6], "pref_1":res[7], "pref_2":res[8], "pref_3":res[9], "pref_4":res[10], "pref_5":res[11], "pref_6":res[12]}
+
+    #res2 = json.dumps(result)
+    res = json.loads(result)
+
+    temp = {"Museum": res['Museum'], "Parks": res['Parks'], "Ferris_wheel": res['FerrisWheel']}
+
+    result = json.dumps(temp)
 
     conn.commit()
     cursor.close()
@@ -46,15 +53,13 @@ def update_preferences():
 
     #pref = json.load(json_date)
     name = json_date['username']
-    pref_0 = str(json_date['pref_0'])
-    pref_1 = str(json_date['pref_1'])
-    pref_2 = str(json_date['pref_2'])
-    pref_3 = str(json_date['pref_3'])
-    pref_4 = str(json_date['pref_4'])
-    pref_5 = str(json_date['pref_5'])
-    pref_6 = str(json_date['pref_6'])
+    pref_0 = str(json_date['Museum'])
+    pref_1 = str(json_date['Parks'])
+    pref_2 = str(json_date['Ferris_wheel'])
 
-    sqlString = "UPDATE justdiscover.users SET pref_0 = " + pref_0 + ", pref_1 = " + pref_1 + ", pref_2 = " + pref_2 + ", pref_3 = " + pref_3 + ", pref_4 = " + pref_4 + ", pref_5 = " + pref_5 + ", pref_6 = " + pref_6 + " WHERE user_name = CAST ('" + name + "' as TEXT);"
+    tempstring = '{"Museum": ' + pref_0 + ', "Parks": ' + pref_1 + ', "FerrisWheel": ' + pref_2 + '}'
+
+    sqlString = "UPDATE justdiscover.users SET preferences = '" + tempstring + "' WHERE user_name = CAST ('" + name + "' as TEXT);"
     cursor.execute(sqlString)
 
 
@@ -83,13 +88,13 @@ def give_review():
     attracIDSQL = "SELECT id FROM justdiscover.poi WHERE name = '" + attraction + "';"
     userIDSQL = "SELECT id FROM justdiscover.users WHERE user_name = '"+ username + "';"
 
-    TreviewID = cursor.execute(maxIDSQL)
+    cursor.execute(maxIDSQL)
     reviewID = cursor.fetchone()
     rID = reviewID[0]
     rID = rID + 1
-    TpoiID = cursor.execute(attracIDSQL)
+    cursor.execute(attracIDSQL)
     poiID = cursor.fetchone()[0]
-    TuserID = cursor.execute(userIDSQL)
+    cursor.execute(userIDSQL)
     userID = cursor.fetchone()[0]
 
     insertSQL = "INSERT INTO justdiscover.reviews VALUES " + str(rID) + ", " + str(rating) + ", " + date + ", " + triptype + ", " + userID + ", " + str(poiID) + ";"
@@ -106,6 +111,11 @@ def give_review():
 
 @app.route('/api/request-all-recommendations/', methods=['POST'])
 def get_all_recommendations():
+
+
+    return Response(status=200)
+
+
     json_data = request.get_json(force=True)
 
     conn = psy.connect(host=host, database=database, user=user, password=password)
@@ -115,39 +125,59 @@ def get_all_recommendations():
     long = json_data['long']
     dist = json_data['dist']
 
+    '''
+    if(dist < 5):
+        dist = 5
+
     latDegree = math.radians(lat)
     longDegree = math.radians(long)
     kmAtEq = 69.172*1.609
-    longdist = (1/1.38458)*((((dist/(((lat*math.pi)/180)*kmAtEq))/kmAtEq)*180)/math.pi)
+
+    longdist = math.degrees((dist/(latDegree*kmAtEq))/kmAtEq)
+    a = longdist
+    longdist2 = ((((dist/(((lat*math.pi)/180)*kmAtEq))/kmAtEq)*180)/math.pi)
+    b = longdist2
     latdist = dist/kmAtEq
 
+    
+    if(longdist < 0):
+        longdist += longdist * (-2)
+    if(latdist < 0):
+        latdist += latdist * (-2)
+    
 
     maxlong = long + longdist
     minlong = long - longdist
     maxlat = lat + latdist
     minlat = lat - latdist
+    
+    sqlstring = "SELECT * FROM justdiscover.poi WHERE lat > "+ str(minlat) +" AND lat < " + str(maxlat) +" AND lng > " + str(minlong) +" AND lng < " + str(maxlong) + ";"
+    cursor.execute(sqlstring)
 
+    '''
 
     #Det her skal være alle dem inden for en hvis radius
     recs = []     #1, 3, 5, 2, 22, 10, 12, 32, 99, 23, 41]
     attracs = []
 
-    sqlstring = "SELECT * FROM justdiscover.poi WHERE lat > "+ str(minlat) +" AND lat < " + str(maxlat) +" AND lng > " + str(minlong) +" AND lng < " + str(maxlong) + ";"
 
+    sqlstring = ""
     cursor.execute(sqlstring)
-
     attraction = cursor.fetchone
     counter = 0
 
+    attracs = [{"id": 1, "name": "The British Museum", "opening_hours": "Fri:10:00 AM - 8:30 PM;\nSat - Thu:10:00 AM - 5:30 PM;\n", "img_path": "https://media-cdn.tripadvisor.com/media/photo-s/03/56/93/aa/great-court-at-the-british.jpg", "description": "The British Museum", "rating": 4.5, "isFoodPlace": True, "url": "https://media-cdn.tripadvisor.com/media/photo-s/03/56/93/aa/great-court-at-the-british.jpg", "lat": 0.0, "long": 0.0}, {"id": 3, "name": "German Doner Kebab", "opening_hours": "Sun - Sat\r:11:00 AM - 11:00 PM;\n", "img_path": "https://media-cdn.tripadvisor.com/media/photo-s/15/3a/13/80/kebab.jpg", "description": "German Doner Kebab", "rating": 5.0, "isFoodPlace": False, "url": "https://media-cdn.tripadvisor.com/media/photo-s/15/3a/13/80/kebab.jpg", "lat": 0.0, "long": 0.0}]
+    attracs = json.dumps(attracs)
+
     #Linjen her under skal fjernes når db er good to go
-    return Response(headers={"attractions": attracs}, content_type='text/json', status=200)
 
 
-    while(attraction != None and counter < 20):
+    while(attraction != None):
         #sqlstring = "SELECT * FROM justdiscover.poi WHERE id = " + str(r) + ";"
         #cursor.execute(sqlstring)
         #attraction = cursor.fetchone()
-        tempAttraction = {"name": attraction[9],
+        tempAttraction = {"id": attraction[0],
+                          "name": attraction[9],
                           "opening_hours": attraction[4],
                           "img_path": attraction[8],
                           "description": attraction[9],
@@ -159,6 +189,79 @@ def get_all_recommendations():
         attracs.append(tempAttraction)
         cursor.fetchone
         counter += 1
+
+    attracs = json.dumps(attracs)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return Response(headers={"attractions": attracs}, content_type='text/json', status=200)
+
+
+@app.route('/api/update-liked-attractions/', methods=['POST'])
+def update_liked():
+    json_data = request.get_json(force=True)
+
+    conn = psy.connect(host=host, database=database, user=user, password=password)
+    cursor = conn.cursor()
+    username = str(json_data['username'])
+    attractions = json_data['liked']
+
+    sqlString = "UPDATE justdiscover.users SET liked_attractions = '" + attractions + "'  WHERE user_name = CAST ('" + username + "' as TEXT);"
+    cursor.execute(sqlString)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return Response(content_type='text/json', status=200)
+
+
+
+@app.route('/api/request-liked-attractions/', methods=['POST'])
+def get_liked_attractions():
+    json_data = request.get_json(force=True)
+
+    conn = psy.connect(host=host, database=database, user=user, password=password)
+    cursor = conn.cursor()
+    username = str(json_data['username'])
+
+    sqlstring = "SELECT liked_attractions from justdiscover.users WHERE user_name = '" + username + "';"
+    cursor.execute(sqlstring)
+    if(cursor.rowcount == 0):
+        return Response(status=200)
+
+    liked = cursor.fetchone()[0]
+
+
+    like = liked.split('|')
+
+    like.pop(len(like)-1)
+
+
+
+
+
+    #Kald recommendation metoden her sådan at den liste der bliver returneret bliver sat til at være lig recs
+    #recs = [1, 3, 5, 2, 22, 10]
+    attracs = []
+
+    for r in like:
+        sqlstring = "SELECT * FROM justdiscover.poi WHERE id = " + str(r) + ";"
+        cursor.execute(sqlstring)
+        attraction = cursor.fetchone()
+        tempAttraction = {"id": attraction[0],
+                          "name": attraction[9],
+                          "opening_hours": attraction[4],
+                          "img_path": attraction[8],
+                          "description": attraction[9],
+                          "rating": float(attraction[3]),
+                          "isFoodPlace": attraction[11],
+                          "url": attraction[8],  # Skal ikke være det her....
+                          "lat": float(attraction[1]),
+                          "long": float(attraction[2])}
+        attracs.append(tempAttraction)
 
     attracs = json.dumps(attracs)
 
@@ -186,7 +289,8 @@ def get_recommendations():
         sqlstring = "SELECT * FROM justdiscover.poi WHERE id = " + str(r) + ";"
         cursor.execute(sqlstring)
         attraction = cursor.fetchone()
-        tempAttraction = {"name": attraction[9],
+        tempAttraction = {"id":attraction[0],
+                          "name": attraction[9],
                           "opening_hours": attraction[4],
                           "img_path": attraction[8],
                           "description": attraction[9],

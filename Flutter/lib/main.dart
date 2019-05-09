@@ -25,13 +25,6 @@ main() async {
 }
 //void main() => runApp(MyApp());
 
-void getrecinit(BuildContext context) async {
-  var _geolocator = Geolocator();
-  Position position = await _geolocator.getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
-
-  getRecommendations(new Coordinate(position.latitude, position.longitude), 1, context);
-}
-
 class MyApp extends StatelessWidget {  
   bool loggedIn = false;
 
@@ -55,7 +48,6 @@ class MyApp extends StatelessWidget {
         onGenerateRoute: (RouteSettings settings) {
           switch (settings.name) {
             case '/':
-              getrecinit(context);
               return MaterialPageRoute(builder: (context) => HomeScreenState());
               break;
             case '/LogIn':

@@ -14,7 +14,7 @@ class DataContainer {
 
 
   DataContainer(){
-    _categoryRatings = Map.fromIterables(['pref_0','pref_1','pref_2','pref_3','pref_4', 'pref_5', 'pref_6'], [0,0,0,0,0,0,0]);
+    _categoryRatings = Map.fromIterables(['Museum', 'Parks', 'Ferris Wheel'], [0,0,0]);
   }
 
   List<Attraction> getAttractions() => _currentAttractions;
