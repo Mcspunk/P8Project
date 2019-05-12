@@ -4,7 +4,6 @@ from collections import namedtuple
 import psycopg2
 import creds_psql as creds
 from typing import List
-from typing import Dict
 from collections import defaultdict
 
 np.random.seed(seed=8)
@@ -13,76 +12,42 @@ ItemRatingPair = namedtuple("ItemRatingPair", "item rating")
 
 
 class RatingObj:
-    # row:User_Item column:ctx_index, data: rating
-    rate_matrix: scipy.sparse.csr_matrix
-    #row:User_Item column:ctx_index, data: kth-fold
     assign_matrix: scipy.sparse.csr_matrix
-    items: int
-    users: int
+    rate_matrix: scipy.sparse.csr_matrix
 
-    user_ids = dict()
-    items_ids = dict()
-    ctx_ids: Dict[str, int] = dict()
-    ui_ids: Dict[str, int] = dict()
-    dim_ids: Dict[str, int] = dict()
-    cond_ids: Dict[str, int] = dict()
+    def __init__(self):
 
-    ids_user: Dict[int, str] = dict()
-    ids_items: Dict[int, str] = dict()
-    ids_ctx: Dict[int, str] = dict()
-    ids_ctx_list: Dict[int, list] = dict()
-    ids_ui: Dict[int, str] = dict()
-    ids_dim: Dict[int, str] = dict()
-    ids_cond: Dict[int, str] = dict()
+        self.user_ids = dict()
+        self.items_ids = dict()
+        self.ctx_ids = dict()
+        self.ui_ids = dict()
+        self.dim_ids = dict()
+        self.cond_ids = dict()
 
-    num_rating: int
-    ui_user_ids: Dict[int, int] = dict()
-    ui_item_ids: Dict[int, int] = dict()
-    cond_dim_dict: Dict[int, int] = dict()
-    dim_cond_dict = defaultdict(set)
+        self.ids_user = dict()
+        self.ids_items = dict()
+        self.ids_ctx = dict()
+        self.ids_ctx_list = dict()
+        self.ids_ui = dict()
+        self.ids_dim = dict()
+        self.ids_cond = dict()
 
-    user_rated_multimap = defaultdict(set)
-    item_rated_multimap = defaultdict(set)
-    user_item_user_ids_multimap = defaultdict(set)
-    user_item_item_ids_multimap = defaultdict(set)
+        self.num_rating: int
+        self.ui_user_ids = dict()
+        self.ui_item_ids = dict()
+        self.cond_dim_dict = dict()
+        self.dim_cond_dict = defaultdict(set)
 
-    context_condition_multimap = defaultdict(set)
-    condition_context_multimap = defaultdict(set)
+        self.user_item_user_ids_multimap = defaultdict(set)
+        self.user_item_item_ids_multimap = defaultdict(set)
 
-    rating_values = set()
+        self.context_str_ids = dict()
+        self.context_condition_multimap = defaultdict(set)
+        self.condition_context_multimap = defaultdict(set)
+        self.ratings_count = 0
+        self.rating_values = set()
 
-    user_item_context_rating = dict(list())
-    ratings_count = 0
-
-    train: scipy.sparse.csr_matrix
-
-    def __init__(self, obj=None):
-        if obj is not None:
-            self.assign_matrix = obj.assign_matrix
-            self.cond_dim_dict = obj.cond_dim_dict
-            self.cond_ids = obj.cond_ids
-            self.condition_context_multimap = obj.condition_context_multimap
-            self.context_condition_multimap = obj.context_condition_multimap
-            self.ctx_ids = obj.ctx_ids
-            self.dim_cond_dict = obj.dim_cond_dict
-            self.dim_ids = obj.dim_ids
-            self.ids_cond = obj.ids_cond
-            self.ids_items = obj.ids_items
-            self.ids_dim = obj.ids_dim
-            self.ids_ui = obj.ids_ui
-            self.ids_user = obj.ids_user
-            self.item_rated_multimap = obj.item_rated_multimap
-            self.items_ids = obj.items_ids
-            self.rate_matrix = obj.rate_matrix
-            self.ratings = obj.ratings
-            self.ui_ids = obj.ui_ids
-            self.ui_item_ids = obj.ui_item_ids
-            self.ui_user_ids = obj.ui_user_ids
-            self.user_ids = obj.user_ids
-            self.user_item_context_rating = obj.user_item_context_rating
-            self.user_item_item_ids_multimap = obj.user_item_item_ids_multimap
-            self.user_item_user_ids_multimap = obj.user_item_user_ids_multimap
-            self.user_rated_multimap = obj.user_rated_multimap
+        self.user_item_context_rating = dict(list())
 
     def split_data(self, k_folds):
 
@@ -242,7 +207,7 @@ def read_data_binary():
 
     db = psycopg2.connect(conn_string)
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM justdiscover.reviews_binary ORDER BY  id ASC LIMIT 80000")
+    cursor.execute("SELECT * FROM justdiscover.reviews_binary ORDER BY id ASC")
 
     colnames: List[str] = [desc[0] for desc in cursor.description[4:]]
     counter = 0
@@ -275,9 +240,6 @@ def read_data_binary():
         user_item_id = rating_obj.ui_ids.get(user_item, len(rating_obj.ui_ids))
         rating_obj.ui_ids[user_item] = user_item_id
 
-        rating_obj.user_rated_multimap[row_id].add(user_item_id)
-        rating_obj.item_rated_multimap[col_id].add(user_item_id)
-
         rating_obj.ui_user_ids[user_item_id] = row_id
         rating_obj.ui_item_ids[user_item_id] = col_id
 
@@ -309,6 +271,11 @@ def read_data_binary():
     rating_obj.ids_user = dict((v, k) for k, v in rating_obj.user_ids.items())
     rating_obj.ids_items = dict((v, k) for k, v in rating_obj.items_ids.items())
     rating_obj.ids_cond = dict((v, k) for k, v in rating_obj.cond_ids.items())
+
+    for key, val in rating_obj.ids_ctx_list.items():
+        context_str = ','.join([str(rating_obj.ids_cond[elem]) for elem in val])
+        rating_obj.context_str_ids[context_str] = key
+
     sorted(rating_obj.rating_values)
     number_of_rows = len(rating_obj.user_item_context_rating)
     number_of_row_ptrs = number_of_rows + 1

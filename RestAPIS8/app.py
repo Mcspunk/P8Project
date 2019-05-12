@@ -8,6 +8,8 @@ import just_discover.Recommender as recommender
 import just_discover.DataProcessor as dataprocessor
 import requests
 import pickle
+import dill
+import copy
 
 host = "jd-database.ccwvupidct47.eu-west-3.rds.amazonaws.com"
 database = "jd_database"
@@ -17,6 +19,7 @@ password = "sw_809_p8"
 app = Flask(__name__)
 cors = CORS(app, support_credentials=True, resources={r"/api/*": {"origins": "*", "support_credentials": True}})
 
+icamf_recommender: recommender.ICAMF
 
 @app.route('/api/get-preferences/', methods=['POST'])
 def get_preferences():
@@ -89,7 +92,7 @@ def give_review():
 
     maxIDSQL = "SELECT MAX(id) FROM justdiscover.reviews;"
     attracIDSQL = "SELECT id FROM justdiscover.poi WHERE name = '" + attraction + "';"
-    userIDSQL = "SELECT id FROM justdiscover.users WHERE user_name = '"+ username + "';"
+    userIDSQL = "SELECT id FROM justdiscover.users WHERE user_name = '" + username + "';"
 
     cursor.execute(maxIDSQL)
     reviewID = cursor.fetchone()
@@ -277,12 +280,21 @@ def get_liked_attractions():
 
 @app.route('/api/request-recommendations/', methods=['POST'])
 def get_recommendations():
-    json_data = request.get_json(force=True)
+
+    json_data = requests.get_json(force=True)
+    threshold_min_rating = 3
+    max_dist = json_data['dist']
+    user_id = json_data['id']
+    context = json_data['context']
+    coordinate = json_data['coordinate']
+
+    max_dist_in_km = max_dist * 1000
 
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
-
-    dist = json_data['dist']
+    cursor.execute("SELECT poi_backup.id FROM justdiscover.poi_backup WHERE ST_Distance_Sphere(geometry(justdiscover.poi_backup.location_coordinate), st_makepoint %s) <= %s", (coordinate, max_dist_in_km))
+    poi_within_distance_list = [tup[0] for tup in list(cursor)]
+    recommendation_list = icamf_recommender.top_recommendations(user_id, poi_within_distance_list, context, threshold_min_rating)
 
     #Kald recommendation metoden her sådan at den liste der bliver returneret bliver sat til at være lig recs
     recs = [1, 3, 5, 2, 22, 10]
@@ -381,13 +393,42 @@ def update_binary_review_table():
     dataprocessor.transform_reviews_table_to_binary()
 
 
-def train_recommender():
-    recommender.execute(k_fold=5, regularizer=0.01, learning_rate=0.03, num_factors=10, iterations=100)
+def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iterations):
+    recommender.train_eval_parallel(k_fold=kfold, regularizer=regularizer, learning_rate=learning_rate,
+                                    num_factors=num_factors, iterations=iterations)
 
+
+def train_and_save_model(regularizer, learning_rate, num_factors, iterations):
+    recommender.train_and_save_model(regularizer=regularizer, learning_rate=learning_rate,
+                                     num_factors=num_factors,iterations=iterations)
+
+
+def place_details():
+    api_key = "Insert_API_KEY"
+    poi_place_details_list = list()
+    poi_no_results = list()
+    params = dict()
+    params['key'] = api_key
+    endpoint = "https://maps.googleapis.com/maps/api/place/details/json"
+    with open("poi_id_geocoding.pkl", "rb") as f:
+        id_geocoding_json_list = dill.load(f)
+
+    for poi_id, geocoding in id_geocoding_json_list:
+        if geocoding['status'] == "ZERO_RESULTS":
+            poi_no_results.append(poi_id)
+            continue
+        params['placeid'] = geocoding["results"][0]["place_id"]
+        r = requests.get(url=endpoint, params=params, )
+        data = r.json()
+        poi_place_details_list.append((poi_id,data))
+    for empty_poi in poi_no_results:
+        poi_place_details_list.append((empty_poi, None))
+    with open(f'poi_details.pkl', "wb") as file:
+        dill.dump(poi_place_details_list, file)
+    return poi_place_details_list
 
 def geocoding_of_poi():
     api_key = "Insert_API_KEY"
-
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
 
@@ -417,13 +458,38 @@ def geocoding_of_poi():
 
     return id_geocoding_json_list
 
+def insert_poi_details():
+    with open("poi_details.pkl", "rb") as f:
+        poi_details = dill.load(f)
+    poi_no_details_list = list()
+
+    for poi_id, details_json in poi_details:
+        if details_json is None:
+            poi_no_details_list.append((poi_id, details_json))
+            continue
+        phone_number = None
+        categories = None
+        website = None
+        opening_hours = None
+        price_level = None
+
+        if 'international_phone_number' in details_json['result']:
+            phone_number = details_json['result']['international_phone_number']
+        if 'types' in details_json['result']:
+            categories = details_json['result']['types']
+        if 'website' in details_json['result']:
+            website = details_json['result']['website']
+        if 'opening_hours' in details_json['result']:
+            opening_hours = details_json['result']['opening_hours']
+        if 'price_level' in details_json['result']:
+            price_level = details_json['result']['price_level']
+
+
 
 def insert_geocoding_database():
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
-
-
-    id_geocoding_json_list = pickle.load(open("poi_id_geocoding.p", "rb"))
+    id_geocoding_json_list = pickle.load(open("poi_id_geocoding.pkl", "rb"))
     poi_no_results = list()
     for poi_id, geocoding in id_geocoding_json_list:
         if geocoding['status'] == "ZERO_RESULTS":
@@ -441,6 +507,14 @@ def insert_geocoding_database():
 
 
 if __name__ == '__main__':
-    #icamf_recommender = pickle.load(open("icamf_model.p", "rb"))
-    update_binary_review_table()
+
     app.run()
+
+
+with open("dummy_model.pkl", "rb") as f:
+    icamf_recommender = dill.load(f)
+
+#train_and_save_model(0.001,0.002,10,1)
+#train_recommender_kfold(2, 0.001, 0.002,10,1)
+
+
