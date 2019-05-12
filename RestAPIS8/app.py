@@ -514,7 +514,8 @@ if __name__ == '__main__':
 with open("dummy_model.pkl", "rb") as f:
     icamf_recommender = dill.load(f)
 
-#train_and_save_model(0.001,0.002,10,1)
-#train_recommender_kfold(2, 0.001, 0.002,10,1)
-
+#train_and_save_model(0.001,0.002,25,20)
+#train_recommender_kfold(5, 0.001, 0.002,25,100)
+#train_recommender_kfold(5, 0.001, 0.002,25,100)
+#train_recommender_kfold(5, 0.001, 0.002,25,100)
 

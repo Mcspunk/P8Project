@@ -11,11 +11,11 @@ import dill
 import copy
 
 
-
 np.random.seed(seed=8)
 latent_factor_values = recordclass('latent_factor_values', 'index value delta')
 confusion_matrix_row = recordclass('confusion_matrix_row', 'rating true_positive false_positive true_negative false_negative precision recall accuracy')
 measurement_queue = Queue()
+
 
 def __train_eval_parallel_worker(recommender, output):
     recommender.build_ICAMF()
@@ -99,7 +99,7 @@ class ICAMF:
                                                        size=(len(self.rating_object.ids_cond), self.num_factors))
 
     def build_ICAMF(self):
-        print("Training started: " + str(datetime.datetime.now().time()))
+        print("Training started: " + f'fold: {str(self.fold)} ' + str(datetime.datetime.now().time()))
         for iteration in range(0, self.iterations):
 
             loss = 0
@@ -160,7 +160,7 @@ class ICAMF:
                         for index, condition in enumerate(conditions):
                             self.context_factor_matrix[condition][factor] += self.learning_rate * latent_values_list[index+2].delta
             loss *= 0.5
-            print("Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
+            print(f'Fold: {str(self.fold)} ' + "Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
             print("Loss: " + str(loss))
 
 
