@@ -163,8 +163,28 @@ class RatingState extends StatefulWidget {
 class HomeScreen extends State<HomeScreenState> {
   double attractionRating = 0;
   Coordinate userLocation;
-
+  bool refreshDisabled = false;
+  int maxDist;
   String username;
+
+  bool checkRefresh(bool val) {
+    setState(() {
+      this.refreshDisabled = val ?? false;
+    });
+  }
+
+  void refreshDistancePenalty() {
+    DataContainer data = DataProvider.of(context).dataContainer;
+    List<Attraction> attractionList = data.getAttractions();
+    for (var attraction in attractionList) {
+      double score = attraction.getRating();
+      double distPen = 5 /maxDist * distanceBetweenCoordinates(userLocation, attraction.getCoordinate());
+      double penalisedScore = score - (0.8 * distPen);
+      attraction.setPenalisedScore(penalisedScore);
+      print(penalisedScore);
+    }
+  }
+
   Widget _homeScreen() {
     DataContainer data = DataProvider.of(context).dataContainer;
     return MaterialApp(
@@ -175,6 +195,10 @@ class HomeScreen extends State<HomeScreenState> {
           appBar: AppBar(
             title: Text('Home'),
             actions: <Widget>[
+              IconButton(
+                icon: Icon(Icons.refresh),
+                onPressed: refreshDisabled ? null : refreshDistancePenalty,
+              ),
               IconButton(
                   //Tror ikke det er her den her funktionalitet skal være, men kunne ikke få lov til at lave en tab mere
                   icon: const Icon(Icons.map),
@@ -813,10 +837,31 @@ class HomeScreen extends State<HomeScreenState> {
     });
   }
 
+  void loadDist(int maxDist) {
+    setState(() {
+      this.maxDist = maxDist;
+    });
+  }
+
+  void loadDisableDistUpdate(bool disableDist) {
+    bool val;
+    if (disableDist == null) {
+      setState(() {
+        this.refreshDisabled = false;
+      });
+    } else {
+      setState(() {
+        this.refreshDisabled = disableDist;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     loadString('currentUser').then(loadUser);
+    loadInt('dist').then(loadDist);
+    loadBool('disableDist').then(loadDisableDistUpdate);
     new Future.delayed(Duration.zero, () {
       getRecommendations(userLocation, context);
       getAllAttractions(userLocation, context);

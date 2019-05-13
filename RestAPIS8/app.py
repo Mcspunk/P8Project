@@ -290,7 +290,7 @@ def get_liked_attractions():
 @app.route('/api/request-recommendations/', methods=['POST'])
 def get_recommendations():
 
-    json_data = requests.get_json(force=True)
+    json_data = request.get_json(force=True)
     threshold_min_rating = 3
     max_dist = json_data['dist']
     user_id = json_data['id']

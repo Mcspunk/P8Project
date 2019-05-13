@@ -498,6 +498,7 @@ class Attraction {
   bool _isFoodPlace;
   String _url;
   Coordinate _coordinate;
+  double _penalisedScore;
 
   Attraction(int id, String name, String openingHours, String imgPath,
       bool isFoodPlace,
@@ -521,6 +522,14 @@ class Attraction {
         ? _coordinate = new Coordinate(lat, long)
         : _coordinate = null;
     _isFoodPlace = isFoodPlace;
+  }
+
+  double getPenalisedScore(){
+    return _penalisedScore;
+  }
+
+  void setPenalisedScore(double val){
+    this._penalisedScore = val;
   }
 
   int getID() {
