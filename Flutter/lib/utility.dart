@@ -10,6 +10,22 @@ import 'dart:io';
 import 'dart:ui';
 import 'dart:math';
 
+Future<bool> loadWantsDistancePenalty() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('wantDistPen');
+}
+
+void saveWantsDistancePenalty(bool val) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setBool('wantDistPen', val);
+}
+
+Future<int> loadMaxDistance() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  int res = prefs.getInt('dist');
+  return res;
+}
+
 ThemeData utilTheme() {
   return ThemeData(
     // Define the default Brightness and Colors
@@ -184,7 +200,7 @@ Future<void> getAllAttractions(
 
 Future<void> getRecommendations(
     Coordinate coordinate, int dist, BuildContext context) async {
-  var jsonstring = {
+  /*var jsonstring = {
     "lat": coordinate.GetLat(),
     "long": coordinate.GetLong(),
     "dist": dist ?? 1
@@ -212,17 +228,20 @@ Future<void> getRecommendations(
             t[i]['url'],
             t[i]['lat'],
             t[i]['long']));
-      }
+      }*/
+      List<Attraction> recAttractions = [];
+      recAttractions.add(Attraction(1, 'test', 'opening', 'https://i.imgur.com/YuQ9fu2.jpg', true, 5.0, 'desc', 'https://i.imgur.com/YuQ9fu2.jpg', 37.787834, -122.406417));
       DataContainer data = DataProvider.of(context).dataContainer;
       if (recAttractions.length != 0) {
         data.setAttractions(recAttractions);
       }
-    } else {
+      print(data.getAttractions().length);
+    /*} else {
       displayMsg('No connection to server\nGR', context);
     }
   } catch (e) {
     print(e);
-  }
+  }*/
 }
 
 Future<void> updateLikedAttraction(BuildContext context) async {
@@ -440,6 +459,7 @@ class Attraction {
   bool _isFoodPlace;
   String _url;
   Coordinate _coordinate;
+  double _penalisedScore;
 
   Attraction(int id, String name, String openingHours, String imgPath,
       bool isFoodPlace,
@@ -447,7 +467,7 @@ class Attraction {
       String description,
       String url,
       double lat,
-      double long]) {
+      double long,]) {
     _id = id;
     _name = name;
     _openingHours = openingHours;
@@ -463,6 +483,14 @@ class Attraction {
         ? _coordinate = new Coordinate(lat, long)
         : _coordinate = null;
     _isFoodPlace = isFoodPlace;
+  }
+
+  double GetPenalisedScore() {
+    return _penalisedScore;
+  }
+
+  void SetPenalisedScore(val) {
+    _penalisedScore = val;
   }
 
   int GetID() {

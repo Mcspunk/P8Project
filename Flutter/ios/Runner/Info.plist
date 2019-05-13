@@ -23,7 +23,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Laction always </string>
+	<string>We need permission to always access your location in order to give you notifications when new recommendations are available near you. </string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Location in usage </string>
 	<key>UIBackgroundModes</key>

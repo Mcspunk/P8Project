@@ -11,32 +11,36 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'dart:async';
 import 'location_manager.dart';
-import 'utility.dart';
 import 'dart:io' show Platform;
 import 'package:background_fetch/background_fetch.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'context_prompt.dart';
 import 'utility.dart'; 
-import 'package:background_fetch/background_fetch.dart';
-import 'dart:io' show Platform;
-//import 'package:permission_handler/permission_handler.dart';
+
+
 
 //AndroidAlarmManager aAM = new AndroidAlarmManager();
 
 main() async {
   final int helloAlarmID = 0;
   if (Platform.isAndroid) {
-    await AndroidAlarmManager.initialize();
+    /*await AndroidAlarmManager.initialize();
     runApp(MyApp());
     await PermissionHandler().checkPermissionStatus(PermissionGroup.location);
     initPushNotif();
     Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.location]);
     await AndroidAlarmManager.periodic(const Duration(minutes: 1), helloAlarmID, locationChecker);    
- 
+ */
   }
   else {
     runApp(MyApp());
+    await PermissionHandler().checkPermissionStatus(PermissionGroup.locationWhenInUse).then(print);
+    await PermissionHandler().checkPermissionStatus(PermissionGroup.locationAlways).then(print);
+
     initPushNotif();
+    //await PermissionHandler().requestPermissions([PermissionGroup.locationWhenInUse]).then(print);
+    await PermissionHandler().requestPermissions([PermissionGroup.locationAlways]).then(print);
+      
    // BackgroundFetch.registerHeadlessTask(locationChecker);
   }
 }

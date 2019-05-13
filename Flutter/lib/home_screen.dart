@@ -10,6 +10,7 @@ import 'data_provider.dart';
 import 'dart:io';
 import 'location_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RatingDialog extends State<RatingState> {
   //https://www.youtube.com/watch?v=MsycCv5r2Wo
@@ -147,6 +148,7 @@ class RatingState extends StatefulWidget {
 }
 
 class HomeScreen extends State<HomeScreenState> {
+  bool refreshDisabled = true; //TODO true skal være en metode
   double attractionRating = 0;
   Coordinate userLocation;
   String username = null;
@@ -160,6 +162,10 @@ class HomeScreen extends State<HomeScreenState> {
           appBar: AppBar(
             title: Text('Home'),
             actions: <Widget>[
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: refreshDistancePenalty,
+              ),
               IconButton(
                   //Tror ikke det er her den her funktionalitet skal være, men kunne ikke få lov til at lave en tab mere
                   icon: const Icon(Icons.map),
@@ -220,6 +226,25 @@ class HomeScreen extends State<HomeScreenState> {
         ),
       ),
     );
+  }
+
+  bool checkRefresh(val){
+    setState(() {
+      this.refreshDisabled = val ?? false;
+    });
+  }
+
+  void refreshDistancePenalty() async {
+    DataContainer data = DataProvider.of(context).dataContainer;
+    List<Attraction> attractionList = data.getAttractions();
+    int maxDist = await loadMaxDistance();
+    for (var attraction in attractionList) {
+      double score = attraction.GetRating();
+      double distPen = 5/maxDist * distanceBetweenCoordinates(userLocation, attraction.GetCoordinate());
+      double penalisedScore = score - (0.8 * distPen);
+      attraction.SetPenalisedScore(penalisedScore);
+      print(penalisedScore);
+    }
   }
 
   Widget _buildRecList(var items) {
@@ -772,7 +797,7 @@ DateTime lastupdatedAll = DateTime.now();
       lastupdatedRec = DateTime.now();
     }
     if(data.getAllNearbyAttractions().length == 0 || diffAll > 5 ){
-      getAllAttractions(userLocation, data.getDist(), context);
+      //getAllAttractions(userLocation, data.getDist(), context);
       lastupdatedAll = DateTime.now();
     }
     /*
@@ -798,11 +823,12 @@ DateTime lastupdatedAll = DateTime.now();
   @override
   void initState() {
     super.initState();
+    loadWantsDistancePenalty().then(checkRefresh);
     loadString('currentUser').then(loadUser);
     new Future.delayed(Duration.zero,(){
       getRecommendations(userLocation, 1, context);
-      getAllAttractions(userLocation, 1, context);
-      getLikedAttraction(context);
+      //getAllAttractions(userLocation, 1, context);
+      //getLikedAttraction(context);
     });
   }
 
