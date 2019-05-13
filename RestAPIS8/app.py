@@ -281,7 +281,7 @@ def get_liked_attractions():
 @app.route('/api/request-recommendations/', methods=['POST'])
 def get_recommendations():
 
-    json_data = requests.get_json(force=True)
+    json_data = request.get_json(force=True)
     threshold_min_rating = 3
     max_dist = json_data['dist']
     user_id = json_data['id']
@@ -427,6 +427,7 @@ def place_details():
         dill.dump(poi_place_details_list, file)
     return poi_place_details_list
 
+
 def geocoding_of_poi():
     api_key = "Insert_API_KEY"
     conn = psy.connect(host=host, database=database, user=user, password=password)
@@ -458,6 +459,7 @@ def geocoding_of_poi():
 
     return id_geocoding_json_list
 
+
 def insert_poi_details():
     with open("poi_details.pkl", "rb") as f:
         poi_details = dill.load(f)
@@ -485,7 +487,6 @@ def insert_poi_details():
             price_level = details_json['result']['price_level']
 
 
-
 def insert_geocoding_database():
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
@@ -510,6 +511,7 @@ if __name__ == '__main__':
 
     app.run()
 
+train_and_save_model(0.001, 0.002, 20, 100)
 
 with open("dummy_model.pkl", "rb") as f:
     icamf_recommender = dill.load(f)

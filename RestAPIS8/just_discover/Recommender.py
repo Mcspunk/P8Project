@@ -12,6 +12,7 @@ import copy
 
 
 np.random.seed(seed=8)
+np.seterr(all='raise')
 latent_factor_values = recordclass('latent_factor_values', 'index value delta')
 confusion_matrix_row = recordclass('confusion_matrix_row', 'rating true_positive false_positive true_negative false_negative precision recall accuracy')
 measurement_queue = Queue()
@@ -129,40 +130,49 @@ class ICAMF:
                     self.user_bias[user_id] += sgd_user_bias * self.learning_rate
                     self.item_bias[item_id] += sgd_item_bias * self.learning_rate
 
-                    loss += self.regularizer_1 * item_bias * item_bias
-                    loss += self.regularizer_1 * user_bias * user_bias
+                    loss += 0.5 * self.regularizer_1 * item_bias * item_bias
+                    loss += 0.5 * self.regularizer_1 * user_bias * user_bias
 
                     for factor in range(0, self.num_factors):
                         user_latent_factor = self.user_factor_matrix[user_id][factor]
                         item_latent_factor = self.item_factor_matrix[item_id][factor]
+
                         latent_values_list = list()
 
-                        user_values = latent_factor_values("user", user_latent_factor, -(self.regularizer_1 * user_latent_factor))
-                        item_values = latent_factor_values("item", item_latent_factor, -(self.regularizer_1 * item_latent_factor))
+                        user_values = latent_factor_values(index="user", value=user_latent_factor, delta=-(self.regularizer_1 * user_latent_factor))
+                        item_values = latent_factor_values(index="item", value=item_latent_factor, delta=-(self.regularizer_1 * item_latent_factor))
                         latent_values_list.append(user_values)
                         latent_values_list.append(item_values)
 
                         for condition in conditions:
-                            condition_values = latent_factor_values(condition, self.context_factor_matrix[condition][factor], -(self.context_factor_matrix[condition][factor]*self.regularizer_1))
+                            condition_values = latent_factor_values(index=condition, value=self.context_factor_matrix[condition][factor], delta=-(self.context_factor_matrix[condition][factor]*self.regularizer_1))
                             latent_values_list.append(condition_values)
                         for tuple_element in latent_values_list:
                             val = 0
                             for inner_element in latent_values_list:
                                 if tuple_element.index != inner_element.index:
-                                    val += error_user_item * inner_element.value
+                                    try:
+                                        val += error_user_item * inner_element.value
+                                    except FloatingPointError as e:
+                                        print(f'Error_user_item = {error_user_item}, inner_element_value {inner_element}, Error {e}')
                             tuple_element.delta += val
 
-                            loss += self.regularizer_1 * tuple_element.value * tuple_element.value
+                            #loss += self.regularizer_1 * tuple_element.value * tuple_element.value
+
+                        loss += 0.5 * self.regularizer_1 * pow(np.linalg.norm(self.user_factor_matrix[user_id]),2)
+                        loss += 0.5 * self.regularizer_1 * pow(np.linalg.norm(self.item_factor_matrix[item_id]),2)
+
+                        for condition in conditions:
+                            loss += 0.5 * self.regularizer_1 * pow(np.linalg.norm(self.context_factor_matrix[condition]), 2)
 
                         self.user_factor_matrix[user_id][factor] += self.learning_rate * latent_values_list[0].delta
                         self.item_factor_matrix[item_id][factor] += self.learning_rate * latent_values_list[1].delta
 
                         for index, condition in enumerate(conditions):
                             self.context_factor_matrix[condition][factor] += self.learning_rate * latent_values_list[index+2].delta
-            loss *= 0.5
+
             print(f'Fold: {str(self.fold)} ' + "Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
             print("Loss: " + str(loss))
-
 
     def predict(self, user, item, context):
 
