@@ -63,6 +63,11 @@ class Settings extends State<SettingsState> {
       ),
       body: WillPopScope(
         onWillPop: (){
+
+          if(loadInt('dist') != _n || loadString('tripType') != dropdownValue){
+            data.setUpdateRecs(true);
+          }
+
           data.setDist(_n);
           saveInt('dist', _n);
           data.setTripType(dropdownValue);

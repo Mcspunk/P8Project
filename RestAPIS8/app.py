@@ -117,64 +117,19 @@ def give_review():
 
 @app.route('/api/request-all-attractions/', methods=['POST'])
 def get_all_recommendations():
-
-
-    #return Response(status=200)
-
-
     json_data = request.get_json(force=True)
 
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
 
-    lat = json_data['lat']
-    long = json_data['long']
+    coordinate = json_data['coordinate']
     dist = json_data['dist']
-
-    '''
-    if(dist < 5):
-        dist = 5
-
-    latDegree = math.radians(lat)
-    longDegree = math.radians(long)
-    kmAtEq = 69.172*1.609
-
-    longdist = math.degrees((dist/(latDegree*kmAtEq))/kmAtEq)
-    a = longdist
-    longdist2 = ((((dist/(((lat*math.pi)/180)*kmAtEq))/kmAtEq)*180)/math.pi)
-    b = longdist2
-    latdist = dist/kmAtEq
-
-    
-    if(longdist < 0):
-        longdist += longdist * (-2)
-    if(latdist < 0):
-        latdist += latdist * (-2)
-    
-
-    maxlong = long + longdist
-    minlong = long - longdist
-    maxlat = lat + latdist
-    minlat = lat - latdist
-    
-    sqlstring = "SELECT * FROM justdiscover.poi WHERE lat > "+ str(minlat) +" AND lat < " + str(maxlat) +" AND lng > " + str(minlong) +" AND lng < " + str(maxlong) + ";"
-    cursor.execute(sqlstring)
-
-    '''
-
-    #Det her skal være alle dem inden for en hvis radius
-    recs = []     #1, 3, 5, 2, 22, 10, 12, 32, 99, 23, 41]
+    max_dist_in_m = dist * 1000
     attracs = []
 
-
-    sqlstring = "SELECT * FROM justdiscover.poi_backup"
+    sqlstring = "SELECT * FROM justdiscover.poi_backup WHERE ST_Distance_Sphere(geometry(justdiscover.poi_backup.location_coordinate), st_makepoint " + str(coordinate) + ") <= " + str(max_dist_in_m) + ";"
     cursor.execute(sqlstring)
     attractions = cursor.fetchall()
-
-    #attracs = [{"id": 1, "name": "The British Museum", "opening_hours": "Fri:10:00 AM - 8:30 PM;\nSat - Thu:10:00 AM - 5:30 PM;\n", "img_path": "https://media-cdn.tripadvisor.com/media/photo-s/03/56/93/aa/great-court-at-the-british.jpg", "description": "The British Museum", "rating": 4.5, "isFoodPlace": True, "url": "https://media-cdn.tripadvisor.com/media/photo-s/03/56/93/aa/great-court-at-the-british.jpg", "lat": 0.0, "long": 0.0}, {"id": 3, "name": "German Doner Kebab", "opening_hours": "Sun - Sat\r:11:00 AM - 11:00 PM;\n", "img_path": "https://media-cdn.tripadvisor.com/media/photo-s/15/3a/13/80/kebab.jpg", "description": "German Doner Kebab", "rating": 5.0, "isFoodPlace": False, "url": "https://media-cdn.tripadvisor.com/media/photo-s/15/3a/13/80/kebab.jpg", "lat": 0.0, "long": 0.0}]
-    #attracs = json.dumps(attracs)
-
-    #Linjen her under skal fjernes når db er good to go
 
     for attraction in attractions:
         t = attraction[12]
@@ -238,51 +193,46 @@ def get_liked_attractions():
     cursor.execute(sqlstring)
     if(cursor.rowcount == 0):
         return Response(status=200)
+    attracs = []
 
     liked = cursor.fetchone()[0]
 
+    if(liked != None):
+        like = liked.split('|')
 
-    like = liked.split('|')
-
-    like.pop(len(like)-1)
-
-
+        like.pop(len(like)-1)
 
 
+        for r in like:
+            sqlstring = "SELECT * FROM justdiscover.poi_backup WHERE id = " + str(r) + ";"
+            cursor.execute(sqlstring)
+            attraction = cursor.fetchone()
 
-    #Kald recommendation metoden her sådan at den liste der bliver returneret bliver sat til at være lig recs
-    #recs = [1, 3, 5, 2, 22, 10]
-    attracs = []
+            t = attraction[12]
+            t = t[1:]
+            t = t[:len(t) - 1]
+            c = t.split(',')
+            dblat = c[0]
+            dblong = c[1]
 
-    for r in like:
-        sqlstring = "SELECT * FROM justdiscover.poi_backup WHERE id = " + str(r) + ";"
-        cursor.execute(sqlstring)
-        attraction = cursor.fetchone()
+            tempAttraction = {"id": attraction[0],
+                              "name": attraction[9],
+                              "opening_hours": attraction[4],
+                              "img_path": attraction[8],
+                              "description": attraction[9],
+                              "rating": float(attraction[3]),
+                              "isFoodPlace": attraction[11],
+                              "url": attraction[14],
+                              "lat": float(dblat),
+                              "long": float(dblong),
+                              "phone_number": attraction[13]}
+            attracs.append(tempAttraction)
 
-        t = attraction[12]
-        t = t[1:]
-        t = t[:len(t) - 1]
-        c = t.split(',')
-        dblat = c[0]
-        dblong = c[1]
+        attracs = json.dumps(attracs)
 
-        tempAttraction = {"id": attraction[0],
-                          "name": attraction[9],
-                          "opening_hours": attraction[4],
-                          "img_path": attraction[8],
-                          "description": attraction[9],
-                          "rating": float(attraction[3]),
-                          "isFoodPlace": attraction[11],
-                          "url": attraction[8],  # Skal ikke være det her....
-                          "lat": float(dblat),
-                          "long": float(dblong)}
-        attracs.append(tempAttraction)
-
-    attracs = json.dumps(attracs)
-
-    conn.commit()
-    cursor.close()
-    conn.close()
+        conn.commit()
+        cursor.close()
+        conn.close()
 
     return Response(headers={"attractions": attracs}, content_type='text/json', status=200)
 
@@ -301,18 +251,20 @@ def get_recommendations():
 
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
-    cursor.execute("SELECT poi_backup.id FROM justdiscover.poi_backup WHERE ST_Distance_Sphere(geometry(justdiscover.poi_backup.location_coordinate), st_makepoint %s) <= %s", (coordinate, max_dist_in_km))
+    sqlString = "SELECT poi_backup.id FROM justdiscover.poi_backup WHERE ST_Distance_Sphere(geometry(justdiscover.poi_backup.location_coordinate), st_makepoint " + str(coordinate) + ") <= " + str(max_dist_in_km) + ";"
+    cursor.execute(sqlString)
     poi_within_distance_list = [tup[0] for tup in list(cursor)]
     recommendation_list = icamf_recommender.top_recommendations(user_id, poi_within_distance_list, context, threshold_min_rating)
 
-    #Kald recommendation metoden her sådan at den liste der bliver returneret bliver sat til at være lig recs
-    recs = [1, 3, 5, 2, 22, 11]
     attracs = []
 
-    for r in recs:
-        sqlstring = "SELECT * FROM justdiscover.poi_backup WHERE id = " + str(r) + ";"
+    for r in recommendation_list:
+        sqlstring = "SELECT * FROM justdiscover.poi_backup WHERE id = " + str(r[0]) + ";"
         cursor.execute(sqlstring)
         attraction = cursor.fetchone()
+        sqlstring = "SELECT st_distance_sphere(geometry(a.location_coordinate), st_makepoint " + str(coordinate) + ") FROM justdiscover.poi_backup a WHERE a.id = " + str(r[0]) + ";"
+        cursor.execute(sqlstring)
+        distance = cursor.fetchone()
 
         t = attraction[12]
         t = t[1:]
@@ -327,10 +279,13 @@ def get_recommendations():
                           "img_path": attraction[8],
                           "description": attraction[9],
                           "rating": float(attraction[3]),
+                          "score": float(r[1]),
                           "isFoodPlace": attraction[11],
-                          "url": attraction[8],  # Skal ikke være det her....
+                          "url": attraction[14],
                           "lat": float(dblat),
-                          "long": float(dblong)}
+                          "long": float(dblong),
+                          "distance": float(distance[0]),
+                          "phone_number": attraction[13]}
         attracs.append(tempAttraction)
 
     attracs = json.dumps(attracs)
@@ -340,7 +295,7 @@ def get_recommendations():
     conn.close()
 
     return Response(headers={"attractions": attracs}, content_type='text/json', status=200)
-    #return str(200), {"attractions": result}, {"Content-Type": "application/json"}
+
 
 
 @app.route('/api/create-user/', methods=['POST'])
@@ -416,6 +371,17 @@ def hello_world():
     return 'Hello World!'
 
 
+@app.route('/api/test/', methods=['GET'])
+def test():
+
+    insert_poi_details()
+
+
+
+    return Response(status=200)
+
+
+
 def update_binary_review_table():
     dataprocessor.transform_reviews_table_to_binary()
 
@@ -489,6 +455,8 @@ def insert_poi_details():
     with open("poi_details.pkl", "rb") as f:
         poi_details = dill.load(f)
     poi_no_details_list = list()
+    conn = psy.connect(host=host, database=database, user=user, password=password)
+    cursor = conn.cursor()
 
     for poi_id, details_json in poi_details:
         if details_json is None:
@@ -502,14 +470,28 @@ def insert_poi_details():
 
         if 'international_phone_number' in details_json['result']:
             phone_number = details_json['result']['international_phone_number']
+            sqlstring = "UPDATE justdiscover.poi_backup SET phonenumber = '" + str(phone_number) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"
+            #cursor.execute(sqlstring)
         if 'types' in details_json['result']:
             categories = details_json['result']['types']
+            sqlstring = "UPDATE justdiscover.poi_backup SET category = '" + json.dumps(categories) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"
+            #cursor.execute(sqlstring)
         if 'website' in details_json['result']:
             website = details_json['result']['website']
+            sqlstring = "UPDATE justdiscover.poi_backup SET url = '" + website + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"
+            #cursor.execute(sqlstring)
         if 'opening_hours' in details_json['result']:
-            opening_hours = details_json['result']['opening_hours']
+            opening_hours = details_json['result']['opening_hours']['weekday_text']
+            sqlstring = "UPDATE justdiscover.poi_backup SET open_hours = '" + json.dumps(opening_hours) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"
+            #cursor.execute(sqlstring)
         if 'price_level' in details_json['result']:
             price_level = details_json['result']['price_level']
+            sqlstring = "UPDATE justdiscover.poi_backup SET price_level = '" + str(price_level) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"
+            #cursor.execute(sqlstring)
+
+    #conn.commit()
+    #cursor.close()
+    #conn.close()
 
 
 

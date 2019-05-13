@@ -393,7 +393,7 @@ class HomeScreen extends State<HomeScreenState> {
               subtitle: Text('Distance: 0.8 km'),
               trailing: Container(
                   width: deviceSize.width * (3 / 7),
-                  child: Text('\n' + attraction.getOpeningHours(),
+                  child: Text('\n' + attraction.getOpeningHours()[0],
                       style: Theme.of(context).textTheme.body2)))
         ],
       ),
@@ -401,6 +401,15 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget buildRecTile(Attraction attraction) {
+    var match = attraction.getScore() / 5 * 100;
+    DateTime dt = DateTime.now();
+    String ratingstring = attraction.getScore() == null
+        ? 'Rating: ' + attraction.getRating().toString()
+        : 'Match: ' +
+            match.toStringAsFixed(2) +
+            '%' +
+            '\nRating: ' +
+            attraction.getRating().toString();
     DataContainer data = DataProvider.of(context).dataContainer;
     final deviceSize = MediaQuery.of(context).size;
     return Container(
@@ -495,11 +504,16 @@ class HomeScreen extends State<HomeScreenState> {
                         ],
                       )))),
           ListTile(
-            title: Text('Rating: ' + attraction.getRating().toString()),
-            subtitle: Text('Distance 0.8 km'),
+            title: Text(ratingstring),
+            //leading: Text('Score: ' + attraction.getScore().toString()),
+            subtitle: Text('Distance: ' +
+                (attraction.getDistance().toStringAsFixed(0) ?? 'N/A') +
+                "m"),
             trailing: Container(
-              width: deviceSize.width * (4 / 7),
-              child: Text('\n' + attraction.getOpeningHours(),
+              width: deviceSize.width * (3 / 7),
+              child: Text(
+                  "Opening hours:\n" +
+                      attraction.getOpeningHours()[dt.weekday - 1],
                   style: Theme.of(context).textTheme.body2),
             ),
           ),
@@ -517,6 +531,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   void _detailedAttractionView(Attraction attraction) {
+    final deviceSize = MediaQuery.of(context).size;
     Navigator.of(context)
         .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
       return Scaffold(
@@ -526,6 +541,51 @@ class HomeScreen extends State<HomeScreenState> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             buildRecTile(attraction),
+            Container(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                Padding(
+                  padding: EdgeInsets.all(deviceSize.width * (1/28)),
+                child:Text('Phone Number: ', style: Theme.of(context).textTheme.body2)
+                ),
+                Padding(
+                  padding: EdgeInsets.all(deviceSize.width * (1/9))
+                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                (attraction.getPhoneNumber() != null ? attraction.getPhoneNumber() : 'N/A'),  style: Theme.of(context).textTheme.body2),
+                  ],
+                ),
+              ]),
+            ),
+            Divider(),
+            Container(
+              height: deviceSize.height * (1 / 6),
+              child: Row(children: [
+                Padding(
+                  padding: EdgeInsets.all(deviceSize.width * (1/28)),
+                child:Text('Weekly opening hours', style: Theme.of(context).textTheme.body2)
+                ),
+                Padding(
+                  padding: EdgeInsets.all(deviceSize.width * (1/16))
+                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(attraction.getOpeningHours()[0], style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[1], style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[2], style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[3], style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[4], style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[5], style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[6], style: Theme.of(context).textTheme.body2),
+                  ],
+                ),
+              ]),
+            ),
             Divider(),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -781,10 +841,14 @@ class HomeScreen extends State<HomeScreenState> {
     }
   }
 
+  void updaterecs() {
+    getAllAttractions(userLocation, context);
+    getRecommendations(userLocation, context);
+  }
+
   DateTime lastupdatedRec = DateTime.now();
   DateTime lastupdatedAll = DateTime.now();
   DateTime lastupdatedLoc = DateTime.now();
-//bool initLoad = true;
 
   @override
   Widget build(BuildContext context) {
@@ -816,6 +880,13 @@ class HomeScreen extends State<HomeScreenState> {
     if (userLocation == null || diffLoc > 5) {
       updateUserLocation();
       lastupdatedLoc = DateTime.now();
+    }
+
+    if (data.getupdateRecs()) {
+      setState(() {
+        updaterecs();
+        data.setUpdateRecs(false);
+      });
     }
 
     if (username == null) {
