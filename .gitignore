@@ -328,3 +328,7 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+RestAPIS8/venv/
+
+RestAPIS8/dummy_model\.pkl
