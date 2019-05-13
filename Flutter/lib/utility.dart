@@ -134,10 +134,16 @@ Future<void> getPreferences(BuildContext context) async {
 }
 
 Future<int> getRecCount(Coordinate coordinate) async {  
+  DateTime dt = DateTime.now();
+  String tt = await loadString('triptype') ?? 'alone';
+  int distance = await loadInt('dist') ?? 1;
+  tt = tt.toLowerCase() == 'solo' ? 'alone' : tt;
+  String usercontext = "month_visited:" + months[dt.month] + ",company:" + (tt ?? 'alone');
   var jsonstring = {
-    "lat": coordinate.getLat(),
-    "long": coordinate.getLong(),
-    "dist": await loadInt("dist") ?? 1
+    "id": await loadInt('currentUserID'),
+    "context": usercontext.toLowerCase(),
+    "coordinate": "(" +  coordinate.getLat().toString() + "," + coordinate.getLong().toString() + ")",
+    "dist": distance ?? 1
   };
   var jsonedString = jsonEncode(jsonstring);
   try {
@@ -160,8 +166,7 @@ Future<void> getAllAttractions(
   DataContainer data = DataProvider.of(context).dataContainer;
   int distance = data.getDist() ?? await loadInt('dist');
   var jsonstring = {
-    "lat": coordinate.getLat(),
-    "long": coordinate.getLong(),
+    "coordinate": "(" +  coordinate.getLat().toString() + "," + coordinate.getLong().toString() + ")",
     "dist": distance ?? 1
   };
   var jsonedString = jsonEncode(jsonstring);
@@ -206,7 +211,8 @@ Future<void> getRecommendations(
   DateTime dt = DateTime.now();
   int distance = data.getDist() ?? await loadInt('dist'); //ID, Context (commpany:triptype, monthvisited:måned)
   String tt = data.getTripType() ?? await loadString('triptype');
-  String usercontext = "month_visited:" + months[dt.month] + ",company:" + (tt ?? 'solo');
+  tt = tt.toLowerCase() == 'solo' ? 'alone' : tt;
+  String usercontext = "month_visited:" + months[dt.month] + ",company:" + (tt ?? 'alone');
   if(coordinate == null){
     if(await PermissionHandler().checkPermissionStatus(PermissionGroup.location) == PermissionStatus.granted) {
       Position pos = await Geolocator().getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
@@ -216,7 +222,7 @@ Future<void> getRecommendations(
 
   var jsonstring = {
     "id": await loadInt('currentUserID'),
-    "context": usercontext,
+    "context": usercontext.toLowerCase(),
     "coordinate": "(" +  coordinate.getLat().toString() + "," + coordinate.getLong().toString() + ")",
     "dist": distance ?? 1
   };
@@ -232,17 +238,28 @@ Future<void> getRecommendations(
       var t = decoded as List;
       List<Attraction> recAttractions = [];
       for (var i = 0; i < t.length; i++) {
+
+        var oh = jsonDecode(t[i]['opening_hours']);
+        List<String> open = [];
+
+        for (var item in oh) {
+          open.add(item.toString());
+        }
+
+
         recAttractions.add(new Attraction(
           t[i]['id'],
           t[i]['name'],
-          t[i]['opening_hours'],
+          open,
           t[i]['img_path'],
           !t[i]['isFoodPlace'],
           t[i]['rating'],
           t[i]['description'],
           t[i]['url'],
           t[i]['lat'],
-          t[i]['long']));
+          t[i]['long'],
+          t[i]['score'],
+          t[i]['distance']));
         
       }
       DataContainer data = DataProvider.of(context).dataContainer;
@@ -491,24 +508,30 @@ class User {
 class Attraction {
   int _id;
   String _name;
-  String _openingHours;
+  List<String> _openingHours;
   String _imgPath;
   String _description;
   double _rating;
+  double _score;
+  double _distance;
   bool _isFoodPlace;
   String _url;
   Coordinate _coordinate;
+  String _phone_number;
 
-  Attraction(int id, String name, String openingHours, String imgPath,
+  Attraction(int id, String name, List<String> openingHours, String imgPath,
       bool isFoodPlace,
       [double rating,
       String description,
       String url,
       double lat,
-      double long]) {
+      double long,
+      double score,
+      double distance,
+      String phone_number]) {
     _id = id;
     _name = name;
-    _openingHours = openingHours == "" ? "Opening hours are not available" : openingHours.replaceAll(';', ' ');
+    _openingHours = openingHours;
     _imgPath = imgPath;
     rating != null ? _rating = rating : _rating = 0;
     description != null
@@ -521,6 +544,9 @@ class Attraction {
         ? _coordinate = new Coordinate(lat, long)
         : _coordinate = null;
     _isFoodPlace = isFoodPlace;
+    _score = score;
+    _distance = distance;
+    _phone_number = phone_number;
   }
 
   int getID() {
@@ -531,7 +557,7 @@ class Attraction {
     return _name;
   }
 
-  String getOpeningHours() {
+  List<String> getOpeningHours() {
     return _openingHours;
   }
 
@@ -557,6 +583,24 @@ class Attraction {
 
   Coordinate getCoordinate() {
     return _coordinate;
+  }
+
+  double getScore() => _score;
+
+  double setScore(score){
+    _score = score;
+  }
+
+  double getDistance() => _distance;
+
+  void setDistance(dist){
+    _distance = dist;
+  }
+
+  String getPhoneNumber() => _phone_number;
+
+  void setPhoneNumber(pn){
+    _phone_number = pn;
   }
 
   @override

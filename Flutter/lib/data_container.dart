@@ -12,6 +12,7 @@ class DataContainer {
   String _triptype = 'Solo';
   Map _categoryRatings;
   bool _createRecAttOnly = true;
+  bool _updateRecs = false;
 
 
   DataContainer(){
@@ -40,6 +41,12 @@ class DataContainer {
 
   void setDist(distance){
     _dist = distance;
+  }
+
+  bool getupdateRecs() => _updateRecs;
+
+  void setUpdateRecs(boolean){
+    _updateRecs = boolean;
   }
 
   List<Attraction> getAllNearbyAttractions() => _allNearbyAttractions;
