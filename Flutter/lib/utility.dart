@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:test2/data_container.dart';
 import 'package:test2/data_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -6,9 +8,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 import 'dart:math';
+
+Map months = {
+    1: "january",
+    2: "febuary",
+    3: "march",
+    4: "april",
+    5: "may",
+    6: "june",
+    7: "july",
+    8: "august",
+    9: "september",
+    10: "october",
+    11: "november",
+    12: "december"
+  };
 
 ThemeData utilTheme() {
   return ThemeData(
@@ -117,11 +133,11 @@ Future<void> getPreferences(BuildContext context) async {
   }
 }
 
-Future<int> getRecCount(Coordinate coordinate) async {
+Future<int> getRecCount(Coordinate coordinate) async {  
   var jsonstring = {
-    "lat": coordinate.GetLat(),
-    "long": coordinate.GetLong(),
-    "distance": await loadInt("dist")
+    "lat": coordinate.getLat(),
+    "long": coordinate.getLong(),
+    "dist": await loadInt("dist") ?? 1
   };
   var jsonedString = jsonEncode(jsonstring);
   try {
@@ -140,16 +156,18 @@ Future<int> getRecCount(Coordinate coordinate) async {
 }
 
 Future<void> getAllAttractions(
-    Coordinate coordinate, int dist, BuildContext context) async {
+    Coordinate coordinate, BuildContext context) async {
+  DataContainer data = DataProvider.of(context).dataContainer;
+  int distance = data.getDist() ?? await loadInt('dist');
   var jsonstring = {
-    "lat": coordinate.GetLat(),
-    "long": coordinate.GetLong(),
-    "dist": dist ?? 1
+    "lat": coordinate.getLat(),
+    "long": coordinate.getLong(),
+    "dist": distance ?? 1
   };
   var jsonedString = jsonEncode(jsonstring);
   try {
     var response = await http.post(
-        'http://10.0.2.2:5000/api/request-all-recommendations/',
+        'http://10.0.2.2:5000/api/request-all-attractions/',
         body: jsonedString,
         headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
@@ -183,11 +201,24 @@ Future<void> getAllAttractions(
 }
 
 Future<void> getRecommendations(
-    Coordinate coordinate, int dist, BuildContext context) async {
+    Coordinate coordinate, BuildContext context) async {
+  DataContainer data = DataProvider.of(context).dataContainer;
+  DateTime dt = DateTime.now();
+  int distance = data.getDist() ?? await loadInt('dist'); //ID, Context (commpany:triptype, monthvisited:måned)
+  String tt = data.getTripType() ?? await loadString('triptype');
+  String usercontext = "month_visited:" + months[dt.month] + ",company:" + (tt ?? 'solo');
+  if(coordinate == null){
+    if(await PermissionHandler().checkPermissionStatus(PermissionGroup.location) == PermissionStatus.granted) {
+      Position pos = await Geolocator().getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
+      coordinate = new Coordinate(pos.latitude, pos.longitude);
+    }    
+  }
+
   var jsonstring = {
-    "lat": coordinate.GetLat(),
-    "long": coordinate.GetLong(),
-    "dist": dist ?? 1
+    "id": await loadInt('currentUserID'),
+    "context": usercontext,
+    "coordinate": "(" +  coordinate.getLat().toString() + "," + coordinate.getLong().toString() + ")",
+    "dist": distance ?? 1
   };
   var jsonedString = jsonEncode(jsonstring);
   try {
@@ -202,16 +233,17 @@ Future<void> getRecommendations(
       List<Attraction> recAttractions = [];
       for (var i = 0; i < t.length; i++) {
         recAttractions.add(new Attraction(
-            t[i]['id'],
-            t[i]['name'],
-            t[i]['opening_hours'],
-            t[i]['img_path'],
-            !t[i]['isFoodPlace'],
-            t[i]['rating'],
-            t[i]['description'],
-            t[i]['url'],
-            t[i]['lat'],
-            t[i]['long']));
+          t[i]['id'],
+          t[i]['name'],
+          t[i]['opening_hours'],
+          t[i]['img_path'],
+          !t[i]['isFoodPlace'],
+          t[i]['rating'],
+          t[i]['description'],
+          t[i]['url'],
+          t[i]['lat'],
+          t[i]['long']));
+        
       }
       DataContainer data = DataProvider.of(context).dataContainer;
       if (recAttractions.length != 0) {
@@ -229,7 +261,7 @@ Future<void> updateLikedAttraction(BuildContext context) async {
   DataContainer data = DataProvider.of(context).dataContainer;
   String liked = "";
   for (var item in data.getFavourites()) {
-    liked += (item.GetID().toString() + "|");
+    liked += (item.getID().toString() + "|");
   }
   if (liked.length != 0) {
     var preEncode = {
@@ -297,7 +329,11 @@ Future<void> checkLogIn(
     var response = await http.post('http://10.0.2.2:5000/api/login/',
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
-      saveString('currentUser', username.toString());
+      saveString('currentUser', username.toString());   
+      print(await loadString('currentUser'));   
+      var t = jsonDecode(response.headers['id']);
+      int v = t['id'];
+      saveInt('currentUserID', v);
       getPreferences(context);
       Navigator.pushNamed(context, '/');
     } else if (response.statusCode == 204) {
@@ -321,7 +357,9 @@ Future<void> checkSignUp(
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
       saveString('currentUser', username.toString());
-      Navigator.pushNamed(context, '/select_interests');
+      var a = jsonDecode(response.headers['id']);
+      saveInt('currentUserID', a['id']);
+      Navigator.pushNamedAndRemoveUntil(context, '/context_prompt', (Route<dynamic> route) => false);
     } else if (response.statusCode == 208) {
       displayMsg('Username already taken.', context);
     } else {
@@ -347,6 +385,11 @@ void saveString(String key, String value) async {
   prefs.setString(key, value);
 }
 
+void saveInt(String key, int value) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setInt(key, value);
+}
+
 Future<int> loadInt(String key) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getInt(key);
@@ -355,6 +398,16 @@ Future<int> loadInt(String key) async {
 Future<String> loadString(String key) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getString(key);
+}
+
+void saveBool(String key, bool value) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setBool(key, value);
+}
+
+Future<bool> loadBool(String key) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getBool(key);
 }
 
 void displayMsg(String msg, BuildContext context) {
@@ -377,23 +430,23 @@ void launchWebsite(String url, var context) async {
 
 Coordinate findMiddlePoint(Coordinate one, Coordinate two) {
   double latdiff =
-      one.GetLat() < two.GetLat() ? two.GetLat() - one.GetLat() : one.GetLat() - two.GetLat();
+      one.getLat() < two.getLat() ? two.getLat() - one.getLat() : one.getLat() - two.getLat();
   double longdiff =
-      one.GetLong() < two.GetLong() ? two.GetLong() - one.GetLong() : one.GetLong() - two.GetLong();
+      one.getLong() < two.getLong() ? two.getLong() - one.getLong() : one.getLong() - two.getLong();
   longdiff = longdiff / 2;
   latdiff = latdiff / 2;
-  double lat = one.GetLat() < two.GetLat() ? one.GetLat() + latdiff : two.GetLat() + latdiff;
+  double lat = one.getLat() < two.getLat() ? one.getLat() + latdiff : two.getLat() + latdiff;
   double long =
-      one.GetLong() < two.GetLong() ? one.GetLong() + longdiff : two.GetLong() + longdiff;
+      one.getLong() < two.getLong() ? one.getLong() + longdiff : two.getLong() + longdiff;
   return new Coordinate(lat, long);
 }
 
 double distanceBetweenCoordinates(Coordinate c1, Coordinate c2) {
   var r = 6371000;
-  double phi_1 = c1.GetLat() * (pi / 180);
-  double phi_2 = c2.GetLat() * (pi / 180);
-  double deltaPhi = (c2.GetLat() - c1.GetLat()) * (pi / 180);
-  double deltaLambda = (c2.GetLong() - c1.GetLong()) * (pi / 180);
+  double phi_1 = c1.getLat() * (pi / 180);
+  double phi_2 = c2.getLat() * (pi / 180);
+  double deltaPhi = (c2.getLat() - c1.getLat()) * (pi / 180);
+  double deltaLambda = (c2.getLong() - c1.getLong()) * (pi / 180);
   var a = sin(deltaPhi / 2) * sin(deltaPhi / 2) +
       cos(phi_1) * cos(phi_2) * sin(deltaLambda / 2) * sin(deltaLambda / 2);
   var c = 2 * atan2(sqrt(a), sqrt(1 - a));
@@ -412,11 +465,11 @@ class Coordinate {
     _lat = lat;
     _long = long;
   }
-  double GetLat() {
+  double getLat() {
     return _lat;
   }
 
-  double GetLong() {
+  double getLong() {
     return _long;
   }
 }
@@ -470,44 +523,44 @@ class Attraction {
     _isFoodPlace = isFoodPlace;
   }
 
-  int GetID() {
+  int getID() {
     return _id;
   }
 
-  String GetName() {
+  String getName() {
     return _name;
   }
 
-  String GetOpeningHours() {
+  String getOpeningHours() {
     return _openingHours;
   }
 
-  String GetImgPath() {
+  String getImgPath() {
     return _imgPath;
   }
 
-  double GetRating() {
+  double getRating() {
     return _rating;
   }
 
-  bool GetIsFoodPlace() {
+  bool getIsFoodPlace() {
     return _isFoodPlace;
   }
 
-  String GetDescription() {
+  String getDescription() {
     return _description;
   }
 
-  String GetURL() {
+  String getURL() {
     return _url;
   }
 
-  Coordinate GetCoordinate() {
+  Coordinate getCoordinate() {
     return _coordinate;
   }
 
   @override
   bool operator ==(other) {
-    return (other is Attraction && this._id == other.GetID());
+    return (other is Attraction && this._id == other.getID());
   }
 }

@@ -192,7 +192,7 @@ class LogIn extends State<LogInState> {
                     height: 70,
                     onPressed: () {
                       if (_formKey.currentState.validate()) {
-                        checkLogIn(logInUsernamecontroller.text.toString(), logInPasswordcontroller.text, context);
+                        checkLogIn(logInUsernamecontroller.text.toString(), logInPasswordcontroller.text.toString(), context);
                       }
                     },
                     child: const Text(
@@ -327,11 +327,8 @@ class LogIn extends State<LogInState> {
                     minWidth: 300,
                     height: 70,
                     onPressed: () {
-                      //TODO vi mangler password felt og ændre streng herunder
-                      //checkSignUp(signUpUserNameController.text, 'tbd', context);
                       if (_formKey.currentState.validate()) {
-                        saveString('currentUser', signUpUserNameController.text.toString());
-                        Navigator.pushNamedAndRemoveUntil(context, '/context_prompt', (Route<dynamic> route) => false);
+                        checkSignUp(signUpUserNameController.text.toString(), signUpPasswordController.text, context);
                       }
                     },
                     child: const Text(

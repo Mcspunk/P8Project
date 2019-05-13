@@ -109,11 +109,11 @@ def give_review():
     return Response(content_type='text/json', status=200)
 
 
-@app.route('/api/request-all-recommendations/', methods=['POST'])
+@app.route('/api/request-all-attractions/', methods=['POST'])
 def get_all_recommendations():
 
 
-    return Response(status=200)
+    #return Response(status=200)
 
 
     json_data = request.get_json(force=True)
@@ -161,21 +161,23 @@ def get_all_recommendations():
     attracs = []
 
 
-    sqlstring = ""
+    sqlstring = "SELECT * FROM justdiscover.poi_backup"
     cursor.execute(sqlstring)
-    attraction = cursor.fetchone
-    counter = 0
+    attractions = cursor.fetchall()
 
-    attracs = [{"id": 1, "name": "The British Museum", "opening_hours": "Fri:10:00 AM - 8:30 PM;\nSat - Thu:10:00 AM - 5:30 PM;\n", "img_path": "https://media-cdn.tripadvisor.com/media/photo-s/03/56/93/aa/great-court-at-the-british.jpg", "description": "The British Museum", "rating": 4.5, "isFoodPlace": True, "url": "https://media-cdn.tripadvisor.com/media/photo-s/03/56/93/aa/great-court-at-the-british.jpg", "lat": 0.0, "long": 0.0}, {"id": 3, "name": "German Doner Kebab", "opening_hours": "Sun - Sat\r:11:00 AM - 11:00 PM;\n", "img_path": "https://media-cdn.tripadvisor.com/media/photo-s/15/3a/13/80/kebab.jpg", "description": "German Doner Kebab", "rating": 5.0, "isFoodPlace": False, "url": "https://media-cdn.tripadvisor.com/media/photo-s/15/3a/13/80/kebab.jpg", "lat": 0.0, "long": 0.0}]
-    attracs = json.dumps(attracs)
+    #attracs = [{"id": 1, "name": "The British Museum", "opening_hours": "Fri:10:00 AM - 8:30 PM;\nSat - Thu:10:00 AM - 5:30 PM;\n", "img_path": "https://media-cdn.tripadvisor.com/media/photo-s/03/56/93/aa/great-court-at-the-british.jpg", "description": "The British Museum", "rating": 4.5, "isFoodPlace": True, "url": "https://media-cdn.tripadvisor.com/media/photo-s/03/56/93/aa/great-court-at-the-british.jpg", "lat": 0.0, "long": 0.0}, {"id": 3, "name": "German Doner Kebab", "opening_hours": "Sun - Sat\r:11:00 AM - 11:00 PM;\n", "img_path": "https://media-cdn.tripadvisor.com/media/photo-s/15/3a/13/80/kebab.jpg", "description": "German Doner Kebab", "rating": 5.0, "isFoodPlace": False, "url": "https://media-cdn.tripadvisor.com/media/photo-s/15/3a/13/80/kebab.jpg", "lat": 0.0, "long": 0.0}]
+    #attracs = json.dumps(attracs)
 
     #Linjen her under skal fjernes når db er good to go
 
+    for attraction in attractions:
+        t = attraction[12]
+        t = t[1:]
+        t = t[:len(t) - 1]
+        c = t.split(',')
+        dblat = c[0]
+        dblong = c[1]
 
-    while(attraction != None):
-        #sqlstring = "SELECT * FROM justdiscover.poi WHERE id = " + str(r) + ";"
-        #cursor.execute(sqlstring)
-        #attraction = cursor.fetchone()
         tempAttraction = {"id": attraction[0],
                           "name": attraction[9],
                           "opening_hours": attraction[4],
@@ -184,11 +186,10 @@ def get_all_recommendations():
                           "rating": float(attraction[3]),
                           "isFoodPlace": attraction[11],
                           "url": attraction[8],  # Skal ikke være det her....
-                          "lat": float(attraction[1]),
-                          "long": float(attraction[2])}
+                          "lat": float(dblat),
+                          "long": float(dblong)}
         attracs.append(tempAttraction)
-        cursor.fetchone
-        counter += 1
+        cursor.fetchone()
 
     attracs = json.dumps(attracs)
 
@@ -248,9 +249,17 @@ def get_liked_attractions():
     attracs = []
 
     for r in like:
-        sqlstring = "SELECT * FROM justdiscover.poi WHERE id = " + str(r) + ";"
+        sqlstring = "SELECT * FROM justdiscover.poi_backup WHERE id = " + str(r) + ";"
         cursor.execute(sqlstring)
         attraction = cursor.fetchone()
+
+        t = attraction[12]
+        t = t[1:]
+        t = t[:len(t) - 1]
+        c = t.split(',')
+        dblat = c[0]
+        dblong = c[1]
+
         tempAttraction = {"id": attraction[0],
                           "name": attraction[9],
                           "opening_hours": attraction[4],
@@ -259,8 +268,8 @@ def get_liked_attractions():
                           "rating": float(attraction[3]),
                           "isFoodPlace": attraction[11],
                           "url": attraction[8],  # Skal ikke være det her....
-                          "lat": float(attraction[1]),
-                          "long": float(attraction[2])}
+                          "lat": float(dblat),
+                          "long": float(dblong)}
         attracs.append(tempAttraction)
 
     attracs = json.dumps(attracs)
@@ -279,16 +288,22 @@ def get_recommendations():
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
 
-    dist = json_data['dist']
-
     #Kald recommendation metoden her sådan at den liste der bliver returneret bliver sat til at være lig recs
-    recs = [1, 3, 5, 2, 22, 10]
+    recs = [1, 3, 5, 2, 22, 11]
     attracs = []
 
     for r in recs:
-        sqlstring = "SELECT * FROM justdiscover.poi WHERE id = " + str(r) + ";"
+        sqlstring = "SELECT * FROM justdiscover.poi_backup WHERE id = " + str(r) + ";"
         cursor.execute(sqlstring)
         attraction = cursor.fetchone()
+
+        t = attraction[12]
+        t = t[1:]
+        t = t[:len(t) - 1]
+        c = t.split(',')
+        dblat = c[0]
+        dblong = c[1]
+
         tempAttraction = {"id":attraction[0],
                           "name": attraction[9],
                           "opening_hours": attraction[4],
@@ -297,8 +312,8 @@ def get_recommendations():
                           "rating": float(attraction[3]),
                           "isFoodPlace": attraction[11],
                           "url": attraction[8],  # Skal ikke være det her....
-                          "lat": float(attraction[1]),
-                          "long": float(attraction[2])}
+                          "lat": float(dblat),
+                          "long": float(dblong)}
         attracs.append(tempAttraction)
 
     attracs = json.dumps(attracs)
@@ -324,20 +339,25 @@ def create_user():
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
     sqlstring = "SELECT user_name FROM justdiscover.users WHERE user_name = '" + json_data['username'] + "';"
-    name = cursor.execute(sqlstring)
+    cursor.execute(sqlstring)
+    name = cursor.fetchone()
 
     if(name == None):
         now = datetime.datetime.now()
         date = str(now.year) + '-' + str(now.month) + '-' + str(now.day)
+        stringid = ''
         sqlstring = "INSERT INTO justdiscover.users VALUES '', " + json_data['password'] + ", "+  date + ", '', " + json_data['username'] + ";"
         #cursor.execute(sqlstring)
+        sqlstring2 = "SELECT id_sk FROM justdiscover.users WHERE user_name = '" + str(json_data['username']) + "';"
         print(json_data['username'] + ' - ' + json_data['password'] + ' | Created')
+        cursor.execute(sqlstring2)
+        idsk = cursor.fetchone()
         conn.commit()
         cursor.close()
         conn.close()
-        return str(200)
+        return Response(status=200, headers={"id": idsk[0]}, content_type='text/json')
     else:
-        return str(208)
+        return Response(status=208)
 
     #cursor.execute("INSERT INTO justdiscover.users VALUES (json_data['uid'],json_data['password'],current_date(),json_data['preferences'],json_data['username'])")
     conn.commit()
@@ -361,12 +381,17 @@ def login():
     tempUser = cursor.execute("SELECT * FROM justdiscover.users WHERE user_name = %s AND password = %s",
                    (json_data['username'], json_data['password']))
     result = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    if (tempUser != None):
-        return str(200)
+
+    res = json.dumps({"id": result[5], "t": 0})
+
+    if (result != None):
+        cursor.close()
+        conn.close()
+        return Response(status=200, headers={"id": res}, content_type='text/json')
     else:
-        return str(204)
+        cursor.close()
+        conn.close()
+        return Response(status=204)
 
 
 @app.route('/')

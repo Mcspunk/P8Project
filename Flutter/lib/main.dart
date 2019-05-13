@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'select_interests.dart';
 import 'settings.dart';
 import 'sign_in.dart';
@@ -7,18 +6,13 @@ import 'home_screen.dart';
 import 'data_provider.dart';
 import 'data_container.dart';
 import 'notification_helper.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
-import 'dart:async';
 import 'location_manager.dart';
 import 'utility.dart';
 import 'dart:io' show Platform;
 import 'package:background_fetch/background_fetch.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'context_prompt.dart';
-import 'utility.dart'; 
-import 'package:background_fetch/background_fetch.dart';
-import 'dart:io' show Platform;
 //import 'package:permission_handler/permission_handler.dart';
 
 //AndroidAlarmManager aAM = new AndroidAlarmManager();
@@ -50,8 +44,6 @@ void bgfFired() {
 //void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {  
-  bool loggedIn = false;
-
   static Widget determineHome() {
     if (loadString('currentUser') == null) {
       return LogInState();

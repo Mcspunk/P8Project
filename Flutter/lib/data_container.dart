@@ -11,6 +11,7 @@ class DataContainer {
   int _dist = 1;
   String _triptype = 'Solo';
   Map _categoryRatings;
+  bool _createRecAttOnly = true;
 
 
   DataContainer(){
@@ -53,5 +54,11 @@ class DataContainer {
 
   void setTripType(tripType){
     _triptype = tripType;
+  }
+
+  bool getcreateRecAttOnly() => _createRecAttOnly;
+
+  void setcreateRecAttOnly(bool createRecAttOnly){
+    _createRecAttOnly = createRecAttOnly;
   }
 }

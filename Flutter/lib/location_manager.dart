@@ -1,9 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'notification_helper.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'home_screen.dart';
-import 'dart:async';
 import 'utility.dart';
 import 'package:permission_handler/permission_handler.dart';
 

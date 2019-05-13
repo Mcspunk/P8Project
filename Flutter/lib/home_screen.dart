@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test2/data_container.dart';
 import 'utility.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'sign_in.dart';
+import 'dart:async';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'data_provider.dart';
-import 'dart:io';
-import 'location_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class RatingDialog extends State<RatingState> {
@@ -23,17 +21,16 @@ class RatingDialog extends State<RatingState> {
     DataContainer data = DataProvider.of(context).dataContainer;
     tripType = data.getTripType();
 
-    void setDateText(String date){
+    void setDateText(String date) {
       setState(() {
         dateText = date;
       });
-      
     }
-    
+
     DateTime selectedTime = DateTime.now();
     return Scaffold(
       appBar: AppBar(
-        title: Text('Rate ' + widget.attraction.GetName()),
+        title: Text('Rate ' + widget.attraction.getName()),
       ),
       body: ListView(
         children: <Widget>[
@@ -45,12 +42,12 @@ class RatingDialog extends State<RatingState> {
               padding: EdgeInsets.only(left: 4.0, bottom: 2.0),
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: NetworkImage(widget.attraction.GetImgPath()),
+                  image: NetworkImage(widget.attraction.getImgPath()),
                   fit: BoxFit.cover,
                 ),
               ),
               child: ListTile(
-                title: Text(widget.attraction.GetName(),
+                title: Text(widget.attraction.getName(),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 20.0,
@@ -118,7 +115,11 @@ class RatingDialog extends State<RatingState> {
                   );
                   setState(() async {
                     selectedTime = await chosenTime;
-                    setDateText(selectedTime.day.toString() + '-' + selectedTime.month.toString() + '-' + selectedTime.year.toString());
+                    setDateText(selectedTime.day.toString() +
+                        '-' +
+                        selectedTime.month.toString() +
+                        '-' +
+                        selectedTime.year.toString());
                   });
                 },
               )),
@@ -128,7 +129,8 @@ class RatingDialog extends State<RatingState> {
               child: Text('Submit review'),
               color: Theme.of(context).accentColor,
               onPressed: () {
-                giveReview(attractionRating, selectedTime, tripType, widget.attraction.GetName(), context);
+                giveReview(attractionRating, selectedTime, tripType,
+                    widget.attraction.getName(), context);
                 /*
                 saveString(widget.attraction.GetName() + '%Rating',
                     attractionRating.toString());
@@ -161,7 +163,8 @@ class RatingState extends StatefulWidget {
 class HomeScreen extends State<HomeScreenState> {
   double attractionRating = 0;
   Coordinate userLocation;
-  String username = null;
+
+  String username;
   Widget _homeScreen() {
     DataContainer data = DataProvider.of(context).dataContainer;
     return MaterialApp(
@@ -204,7 +207,6 @@ class HomeScreen extends State<HomeScreenState> {
                     });
                   }),
                 */
-              
             ],
             bottom: TabBar(tabs: [
               Tab(
@@ -255,14 +257,15 @@ class HomeScreen extends State<HomeScreenState> {
         DataProvider.of(context).dataContainer.getAttractions();
     List<Attraction> attractions = [];
     for (var attraction in data) {
-      if (!attraction.GetIsFoodPlace()) {
+      if (!attraction.getIsFoodPlace()) {
         attractions.add(attraction);
       }
     }
-    return  Padding(
+    return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: attractions.length != 0 ? _buildRecList(attractions)
-      : ListTile(
+      child: attractions.length != 0
+          ? _buildRecList(attractions)
+          : ListTile(
               title: Text('No attractions found'),
               subtitle: Text(
                   'Try going to a different area, or adjust your settings, in order to find some nearby attractions'),
@@ -275,8 +278,9 @@ class HomeScreen extends State<HomeScreenState> {
     DataContainer data = DataProvider.of(context).dataContainer;
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: data.getAttractions().length != 0 ? _buildRecList(data.getAttractions())
-      : ListTile(
+      child: data.getAttractions().length != 0
+          ? _buildRecList(data.getAttractions())
+          : ListTile(
               title: Text('No attractions found'),
               subtitle: Text(
                   'Try going to a different area, or adjust your settings, in order to find some nearby attractions'),
@@ -290,14 +294,15 @@ class HomeScreen extends State<HomeScreenState> {
         DataProvider.of(context).dataContainer.getAttractions();
     List<Attraction> restaurants = [];
     for (var attraction in data) {
-      if (attraction.GetIsFoodPlace()) {
+      if (attraction.getIsFoodPlace()) {
         restaurants.add(attraction);
       }
     }
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: restaurants.length != 0 ? _buildRecList(restaurants)
-      : ListTile(            
+      child: restaurants.length != 0
+          ? _buildRecList(restaurants)
+          : ListTile(
               title: Text('No restaurants found'),
               subtitle: Text(
                   'Try going to a different area, or adjust your settings, in order to find some nearby restaurants'),
@@ -339,12 +344,12 @@ class HomeScreen extends State<HomeScreenState> {
               padding: EdgeInsets.only(left: 4.0, bottom: 2.0),
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: NetworkImage(attraction.GetImgPath()),
+                  image: NetworkImage(attraction.getImgPath()),
                   fit: BoxFit.cover,
                 ),
               ),
               child: ListTile(
-                  title: Text(attraction.GetName(),
+                  title: Text(attraction.getName(),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20.0,
@@ -360,9 +365,12 @@ class HomeScreen extends State<HomeScreenState> {
                         ],
                       )))),
           ListTile(
-              title: Text('Rating: ' + attraction.GetRating().toString()),
+              title: Text('Rating: ' + attraction.getRating().toString()),
               subtitle: Text('Distance: 0.8 km'),
-              trailing: Text(attraction.GetOpeningHours()))
+              trailing: Container(
+                  width: deviceSize.width * (3 / 7),
+                  child: Text('\n' + attraction.getOpeningHours(),
+                      style: Theme.of(context).textTheme.body2)))
         ],
       ),
     );
@@ -388,12 +396,12 @@ class HomeScreen extends State<HomeScreenState> {
               padding: EdgeInsets.only(left: 4.0, bottom: 2.0),
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: NetworkImage(attraction.GetImgPath()),
+                  image: NetworkImage(attraction.getImgPath()),
                   fit: BoxFit.cover,
                 ),
               ),
               child: ListTile(
-                  title: Text(attraction.GetName(),
+                  title: Text(attraction.getName(),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20.0,
@@ -463,11 +471,11 @@ class HomeScreen extends State<HomeScreenState> {
                         ],
                       )))),
           ListTile(
-            title: Text('Rating: ' + attraction.GetRating().toString()),
+            title: Text('Rating: ' + attraction.getRating().toString()),
             subtitle: Text('Distance 0.8 km'),
             trailing: Container(
-              width: deviceSize.width * (4/7),
-              child: Text('\n' + attraction.GetOpeningHours(),
+              width: deviceSize.width * (4 / 7),
+              child: Text('\n' + attraction.getOpeningHours(),
                   style: Theme.of(context).textTheme.body2),
             ),
           ),
@@ -488,7 +496,7 @@ class HomeScreen extends State<HomeScreenState> {
     Navigator.of(context)
         .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
       return Scaffold(
-        appBar: AppBar(title: Text(attraction.GetName())),
+        appBar: AppBar(title: Text(attraction.getName())),
         body: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -503,7 +511,7 @@ class HomeScreen extends State<HomeScreenState> {
                   minWidth: 100,
                   height: 50,
                   onPressed: () {
-                    attraction.GetCoordinate() != null
+                    attraction.getCoordinate() != null
                         ? _mapView(attraction)
                         : displayMsg(
                             'Location unknown for this attraction', context);
@@ -521,8 +529,8 @@ class HomeScreen extends State<HomeScreenState> {
                   minWidth: 100,
                   height: 50,
                   onPressed: () {
-                    attraction.GetURL() != null
-                        ? launchWebsite(attraction.GetURL(), context)
+                    attraction.getURL() != null
+                        ? launchWebsite(attraction.getURL(), context)
                         : displayMsg(
                             'Website for this attraction is unknown', context);
                   },
@@ -558,24 +566,27 @@ class HomeScreen extends State<HomeScreenState> {
     }));
   }
 
-  Widget _mapView(Attraction attraction) {
+  void _mapView(Attraction attraction) {
     Coordinate tempCoordinate =
-        findMiddlePoint(attraction.GetCoordinate(), userLocation);
+        findMiddlePoint(attraction.getCoordinate(), userLocation);
 
-    attraction.GetCoordinate() == null
-        ? displayMsg('The location for this attraction is not available', context)
+    attraction.getCoordinate() == null
+        ? displayMsg(
+            'The location for this attraction is not available', context)
         : Navigator.of(context)
             .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
             return Scaffold(
               appBar: AppBar(
-                title: Text(attraction.GetName()),
+                title: Text(attraction.getName()),
               ),
               body: Container(
                 child: FlutterMap(
                   options: MapOptions(
                     center: LatLng(
-                        tempCoordinate.GetLat(), tempCoordinate.GetLong()),
-                    zoom: zoomLevel(distanceBetweenCoordinates(attraction.GetCoordinate(), userLocation)).toDouble(),
+                        tempCoordinate.getLat(), tempCoordinate.getLong()),
+                    zoom: zoomLevel(distanceBetweenCoordinates(
+                            attraction.getCoordinate(), userLocation))
+                        .toDouble(),
                   ),
                   layers: [
                     TileLayerOptions(
@@ -592,8 +603,8 @@ class HomeScreen extends State<HomeScreenState> {
                         Marker(
                           width: 200.0,
                           height: 200.0,
-                          point: LatLng(attraction.GetCoordinate().GetLat(),
-                              attraction.GetCoordinate().GetLong()),
+                          point: LatLng(attraction.getCoordinate().getLat(),
+                              attraction.getCoordinate().getLong()),
                           builder: (context) => Container(
                                 child: Icon(
                                   Icons.location_on,
@@ -605,7 +616,7 @@ class HomeScreen extends State<HomeScreenState> {
                           width: 200.0,
                           height: 200.0,
                           point: LatLng(
-                              userLocation.GetLat(), userLocation.GetLong()),
+                              userLocation.getLat(), userLocation.getLong()),
                           builder: (context) => Container(
                                 child: Icon(
                                   Icons.my_location,
@@ -622,38 +633,10 @@ class HomeScreen extends State<HomeScreenState> {
           }));
   }
 
-  bool createRecAttOnly = true;
-  List<Marker> markers = [];
   MapController mapController = MapController();
 
-  void switchBool(){
-    setState(() {
-     createRecAttOnly = !createRecAttOnly; 
-    });
-  }
-
-  void updateMarkers(){
-    setState(() {
-     markers = createMarkers(createRecAttOnly); 
-    });
-  }
-
-  Widget forceRefresh(){    
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('you have not seen anything'),
-      ),
-      body: Column(
-
-      ),
-    );
-  }
-
-  Widget _fullMapView(List<Attraction> allAttractions) {    
+  void _fullMapView(List<Attraction> allAttractions) {
     DataContainer data = DataProvider.of(context).dataContainer;
-		
-    //markers = createMarkers(createRecAttOnly);
-
     allAttractions.length == 0 || allAttractions == null
         ? displayMsg('No attractions nearby', context)
         : Navigator.of(context)
@@ -666,11 +649,11 @@ class HomeScreen extends State<HomeScreenState> {
                 children: <Widget>[
                   Container(
                     child: FlutterMap(
-											mapController: mapController,
+                      mapController: mapController,
                       options: MapOptions(
                         center: LatLng(
-                            userLocation.GetLat(), userLocation.GetLong()),
-                        zoom: 15.0,                        
+                            userLocation.getLat(), userLocation.getLong()),
+                        zoom: 15.0,
                       ),
                       layers: [
                         TileLayerOptions(
@@ -683,51 +666,11 @@ class HomeScreen extends State<HomeScreenState> {
                           },
                         ),
                         MarkerLayerOptions(
-                            markers: markers, //data.getMarkers() //createMarkers(/*allAttractions*/),
-                            ),
+                          markers: createMarkers(data.getcreateRecAttOnly()),
+                        ),
                       ],
                     ),
-									),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Container(
-                      color: Colors.grey[850],
-                      child: SwitchListTile(
-                        title: Text('Show only recommended attractions'),
-                        secondary: Icon(Icons.loupe),
-                        value: createRecAttOnly,
-                        onChanged: (value) {
-                          
-                          print(createRecAttOnly);
-                          switchBool();
-                          print(createRecAttOnly);
-                          print(markers.length.toString());
-                          //updateMarkers();
-                            
-                          var tempmarkers = createMarkers(createRecAttOnly);
-                          markers = tempmarkers;
-                          print(markers.length.toString());
-                          setState(() {
-                            mapController.move(mapController.center, mapController.zoom + 0.001);
-                            
-
-                            //Navigator.of(context).push(new MaterialPageRoute<void>(builder: (BuildContext context) {return forceRefresh();}));
-                            
-														//Navigator.pop(context);
-														//Navigator.of(context).push(new MaterialPageRoute<void>(builder: (BuildContext context) {return _fullfullMapView(allAttractions);}));
-
-														/*
-                            print(isSwitched);
-                            print(markers.length);
-                            markers =  createMarkers(isSwitched);
-                            print(markers.length);
-														mapController.move(mapController.center, mapController.zoom+0.001);
-														*/
-                          });
-                        },
-                      ),
-                    ),
-                  )
+                  ),
                 ],
               ),
             );
@@ -746,34 +689,35 @@ class HomeScreen extends State<HomeScreenState> {
           width: 200.0,
           height: 200.0,
           point: LatLng(
-              item.GetCoordinate().GetLat(), item.GetCoordinate().GetLong()),
+              item.getCoordinate().getLat(), item.getCoordinate().getLong()),
           builder: (context) => Container(
-                  child: GestureDetector(
-                onTap: () {
-                  showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          content: buildRecCardTile(item),
-                          contentPadding:
-                              const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
-                        );
-                      });
-                },
-                child: Icon(
-                  item.GetIsFoodPlace()
-                      ? Icons.fastfood
-                      : Icons.account_balance,
-                  color: item.GetIsFoodPlace() ? Colors.red : Colors.green,
+                child: GestureDetector(
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            content: buildRecCardTile(item),
+                            contentPadding:
+                                const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
+                          );
+                        });
+                  },
+                  child: Icon(
+                    item.getIsFoodPlace()
+                        ? Icons.fastfood
+                        : Icons.account_balance,
+                    color: item.getIsFoodPlace() ? Colors.red : Colors.green,
+                  ),
                 ),
-              )),
+              ),
         ),
       );
     }
     returnList.add(new Marker(
       width: 200.0,
       height: 200.0,
-      point: LatLng(userLocation.GetLat(), userLocation.GetLong()),
+      point: LatLng(userLocation.getLat(), userLocation.getLong()),
       builder: (context) => Container(
             child: Icon(
               Icons.my_location,
@@ -786,54 +730,69 @@ class HomeScreen extends State<HomeScreenState> {
     return returnList;
   }
 
-  void updateUserLocation() async {
-    if(await PermissionHandler().checkPermissionStatus(PermissionGroup.location) == PermissionStatus.granted) {
-      Position position = await Geolocator().getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
-      userLocation = Coordinate(position.latitude, position.longitude);
-    }
-/* To be used, when we fix ERROR_ALREADY_REQUESTING_PERMISSIONS error z.z
-    else {
-      Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.location]);
-      if(permissions[PermissionGroup.location] == PermissionStatus.granted) {
-        Position position = await Geolocator().getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
-        userLocation = Coordinate(position.latitude, position.longitude);
-      }*/         
+  void setUserloc(Position pos) {
+    setState(() {
+      userLocation = Coordinate(pos.latitude, pos.longitude);
+    });
   }
-  
-DateTime lastupdatedRec = DateTime.now();
-DateTime lastupdatedAll = DateTime.now();
+
+  void updateUserLocation() async {
+    if (await PermissionHandler()
+            .checkPermissionStatus(PermissionGroup.location) ==
+        PermissionStatus.granted) {
+      await Geolocator()
+          .getLastKnownPosition(desiredAccuracy: LocationAccuracy.high)
+          .then(setUserloc);
+    }
+    //To be used, when we fix ERROR_ALREADY_REQUESTING_PERMISSIONS error z.z
+    else {
+      Map<PermissionGroup, PermissionStatus> permissions =
+          await PermissionHandler()
+              .requestPermissions([PermissionGroup.location]);
+      if (permissions[PermissionGroup.location] == PermissionStatus.granted) {
+        Position position = await Geolocator()
+            .getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
+        userLocation = Coordinate(position.latitude, position.longitude);
+      }
+    }
+  }
+
+  DateTime lastupdatedRec = DateTime.now();
+  DateTime lastupdatedAll = DateTime.now();
+  DateTime lastupdatedLoc = DateTime.now();
 //bool initLoad = true;
 
   @override
-  Widget build(BuildContext context) {    
+  Widget build(BuildContext context) {
     DataContainer data = DataProvider.of(context).dataContainer;
     //print("rec: " + data.getAttractions().length.toString() + " | all: " + data.getAllNearbyAttractions().length.toString());
-    
+
     DateTime currentTime = DateTime.now();
     var diffRec = currentTime.minute - lastupdatedRec.minute;
-    if (diffRec < 0){
+    if (diffRec < 0) {
       diffRec += 60;
     }
     var diffAll = currentTime.minute - lastupdatedAll.minute;
-    if (diffAll < 0){
+    if (diffAll < 0) {
       diffAll += 60;
     }
+    var diffLoc = currentTime.minute - lastupdatedLoc.minute;
+    if (diffLoc < 0) {
+      diffLoc += 60;
+    }
 
-    if(data.getAttractions().length == 0 || diffRec > 5){
-      getRecommendations(userLocation, data.getDist(), context);	
+    if (data.getAttractions().length == 0 || diffRec > 5) {
+      getRecommendations(userLocation, context);
       lastupdatedRec = DateTime.now();
     }
-    if(data.getAllNearbyAttractions().length == 0 || diffAll > 5 ){
-      getAllAttractions(userLocation, data.getDist(), context);
+    if (data.getAllNearbyAttractions().length == 0 || diffAll > 5) {
+      getAllAttractions(userLocation, context);
       lastupdatedAll = DateTime.now();
     }
-    /*
-    if(initLoad){
-      getLikedAttraction(context);
-
-      initLoad = false;
+    if (userLocation == null || diffLoc > 5) {
+      updateUserLocation();
+      lastupdatedLoc = DateTime.now();
     }
-    */
 
     if (username == null) {
       return LogInState();
@@ -847,21 +806,21 @@ DateTime lastupdatedAll = DateTime.now();
     DataContainer data = DataProvider.of(context).dataContainer;
   }
 
+  void loadUser(String userName) {
+    setState(() {
+      this.username = userName;
+      updateUserLocation();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     loadString('currentUser').then(loadUser);
-    new Future.delayed(Duration.zero,(){
-      getRecommendations(userLocation, 1, context);
-      getAllAttractions(userLocation, 1, context);
+    new Future.delayed(Duration.zero, () {
+      getRecommendations(userLocation, context);
+      getAllAttractions(userLocation, context);
       getLikedAttraction(context);
-    });
-  }
-
-  void loadUser(String userName) {
-    setState(() {
-      this.username = userName;
-      //updateUserLocation();
     });
   }
 }

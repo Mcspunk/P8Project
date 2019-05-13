@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'select_interests.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'data_provider.dart';
@@ -11,34 +10,16 @@ void clearSharedPrefs() async {
   prefs.clear();
 }
 
-void saveDistance(String key, int value) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  prefs.setInt(key, value);
-}
-
-Future<int> getDistance(String key) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getInt(key);
-}
-
-void saveTripType(String key, String value) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  prefs.setString(key, value);
-}
-
-Future<String> getTripType(String key) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString(key);
-}
-
 class Settings extends State<SettingsState> {
   int _n =  1;
   String dropdownValue = 'Solo';
+  bool createRecAttOnly = true;
 
   @override
   void initState() {
-    getDistance('dist').then(loadDistance);
-    getTripType('tripType').then(loadTripType);
+    loadInt('dist').then(loadDistance);
+    loadString('tripType').then(loadTripType);
+    loadBool('createRecAttOnly').then(loadcreateRecAttOnly);
     //clearSharedPrefs();
     super.initState();
   }
@@ -46,6 +27,12 @@ class Settings extends State<SettingsState> {
   void loadTripType(String tripType) {
     setState(() {
       this.dropdownValue = tripType ?? 'Solo';
+    });
+  }
+
+  loadcreateRecAttOnly(bool onlyRec){
+    setState(() {
+      this.createRecAttOnly = onlyRec ?? false;
     });
   }
 
@@ -77,9 +64,12 @@ class Settings extends State<SettingsState> {
       body: WillPopScope(
         onWillPop: (){
           data.setDist(_n);
-          saveDistance('dist', _n);
+          saveInt('dist', _n);
           data.setTripType(dropdownValue);
-          saveTripType('tripType', dropdownValue);
+          saveString('tripType', dropdownValue);
+          data.setcreateRecAttOnly(createRecAttOnly);
+          saveBool('createRecAttOnly', createRecAttOnly);
+
           print('saved');
           return new Future.value(true);
         },
@@ -89,7 +79,7 @@ class Settings extends State<SettingsState> {
     );
   }
 
-  Widget _customSettings() {
+  Widget _customSettings() {    
     double width = MediaQuery.of(context).size.width;
     return SizedBox(
       width: width,
@@ -172,6 +162,15 @@ class Settings extends State<SettingsState> {
             onTap: () {
               Navigator.pushNamed(context, '/select_interests');
             },
+          ),
+          Divider(),
+          SwitchListTile(
+            title: Text('Show only recommended attractions'),
+            value: createRecAttOnly,
+
+            onChanged: (value) {
+              createRecAttOnly = !createRecAttOnly;
+            }
           ),
           Divider(),
           ListTile(

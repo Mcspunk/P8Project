@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'utility.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
 
 
 void saveDistance(String key, int value) async {
