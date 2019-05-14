@@ -12,8 +12,6 @@ ItemRatingPair = namedtuple("ItemRatingPair", "item rating")
 
 
 class RatingObj:
-    assign_matrix: scipy.sparse.csr_matrix
-    rate_matrix: scipy.sparse.csr_matrix
 
     def __init__(self):
 
@@ -204,14 +202,13 @@ def transform_reviews_table_to_binary():
 def read_data_binary():
     rating_obj = RatingObj()
     conn_string = "host=" + creds.PGHOST + " port=" + creds.PORT + " dbname=" + creds.PGDATABASE + " user=" + creds.PGUSER + " password=" + creds.PGPASSWORD
-
     db = psycopg2.connect(conn_string)
     cursor = db.cursor()
     cursor.execute("SELECT * FROM justdiscover.reviews_binary ORDER BY id ASC")
 
     colnames: List[str] = [desc[0] for desc in cursor.description[4:]]
-    counter = 0
-    for context in colnames:
+
+    for counter, context in enumerate(colnames):
         context_split = context.strip().split(":")
         context_dim = context_split[0]
         dimc = rating_obj.dim_ids.get(context_dim, rating_obj.dim_ids.keys().__len__())
@@ -219,7 +216,6 @@ def read_data_binary():
         rating_obj.cond_ids[context] = counter
         rating_obj.dim_cond_dict[dimc].add(counter)
         rating_obj.cond_dim_dict[counter] = dimc
-        counter += 1
 
     while True:
         row = cursor.fetchone()

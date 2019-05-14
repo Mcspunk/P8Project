@@ -160,6 +160,11 @@ class ICAMF:
                                     try:
                                         val += error_user_item * inner_element.value
                                     except FloatingPointError as e:
+                                        print(
+                                            f'Context_Matrix_max: {np.max(self.context_factor_matrix)}\tContext_Matrix_min: {np.min(self.context_factor_matrix)}\n'
+                                            f'\tUser_factor_max: {np.max(self.user_factor_matrix)}\tUser_factor_min: {np.min(self.user_factor_matrix)}\n'
+                                            f'\tItem_factor_max: {np.max(self.item_factor_matrix)}\tItem_factor_min: {np.min(self.user_factor_matrix)}\n\n')
+
                                         print(f'Error_user_item = {error_user_item}, inner_element_value {inner_element}, Error {e}')
                             tuple_element.delta += val
 
