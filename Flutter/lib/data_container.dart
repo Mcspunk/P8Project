@@ -1,9 +1,11 @@
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'data_provider.dart';
 
 import 'utility.dart';
 
-class DataContainer {
+class DataContainerState extends State<DataContainer> {
   List<Attraction> _currentAttractions = [];
   List<Attraction> _favourites = [];
   List<Attraction> _allNearbyAttractions = [];
@@ -15,13 +17,13 @@ class DataContainer {
   bool _updateRecs = false;
 
 
-  DataContainer(){
+  DataContainerState(){
     _categoryRatings = Map.fromIterables(['Museum', 'Parks', 'Ferris Wheel'], [0,0,0]);
   }
 
   List<Attraction> getAttractions() => _currentAttractions;
 
-  void setAttractions(attractions){
+  void setAttractions(attractions){        
     _currentAttractions = attractions;
   }
 
@@ -67,5 +69,26 @@ class DataContainer {
 
   void setcreateRecAttOnly(bool createRecAttOnly){
     _createRecAttOnly = createRecAttOnly;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new DataProvider(
+      dataContainer: this,
+      child: widget.child
+    );
+  }
+}
+
+class DataContainer extends StatefulWidget{
+  Widget child;
+
+  DataContainer({this.child});
+
+  @override
+  DataContainerState createState() => new DataContainerState();
+
+  static DataContainerState of(BuildContext context){
+    return (context.inheritFromWidgetOfExactType(DataProvider)as DataProvider).dataContainer;
   }
 }

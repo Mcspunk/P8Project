@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DataProvider(
-      dataContainer: DataContainer(),
+      dataContainer: DataContainerState(),
       child: MaterialApp(
         title: 'Sign in',
         theme: utilTheme(),
