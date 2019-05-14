@@ -192,7 +192,7 @@ class Settings extends State<SettingsState> {
             value: distPenEnabled,
 
             onChanged: (value) {
-              createRecAttOnly = !distPenEnabled;
+              distPenEnabled = !distPenEnabled;
             }
           ),
           Divider(),

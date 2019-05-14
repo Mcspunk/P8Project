@@ -176,7 +176,7 @@ class HomeScreen extends State<HomeScreenState> {
   void refreshDistancePenalty() {
     DataContainerState data = DataContainer.of(context);
     bool wantsdistpen = data.getDistPenEnabled();
-    List<Attraction> attractionList = data.getAttractions();
+    List<Attraction> attractionList = List<Attraction>.from(data.getAttractions());
     if (wantsdistpen){
       for (var attraction in attractionList) {
         double score = attraction.getScore();
@@ -191,8 +191,9 @@ class HomeScreen extends State<HomeScreenState> {
         attraction.setPenalisedScore(attraction.getScore());
       }
     }
-    attractionList.sort((a,b) => a.getPenalisedScore().compareTo(b.getPenalisedScore()));
+    attractionList.sort((a,b) => b.getPenalisedScore().compareTo(a.getPenalisedScore()));
     print('debug');
+    data.setAttractions(attractionList);
     setState(() {});
   }
 
@@ -275,7 +276,7 @@ class HomeScreen extends State<HomeScreenState> {
     );
   }
 
-  Widget _buildRecList(var items) {
+  Widget _buildRecList(List<Attraction> items) {
     return ListView.builder(
       padding: const EdgeInsets.all(1.0),
       itemBuilder: (context, i) {
@@ -417,13 +418,13 @@ class HomeScreen extends State<HomeScreenState> {
 
   Widget buildRecTile(Attraction attraction) {
     var match;
-    if(attraction.getScore() != null){
-      match = attraction.getScore() / 5 * 100;
+    if(attraction.getPenalisedScore() != null){
+      match = attraction.getPenalisedScore() / 5 * 100;
     }
     
     DateTime dt = DateTime.now();
-    String ratingstring = attraction.getScore() == null || match == null
-        ? 'Rating: ' + attraction.getRating().toString()
+    String ratingstring = attraction.getPenalisedScore() == null || match == null
+        ? 'Rating: ' + attraction.getRating().toStringAsFixed(2)
         : 'Match: ' +
             match.toStringAsFixed(2) +
             '%' +
@@ -529,7 +530,7 @@ class HomeScreen extends State<HomeScreenState> {
                         ],
                       )))),
           ListTile(
-            title: Text(attraction.getPenalisedScore().toString()),//Text(ratingstring),
+            title: Text(ratingstring),
             //leading: Text('Score: ' + attraction.getScore().toString()),
             subtitle: Text(distanceString),
             trailing: Container(
@@ -897,9 +898,6 @@ class HomeScreen extends State<HomeScreenState> {
     getAllAttractions(userLocation, context).then(loadAllRecs);
     getLikedAttraction(context).then(loadLikedRecs);
     super.didChangeDependencies();
-
-
-
   }
 
   void loadUser(String userName) {
@@ -910,8 +908,10 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   void loadDist(int maxDist) {
+    DataContainerState data = DataContainer.of(context);    
     setState(() {
       this.maxDist = maxDist;
+      data.setDist(maxDist);
     });
   }
 
@@ -936,7 +936,7 @@ class HomeScreen extends State<HomeScreenState> {
       diff += 60;
     }
 
-    if (data.getAttractions().length == 0 || diff > 5) {
+    if (data.getAttractions() != null && (data.getAttractions().length == 0 || diff > 5)) {
       setState(() {
         data.setAttractions(list);
       });
@@ -969,12 +969,7 @@ class HomeScreen extends State<HomeScreenState> {
       data.setFavourites(list);
     });
   }
-  void loadDist(int distance) {
-    DataContainerState data = DataContainer.of(context);
-    setState(() {
-      data.setDist(distance);
-    });
-  }
+
   void loadTripType(String tt) {
     DataContainerState data = DataContainer.of(context);
     setState(() {
@@ -984,9 +979,6 @@ class HomeScreen extends State<HomeScreenState> {
 
   @override
   void initState() {
-    
-    loadString('currentUser').then(loadUser);
-    
     super.initState();
     loadString('currentUser').then(loadUser);
     loadBool('distPenEnabled').then(loadDistPenEnabled);
