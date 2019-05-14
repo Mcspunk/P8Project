@@ -9,6 +9,7 @@ from functools import reduce
 import operator
 import dill
 import copy
+import sys
 
 
 np.random.seed(seed=8)
@@ -56,10 +57,10 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
 
 def train_and_save_model(regularizer, learning_rate, num_factors, iterations):
     rating_obj = dp.read_data_binary()
+    rating_obj.rate_matrix = rating_obj.rate_matrix.tocsc()
     icamf = ICAMF(rating_obj.rate_matrix, None, rating_obj, fold="Final_Model", regularizer=regularizer,
                   learning_rate=learning_rate, num_factors=num_factors, iterations=iterations)
     icamf.build_ICAMF()
-
     with open(f'{icamf.get_config()}.pkl', "wb") as recommender_file:
         dill.dump(icamf, recommender_file)
 
@@ -99,28 +100,28 @@ class ICAMF:
         self.context_factor_matrix = np.random.uniform(self.init_mean, high=self.init_std,
                                                        size=(len(self.rating_object.ids_cond), self.num_factors))
 
+
     def build_ICAMF(self):
         print("Training started: " + f'fold: {str(self.fold)} ' + str(datetime.datetime.now().time()))
+
         for iteration in range(0, self.iterations):
 
             loss = 0
 
-            for idx, matrix_entry in enumerate(self.train_matrix):
-                if matrix_entry.nnz is 0:
-                    continue
-                for inner_value in range(0, matrix_entry.nnz):
-                    if matrix_entry.nnz is 0:
-                        continue
-                    user_item_id = idx
+            for idx_ctx in range(0, self.train_matrix._shape[1]):
+                column = self.train_matrix.getcol(idx_ctx)
+                for idx_inner in range(0, column.nnz):
+
+                    user_item_id = column.indices[idx_inner]
                     user_id = self.rating_object.get_user_id_from_user_item_id(user_item_id)
                     item_id = self.rating_object.get_item_id_from_user_item_id(user_item_id)
-                    context = matrix_entry.indices[inner_value]
+                    context = idx_ctx
                     conditions = self.rating_object.ids_ctx_list.get(context)
-                    rating_user_item_context = matrix_entry.data[inner_value]
+                    rating_user_item_context = column.data[idx_inner]
                     prediction = self.predict(user_id, item_id, context)
                     error_user_item = rating_user_item_context - prediction
 
-                    loss += error_user_item * error_user_item
+                    loss += abs(error_user_item)
 
                     user_bias = self.user_bias[user_id]
                     item_bias = self.item_bias[item_id]
@@ -132,6 +133,11 @@ class ICAMF:
 
                     loss += 0.5 * self.regularizer_1 * item_bias * item_bias
                     loss += 0.5 * self.regularizer_1 * user_bias * user_bias
+                    loss += 0.5 * self.regularizer_1 * np.linalg.norm(self.user_factor_matrix[user_id]) * np.linalg.norm(self.user_factor_matrix[user_id])
+                    loss += 0.5 * self.regularizer_1 * np.linalg.norm(self.item_factor_matrix[item_id]) * np.linalg.norm(self.user_factor_matrix[item_id])
+
+                    for condition in conditions:
+                        loss += 0.5 * self.regularizer_1 * np.linalg.norm(self.context_factor_matrix[condition]) * np.linalg.norm(self.context_factor_matrix[condition])
 
                     for factor in range(0, self.num_factors):
                         user_latent_factor = self.user_factor_matrix[user_id][factor]
@@ -159,12 +165,6 @@ class ICAMF:
 
                             #loss += self.regularizer_1 * tuple_element.value * tuple_element.value
 
-                        loss += 0.5 * self.regularizer_1 * pow(np.linalg.norm(self.user_factor_matrix[user_id]),2)
-                        loss += 0.5 * self.regularizer_1 * pow(np.linalg.norm(self.item_factor_matrix[item_id]),2)
-
-                        for condition in conditions:
-                            loss += 0.5 * self.regularizer_1 * pow(np.linalg.norm(self.context_factor_matrix[condition]), 2)
-
                         self.user_factor_matrix[user_id][factor] += self.learning_rate * latent_values_list[0].delta
                         self.item_factor_matrix[item_id][factor] += self.learning_rate * latent_values_list[1].delta
 
@@ -173,6 +173,12 @@ class ICAMF:
 
             print(f'Fold: {str(self.fold)} ' + "Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
             print("Loss: " + str(loss))
+            print(f'Context_Matrix_max: {np.max(self.context_factor_matrix)}\tContext_Matrix_min: {np.min(self.context_factor_matrix)}\n'
+                  f'\tUser_factor_max: {np.max(self.user_factor_matrix)}\tUser_factor_min: {np.min(self.user_factor_matrix)}\n'
+                  f'\tItem_factor_max: {np.max(self.item_factor_matrix)}\tItem_factor_min: {np.min(self.user_factor_matrix)}\n\n')
+
+
+
 
     def predict(self, user, item, context):
 
@@ -224,20 +230,17 @@ class ICAMF:
         for rating in self.rating_object.rating_values:
             confusion_matrix[rating] = confusion_matrix_row(rating, 0, 0, 0, 0, 0, 0, 0)
 
-        for idx, matrix_entry in enumerate(self.test_matrix):
-            if matrix_entry.nnz is 0:
-                continue
-            for inner_value in range(0, matrix_entry.nnz):
-                if matrix_entry.nnz is 0:
-                    continue
-                user_item_id = idx
+        for idx_ctx in range(0, self.test_matrix._shape[1]):
+            column = self.test_matrix.getcol(idx_ctx)
+            for idx_inner in range(0, column.nnz):
+                user_item_id = column.indices[idx_inner]
                 user_id = self.rating_object.get_user_id_from_user_item_id(user_item_id)
                 item_id = self.rating_object.get_item_id_from_user_item_id(user_item_id)
-                context = matrix_entry.indices[inner_value]
-                rating_user_item_context = matrix_entry.data[inner_value]
+                context = idx_ctx
+                rating_user_item_context = column.data[idx_inner]
                 prediction = self.predict(user_id, item_id, context)
-                error_user_item = abs(rating_user_item_context - prediction)
-                mae += error_user_item
+                error_user_item = rating_user_item_context - prediction
+                mae += abs(error_user_item)
                 ratings += 1
 
                 closest_rating = min(confusion_matrix.keys(), key=lambda x:abs(x-prediction))

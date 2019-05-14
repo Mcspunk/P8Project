@@ -507,14 +507,14 @@ def insert_geocoding_database():
     conn.close()
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
+#    app.run()
 
-    app.run()
+#train_recommender_kfold(1,0.001,0.001,20,0)
+train_and_save_model(regularizer=0.001,learning_rate= 0.001, num_factors=20, iterations=100)
 
-train_and_save_model(0.001, 0.002, 20, 100)
-
-with open("dummy_model.pkl", "rb") as f:
-    icamf_recommender = dill.load(f)
+#with open("dummy_model.pkl", "rb") as f:
+#    icamf_recommender = dill.load(f)
 
 #train_and_save_model(0.001,0.002,25,20)
 #train_recommender_kfold(5, 0.001, 0.002,25,100)

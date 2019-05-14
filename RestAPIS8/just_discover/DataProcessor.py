@@ -81,7 +81,7 @@ class RatingObj:
         scipy.sparse.csr_matrix.eliminate_zeros(train_matrix)
         scipy.sparse.csr_matrix.eliminate_zeros(test_matrix)
 
-        return train_matrix, test_matrix
+        return train_matrix.tocsc(), test_matrix.tocsc()
 
     def get_user_id_from_user_item_id(self, user_item_id):
         return self.ui_user_ids.get(user_item_id)
