@@ -134,6 +134,9 @@ Future<void> getPreferences(BuildContext context) async {
 }
 
 Future<int> getRecCount(Coordinate coordinate) async {  
+  if(coordinate == null){
+    return 0;
+  }
   DateTime dt = DateTime.now();
   String tt = await loadString('triptype') ?? 'alone';
   int distance = await loadInt('dist') ?? 1;
@@ -163,6 +166,9 @@ Future<int> getRecCount(Coordinate coordinate) async {
 
 Future<List<Attraction>> getAllAttractions(
     Coordinate coordinate, BuildContext context) async {
+  if(coordinate == null){
+    return new List<Attraction>();
+  }
   DataContainerState data = DataContainer.of(context);
   int distance = data.getDist() ?? await loadInt('dist');
   var jsonstring = {
@@ -228,8 +234,8 @@ Future<List<Attraction>> getRecommendations(
     Coordinate coordinate, BuildContext context) async {
   DataContainerState data = DataContainer.of(context);
   DateTime dt = DateTime.now();
-  int distance = data.getDist() ?? await loadInt('dist'); //ID, Context (commpany:triptype, monthvisited:måned)
-  String tt = data.getTripType() ?? await loadString('triptype');
+  int distance = await loadInt('dist') ?? 1; //ID, Context (commpany:triptype, monthvisited:måned)
+  String tt = await loadString('triptype') ?? 'alone';
   tt = tt.toLowerCase() == 'solo' ? 'alone' : tt;
   String usercontext = "month_visited:" + months[dt.month] + ",company:" + (tt ?? 'alone');
   if(coordinate == null){

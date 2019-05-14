@@ -5,7 +5,7 @@ import 'data_provider.dart';
 
 import 'utility.dart';
 
-class DataContainerState extends State<DataContainer> {
+class DataContainerState extends State<DataContainer>{ 
   List<Attraction> _currentAttractions = [];
   List<Attraction> _favourites = [];
   List<Attraction> _allNearbyAttractions = [];
@@ -15,7 +15,6 @@ class DataContainerState extends State<DataContainer> {
   Map _categoryRatings;
   bool _createRecAttOnly = true;
   bool _updateRecs = false;
-
 
   DataContainerState(){
     _categoryRatings = Map.fromIterables(['Museum', 'Parks', 'Ferris Wheel'], [0,0,0]);

@@ -377,15 +377,25 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget buildRecTile(Attraction attraction) {
-    var match = attraction.getScore() / 5 * 100;
+    var match;
+    if(attraction.getScore() != null){
+      match = attraction.getScore() / 5 * 100;
+    }
+    
     DateTime dt = DateTime.now();
-    String ratingstring = attraction.getScore() == null
+    String ratingstring = attraction.getScore() == null || match == null
         ? 'Rating: ' + attraction.getRating().toString()
         : 'Match: ' +
             match.toStringAsFixed(2) +
             '%' +
             '\nRating: ' +
             attraction.getRating().toString();
+
+    
+    String distanceString = attraction.getDistance() != null ? 'Distance: ' +
+                (attraction.getDistance() > 1000 ? (attraction.getDistance() / 1000).toStringAsFixed(2) : attraction.getDistance().toStringAsFixed(0)) +
+                (attraction.getDistance() > 1000 ? "km" : "m") : "";
+
     DataContainerState data = DataContainer.of(context);
     final deviceSize = MediaQuery.of(context).size;
     return Container(
@@ -482,9 +492,7 @@ class HomeScreen extends State<HomeScreenState> {
           ListTile(
             title: Text(ratingstring),
             //leading: Text('Score: ' + attraction.getScore().toString()),
-            subtitle: Text('Distance: ' +
-                (attraction.getDistance().toStringAsFixed(0) ?? 'N/A') +
-                "m"),
+            subtitle: Text(distanceString),
             trailing: Container(
               width: deviceSize.width * (3 / 7),
               child: Text(
@@ -523,7 +531,7 @@ class HomeScreen extends State<HomeScreenState> {
                     padding: EdgeInsets.all(deviceSize.width * (1 / 28)),
                     child: Text('Phone Number: ',
                         style: Theme.of(context).textTheme.body2)),
-                Padding(padding: EdgeInsets.all(deviceSize.width * (1 / 9))),
+                Padding(padding: EdgeInsets.all(deviceSize.width * (1 / 12))),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -544,7 +552,7 @@ class HomeScreen extends State<HomeScreenState> {
                     padding: EdgeInsets.all(deviceSize.width * (1 / 28)),
                     child: Text('Weekly opening hours',
                         style: Theme.of(context).textTheme.body2)),
-                Padding(padding: EdgeInsets.all(deviceSize.width * (1 / 16))),
+                Padding(padding: EdgeInsets.all(deviceSize.width * (1 / 24))),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -827,36 +835,11 @@ class HomeScreen extends State<HomeScreenState> {
 
   @override
   Widget build(BuildContext context) {
-    DataContainerState data = DataContainer.of(context);
-    //print("rec: " + data.getAttractions().length.toString() + " | all: " + data.getAllNearbyAttractions().length.toString());
-
+    
     DateTime currentTime = DateTime.now();
-    //var diffRec = currentTime.minute - lastupdatedRec.minute;
-    var diffRec = currentTime.second - lastupdatedRec.second;
-    if (diffRec < 0) {
-      diffRec += 60;
-    }
-    //var diffAll = currentTime.minute - lastupdatedAll.minute;
-    var diffAll = currentTime.second - lastupdatedAll.second;
-    if (diffAll < 0) {
-      diffAll += 60;
-    }
     var diffLoc = currentTime.minute - lastupdatedLoc.minute;
     if (diffLoc < 0) {
       diffLoc += 60;
-    }
-
-    if (data.getAttractions().length == 0 || diffRec > 5) {
-      getRecommendations(userLocation, context);
-      lastupdatedRec = DateTime.now();
-    }
-    if (data.getAllNearbyAttractions().length == 0 || diffAll > 5) {
-      getAllAttractions(userLocation, context);
-      lastupdatedAll = DateTime.now();
-    }
-    if (userLocation == null || diffLoc > 5) {
-      updateUserLocation();
-      lastupdatedLoc = DateTime.now();
     }
 
     if (username == null) {
@@ -867,11 +850,17 @@ class HomeScreen extends State<HomeScreenState> {
 
   @override
   void didChangeDependencies() {
-    super.didChangeDependencies();
-    //DataContainerState data = DataContainer.of(context);
+    loadInt('dist').then(loadDist);
+    loadString('tripType').then(loadTripType);
+
+    DataContainerState data = DataContainer.of(context);
     getRecommendations(userLocation, context).then(loadRecs);
     getAllAttractions(userLocation, context).then(loadAllRecs);
     getLikedAttraction(context).then(loadLikedRecs);
+    super.didChangeDependencies();
+
+
+
   }
 
   void loadUser(String userName) {
@@ -912,6 +901,7 @@ class HomeScreen extends State<HomeScreenState> {
         data.setAllNearbyAttractions(list);
       });
       lastupdatedAll = DateTime.now();
+      setState(() {});
     }
   }
 
@@ -921,11 +911,25 @@ class HomeScreen extends State<HomeScreenState> {
       data.setFavourites(list);
     });
   }
+  void loadDist(int distance) {
+    DataContainerState data = DataContainer.of(context);
+    setState(() {
+      data.setDist(distance);
+    });
+  }
+  void loadTripType(String tt) {
+    DataContainerState data = DataContainer.of(context);
+    setState(() {
+      data.setTripType(tt);
+    });
+  }
 
   @override
   void initState() {
-    super.initState();
+    
     loadString('currentUser').then(loadUser);
+    
+    super.initState();
   }
 }
 
