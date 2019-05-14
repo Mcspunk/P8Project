@@ -15,6 +15,7 @@ class DataContainerState extends State<DataContainer>{
   Map _categoryRatings;
   bool _createRecAttOnly = true;
   bool _updateRecs = false;
+  bool _distPenEnabled = true;
 
   DataContainerState(){
     _categoryRatings = Map.fromIterables(['Museum', 'Parks', 'Ferris Wheel'], [0,0,0]);
@@ -22,8 +23,16 @@ class DataContainerState extends State<DataContainer>{
 
   List<Attraction> getAttractions() => _currentAttractions;
 
-  void setAttractions(attractions){        
-    _currentAttractions = attractions;
+  void setDistPenEnabled(val) {
+    _distPenEnabled = val;
+  }
+
+  bool getDistPenEnabled() {
+    return _distPenEnabled;
+  }
+
+  void setAttractions(attractions){
+      _currentAttractions = attractions;
   }
 
   List<Attraction> getFavourites() => _favourites;

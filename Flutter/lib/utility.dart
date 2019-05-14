@@ -299,11 +299,9 @@ Future<List<Attraction>> getRecommendations(
           ));
         
       }
+
       return recAttractions;
-      DataContainerState data = DataContainer.of(context);
-      if (recAttractions.length != 0) {
-        data.setAttractions(recAttractions);
-      }
+
     } else {
       displayMsg('No connection to server\nGR', context);
     }
@@ -312,6 +310,7 @@ Future<List<Attraction>> getRecommendations(
     print(e);
   }
 }
+
 
 Future<void> updateLikedAttraction(BuildContext context) async {
   DataContainerState data = DataContainer.of(context);
@@ -575,6 +574,7 @@ class Attraction {
   String _url;
   Coordinate _coordinate;
   String _phone_number;
+  double _penalisedScore;
 
   Attraction(int id, String name, List<String> openingHours, String imgPath,
       bool isFoodPlace,
@@ -604,6 +604,14 @@ class Attraction {
     _score = score;
     _distance = distance;
     _phone_number = phone_number;
+  }
+
+  double getPenalisedScore(){
+    return _penalisedScore;
+  }
+
+  void setPenalisedScore(double val){
+    this._penalisedScore = val;
   }
 
   int getID() {

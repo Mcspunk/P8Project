@@ -14,14 +14,22 @@ class Settings extends State<SettingsState> {
   int _n =  1;
   String dropdownValue = 'Solo';
   bool createRecAttOnly = true;
+  bool distPenEnabled = true;
 
   @override
   void initState() {
     loadInt('dist').then(loadDistance);
     loadString('tripType').then(loadTripType);
     loadBool('createRecAttOnly').then(loadcreateRecAttOnly);
+    loadBool('distPenEnabled').then(loadDistPenEnabled);
     //clearSharedPrefs();
     super.initState();
+  }
+
+  void loadDistPenEnabled(enabled) {
+    setState(() {
+     this.distPenEnabled = enabled ?? true; 
+    });
   }
 
   void loadTripType(String tripType) {
@@ -74,6 +82,8 @@ class Settings extends State<SettingsState> {
           saveString('tripType', dropdownValue);
           data.setcreateRecAttOnly(createRecAttOnly);
           saveBool('createRecAttOnly', createRecAttOnly);
+          data.setDistPenEnabled(distPenEnabled);
+          saveBool('distPenEnabled', distPenEnabled);
 
           print('saved');
           return new Future.value(true);
@@ -175,6 +185,14 @@ class Settings extends State<SettingsState> {
 
             onChanged: (value) {
               createRecAttOnly = !createRecAttOnly;
+            }
+          ),
+          SwitchListTile(
+            title: Text('Recommendations are distance sensitive'),
+            value: distPenEnabled,
+
+            onChanged: (value) {
+              createRecAttOnly = !distPenEnabled;
             }
           ),
           Divider(),
