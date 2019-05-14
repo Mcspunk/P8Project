@@ -6,7 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 
   
-  double _distanceLimit = 0; //meters
+  int _distanceLimit = 1000; //meters
   Geolocator _geolocator = Geolocator()..forceAndroidLocationManager = true;
 
   void locationChecker() async {
@@ -26,7 +26,7 @@ import 'package:permission_handler/permission_handler.dart';
       }
       else {
         distanceInMeters = await Geolocator().distanceBetween(double.parse(await loadString('latestUserLocationLat')), double.parse(await loadString('latestUserLocationLong')), _currentUserLocation.latitude, _currentUserLocation.longitude);
-       
+        _distanceLimit = (await loadInt('dist')) * 1000;
         //print('Debug printing:');
         //print('Old:   lat: ' + await loadString('latestUserLocationLat') + ' long: ' +  await loadString('latestUserLocationLong'));
         //print('Curr:  lat: ' + _currentUserLocation.latitude.toString() + ' long: ' +  _currentUserLocation.longitude.toString());      
@@ -37,7 +37,7 @@ import 'package:permission_handler/permission_handler.dart';
       print('No permission');
     }
 
-    if (distanceInMeters == _distanceLimit) {
+    if (distanceInMeters > _distanceLimit) {
       saveString('latestUserLocationLat', _currentUserLocation.latitude.toString());
       saveString('latestUserLocationLong', _currentUserLocation.longitude.toString());
       //int a = 3; // await API_CALL

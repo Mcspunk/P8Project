@@ -139,9 +139,13 @@ def get_all_recommendations():
         dblat = c[0]
         dblong = c[1]
 
+        open_hours = attraction[4]
+        if (open_hours == None):
+            open_hours = 'NA'
+
         tempAttraction = {"id": attraction[0],
                           "name": attraction[9],
-                          "opening_hours": attraction[4],
+                          "opening_hours": open_hours,
                           "img_path": attraction[8],
                           "description": attraction[9],
                           "rating": float(attraction[3]),
@@ -215,9 +219,13 @@ def get_liked_attractions():
             dblat = c[0]
             dblong = c[1]
 
+            open_hours = attraction[4]
+            if (open_hours == None):
+                open_hours = 'NA'
+
             tempAttraction = {"id": attraction[0],
                               "name": attraction[9],
-                              "opening_hours": attraction[4],
+                              "opening_hours": open_hours,
                               "img_path": attraction[8],
                               "description": attraction[9],
                               "rating": float(attraction[3]),
@@ -273,9 +281,14 @@ def get_recommendations():
         dblat = c[0]
         dblong = c[1]
 
+        open_hours = attraction[4]
+        if(open_hours == None):
+            open_hours = 'NA'
+
+
         tempAttraction = {"id":attraction[0],
                           "name": attraction[9],
-                          "opening_hours": attraction[4],
+                          "opening_hours": open_hours,
                           "img_path": attraction[8],
                           "description": attraction[9],
                           "rating": float(attraction[3]),
@@ -484,6 +497,10 @@ def insert_poi_details():
             opening_hours = details_json['result']['opening_hours']['weekday_text']
             sqlstring = "UPDATE justdiscover.poi_backup SET open_hours = '" + json.dumps(opening_hours) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"
             #cursor.execute(sqlstring)
+        else:
+            sqlstring = "UPDATE justdiscover.poi_backup SET open_hours = NULL WHERE justdiscover.poi_backup.id = " + str(poi_id) + ";"
+            #cursor.execute(sqlstring)
+
         if 'price_level' in details_json['result']:
             price_level = details_json['result']['price_level']
             sqlstring = "UPDATE justdiscover.poi_backup SET price_level = '" + str(price_level) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"

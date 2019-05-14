@@ -45,12 +45,12 @@ class Settings extends State<SettingsState> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainer data = DataContainer.of(context);
   }
 */
   @override
   Widget build(BuildContext context) {
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainerState data = DataContainer.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Row(

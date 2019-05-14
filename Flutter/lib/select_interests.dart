@@ -23,7 +23,7 @@ void saveRatings(String key, List<double> ratings) async {
 }
 
 Future<List<String>> getCategories(BuildContext context) async {
-  DataContainer data = DataProvider.of(context).dataContainer;
+  DataContainerState data = DataContainer.of(context);
   var temp = data.getCategoryRatings().keys;
   List<String> result = [];
   for (var item in temp) {
@@ -37,7 +37,7 @@ Future<List<String>> getCategories(BuildContext context) async {
 }
 
 Future<List<String>> getRatings(BuildContext context) async {  
-  DataContainer data = DataProvider.of(context).dataContainer;
+  DataContainerState data = DataContainer.of(context);
   var temp = data.getCategoryRatings().values;
   List<String> result = [];
   for (var item in temp) {
@@ -106,7 +106,7 @@ class SelectInterests extends State<InterestsState> {
   }
 
   Widget _interestList() {
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainerState data = DataContainer.of(context);
     List<Widget> widgetList = new List<Widget>();
     widgetList.add(new ListTile(
       title: Text(

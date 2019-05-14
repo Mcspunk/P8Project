@@ -91,7 +91,7 @@ Future<void> giveReview(double rating, DateTime date, String triptype,
 }
 
 Future<void> updatePreferences(BuildContext context) async {
-  DataContainer data = DataProvider.of(context).dataContainer;
+  DataContainerState data = DataContainer.of(context);
   var ratings = data.getCategoryRatings();
   var preEncode = {
     "username": await loadString('currentUser'),
@@ -115,7 +115,7 @@ Future<void> updatePreferences(BuildContext context) async {
 }
 
 Future<void> getPreferences(BuildContext context) async {
-  DataContainer data = DataProvider.of(context).dataContainer;
+  DataContainerState data = DataContainer.of(context);
   try {
     String user = await loadString('currentUser');
     var preEncode = {"username": user, "un": user};
@@ -161,9 +161,9 @@ Future<int> getRecCount(Coordinate coordinate) async {
   return 0;
 }
 
-Future<void> getAllAttractions(
+Future<List<Attraction>> getAllAttractions(
     Coordinate coordinate, BuildContext context) async {
-  DataContainer data = DataProvider.of(context).dataContainer;
+  DataContainerState data = DataContainer.of(context);
   int distance = data.getDist() ?? await loadInt('dist');
   var jsonstring = {
     "coordinate": "(" +  coordinate.getLat().toString() + "," + coordinate.getLong().toString() + ")",
@@ -181,10 +181,27 @@ Future<void> getAllAttractions(
       var t = decoded as List;
       List<Attraction> recAttractions = [];
       for (var i = 0; i < t.length; i++) {
+        
+        List<String> open = [];
+        if (t[i]['opening_hours'] == "NA"){
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+        }else{
+          var oh = jsonDecode(t[i]['opening_hours']);
+          for (var item in oh) {
+            open.add(item.toString());
+          }
+        }
+        
         recAttractions.add(new Attraction(
             t[i]['id'],
             t[i]['name'],
-            t[i]['opening_hours'],
+            open,
             t[i]['img_path'],
             !t[i]['isFoodPlace'],
             t[i]['rating'],
@@ -193,7 +210,8 @@ Future<void> getAllAttractions(
             t[i]['lat'],
             t[i]['long']));
       }
-      DataContainer data = DataProvider.of(context).dataContainer;
+      return recAttractions;
+      DataContainerState data = DataContainer.of(context);
       if (recAttractions.length != 0) {
         data.setAllNearbyAttractions(recAttractions);
       }
@@ -201,13 +219,14 @@ Future<void> getAllAttractions(
       displayMsg('No connection to server.\nGAA', context);
     }
   } catch (e) {
+    print('gaa ');
     print(e);
   }
 }
 
-Future<void> getRecommendations(
+Future<List<Attraction>> getRecommendations(
     Coordinate coordinate, BuildContext context) async {
-  DataContainer data = DataProvider.of(context).dataContainer;
+  DataContainerState data = DataContainer.of(context);
   DateTime dt = DateTime.now();
   int distance = data.getDist() ?? await loadInt('dist'); //ID, Context (commpany:triptype, monthvisited:måned)
   String tt = data.getTripType() ?? await loadString('triptype');
@@ -238,13 +257,23 @@ Future<void> getRecommendations(
       var t = decoded as List;
       List<Attraction> recAttractions = [];
       for (var i = 0; i < t.length; i++) {
-
-        var oh = jsonDecode(t[i]['opening_hours']);
         List<String> open = [];
-
-        for (var item in oh) {
-          open.add(item.toString());
+        if (t[i]['opening_hours'] == "NA"){
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+        }else{
+          var oh = jsonDecode(t[i]['opening_hours']);
+          for (var item in oh) {
+            open.add(item.toString());
+          }
         }
+        double score = t[i]['score'];
+        score = score > 5 ? 5 : score;
 
 
         recAttractions.add(new Attraction(
@@ -258,11 +287,14 @@ Future<void> getRecommendations(
           t[i]['url'],
           t[i]['lat'],
           t[i]['long'],
-          t[i]['score'],
-          t[i]['distance']));
+          score,
+          //t[i]['distance']
+          distanceBetweenCoordinates(new Coordinate(t[i]['lat'], t[i]['long']), coordinate)
+          ));
         
       }
-      DataContainer data = DataProvider.of(context).dataContainer;
+      return recAttractions;
+      DataContainerState data = DataContainer.of(context);
       if (recAttractions.length != 0) {
         data.setAttractions(recAttractions);
       }
@@ -270,12 +302,13 @@ Future<void> getRecommendations(
       displayMsg('No connection to server\nGR', context);
     }
   } catch (e) {
+    print('gr: ');
     print(e);
   }
 }
 
 Future<void> updateLikedAttraction(BuildContext context) async {
-  DataContainer data = DataProvider.of(context).dataContainer;
+  DataContainerState data = DataContainer.of(context);
   String liked = "";
   for (var item in data.getFavourites()) {
     liked += (item.getID().toString() + "|");
@@ -300,7 +333,7 @@ Future<void> updateLikedAttraction(BuildContext context) async {
   }
 }
 
-Future<void> getLikedAttraction(BuildContext context) async {
+Future<List<Attraction>> getLikedAttraction(BuildContext context) async {
   var jsonstring = {"username": await loadString('currentUser')};
   var jsonedString = jsonEncode(jsonstring);
   try {
@@ -314,10 +347,26 @@ Future<void> getLikedAttraction(BuildContext context) async {
       var t = decoded as List;
       List<Attraction> recAttractions = [];
       for (var i = 0; i < t.length; i++) {
+        List<String> open = [];
+        if (t[i]['opening_hours'] == "NA"){
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+          open.add('Not Available');
+        }else{
+          var oh = jsonDecode(t[i]['opening_hours']);
+          for (var item in oh) {
+            open.add(item.toString());
+          }
+        }
+
         recAttractions.add(new Attraction(
             t[i]['id'],
             t[i]['name'],
-            t[i]['opening_hours'],
+            open,
             t[i]['img_path'],
             !t[i]['isFoodPlace'],
             t[i]['rating'],
@@ -326,7 +375,8 @@ Future<void> getLikedAttraction(BuildContext context) async {
             t[i]['lat'],
             t[i]['long']));
       }
-      DataContainer data = DataProvider.of(context).dataContainer;
+      return recAttractions;
+      DataContainerState data = DataContainer.of(context);
       if (recAttractions.length != 0) {
         data.setFavourites(recAttractions);
       }
@@ -334,6 +384,7 @@ Future<void> getLikedAttraction(BuildContext context) async {
       displayMsg('No connection to server.\nGLA', context);
     }
   } catch (e) {
+    print('gla ');
     print(e);
   }
 }

@@ -18,7 +18,7 @@ class RatingDialog extends State<RatingState> {
 
   @override
   Widget build(BuildContext context) {
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainerState data = DataContainer.of(context);
     tripType = data.getTripType();
 
     void setDateText(String date) {
@@ -192,7 +192,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _homeScreen() {
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainerState data = DataContainer.of(context);
     return MaterialApp(
       theme: utilTheme(),
       home: DefaultTabController(
@@ -283,8 +283,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _attractionView() {
-    List<Attraction> data =
-        DataProvider.of(context).dataContainer.getAttractions();
+    List<Attraction> data = DataContainer.of(context).getAttractions();
     List<Attraction> attractions = [];
     for (var attraction in data) {
       if (!attraction.getIsFoodPlace()) {
@@ -305,7 +304,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _allView() {
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainerState data = DataContainer.of(context);
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: data.getAttractions().length != 0
@@ -320,8 +319,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _restaurantView() {
-    List<Attraction> data =
-        DataProvider.of(context).dataContainer.getAttractions();
+    List<Attraction> data = DataContainer.of(context).getAttractions();
     List<Attraction> restaurants = [];
     for (var attraction in data) {
       if (attraction.getIsFoodPlace()) {
@@ -342,7 +340,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _likeView() {
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainerState data = DataContainer.of(context);
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: data.getFavourites().length != 0
@@ -358,6 +356,7 @@ class HomeScreen extends State<HomeScreenState> {
 
   Widget buildRecCardTile(Attraction attraction) {
     final deviceSize = MediaQuery.of(context).size;
+    DateTime dt = DateTime.now();
     return GestureDetector(
       onTap: () {
         _detailedAttractionView(attraction);
@@ -396,10 +395,11 @@ class HomeScreen extends State<HomeScreenState> {
                       )))),
           ListTile(
               title: Text('Rating: ' + attraction.getRating().toString()),
-              subtitle: Text('Distance: 0.8 km'),
               trailing: Container(
                   width: deviceSize.width * (3 / 7),
-                  child: Text('\n' + attraction.getOpeningHours()[0],
+                  child: Text(
+                      "Today's opening hours:\n" +
+                          attraction.getOpeningHours()[dt.weekday - 1],
                       style: Theme.of(context).textTheme.body2)))
         ],
       ),
@@ -416,7 +416,7 @@ class HomeScreen extends State<HomeScreenState> {
             '%' +
             '\nRating: ' +
             attraction.getRating().toString();
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainerState data = DataContainer.of(context);
     final deviceSize = MediaQuery.of(context).size;
     return Container(
       decoration: BoxDecoration(
@@ -548,21 +548,20 @@ class HomeScreen extends State<HomeScreenState> {
           children: <Widget>[
             buildRecTile(attraction),
             Container(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
+              child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
                 Padding(
-                  padding: EdgeInsets.all(deviceSize.width * (1/28)),
-                child:Text('Phone Number: ', style: Theme.of(context).textTheme.body2)
-                ),
-                Padding(
-                  padding: EdgeInsets.all(deviceSize.width * (1/9))
-                  ),
+                    padding: EdgeInsets.all(deviceSize.width * (1 / 28)),
+                    child: Text('Phone Number: ',
+                        style: Theme.of(context).textTheme.body2)),
+                Padding(padding: EdgeInsets.all(deviceSize.width * (1 / 9))),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                (attraction.getPhoneNumber() != null ? attraction.getPhoneNumber() : 'N/A'),  style: Theme.of(context).textTheme.body2),
+                        (attraction.getPhoneNumber() != null
+                            ? attraction.getPhoneNumber()
+                            : 'N/A'),
+                        style: Theme.of(context).textTheme.body2),
                   ],
                 ),
               ]),
@@ -572,22 +571,27 @@ class HomeScreen extends State<HomeScreenState> {
               height: deviceSize.height * (1 / 6),
               child: Row(children: [
                 Padding(
-                  padding: EdgeInsets.all(deviceSize.width * (1/28)),
-                child:Text('Weekly opening hours', style: Theme.of(context).textTheme.body2)
-                ),
-                Padding(
-                  padding: EdgeInsets.all(deviceSize.width * (1/16))
-                  ),
+                    padding: EdgeInsets.all(deviceSize.width * (1 / 28)),
+                    child: Text('Weekly opening hours',
+                        style: Theme.of(context).textTheme.body2)),
+                Padding(padding: EdgeInsets.all(deviceSize.width * (1 / 16))),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(attraction.getOpeningHours()[0], style: Theme.of(context).textTheme.body2),
-                    Text(attraction.getOpeningHours()[1], style: Theme.of(context).textTheme.body2),
-                    Text(attraction.getOpeningHours()[2], style: Theme.of(context).textTheme.body2),
-                    Text(attraction.getOpeningHours()[3], style: Theme.of(context).textTheme.body2),
-                    Text(attraction.getOpeningHours()[4], style: Theme.of(context).textTheme.body2),
-                    Text(attraction.getOpeningHours()[5], style: Theme.of(context).textTheme.body2),
-                    Text(attraction.getOpeningHours()[6], style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[0],
+                        style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[1],
+                        style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[2],
+                        style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[3],
+                        style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[4],
+                        style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[5],
+                        style: Theme.of(context).textTheme.body2),
+                    Text(attraction.getOpeningHours()[6],
+                        style: Theme.of(context).textTheme.body2),
                   ],
                 ),
               ]),
@@ -726,7 +730,7 @@ class HomeScreen extends State<HomeScreenState> {
   MapController mapController = MapController();
 
   void _fullMapView(List<Attraction> allAttractions) {
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainerState data = DataContainer.of(context);
     allAttractions.length == 0 || allAttractions == null
         ? displayMsg('No attractions nearby', context)
         : Navigator.of(context)
@@ -768,7 +772,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   List<Marker> createMarkers(bool recOnly /*List<Attraction> allAttractions*/) {
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainerState data = DataContainer.of(context);
     List<Attraction> allAttractions =
         recOnly ? data.getAttractions() : data.getAllNearbyAttractions();
 
@@ -847,26 +851,23 @@ class HomeScreen extends State<HomeScreenState> {
     }
   }
 
-  void updaterecs() {
-    getAllAttractions(userLocation, context);
-    getRecommendations(userLocation, context);
-  }
-
   DateTime lastupdatedRec = DateTime.now();
   DateTime lastupdatedAll = DateTime.now();
   DateTime lastupdatedLoc = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainerState data = DataContainer.of(context);
     //print("rec: " + data.getAttractions().length.toString() + " | all: " + data.getAllNearbyAttractions().length.toString());
 
     DateTime currentTime = DateTime.now();
-    var diffRec = currentTime.minute - lastupdatedRec.minute;
+    //var diffRec = currentTime.minute - lastupdatedRec.minute;
+    var diffRec = currentTime.second - lastupdatedRec.second;
     if (diffRec < 0) {
       diffRec += 60;
     }
-    var diffAll = currentTime.minute - lastupdatedAll.minute;
+    //var diffAll = currentTime.minute - lastupdatedAll.minute;
+    var diffAll = currentTime.second - lastupdatedAll.second;
     if (diffAll < 0) {
       diffAll += 60;
     }
@@ -888,13 +889,6 @@ class HomeScreen extends State<HomeScreenState> {
       lastupdatedLoc = DateTime.now();
     }
 
-    if (data.getupdateRecs()) {
-      setState(() {
-        updaterecs();
-        data.setUpdateRecs(false);
-      });
-    }
-    
     if (username == null) {
       return LogInState();
     }
@@ -904,7 +898,10 @@ class HomeScreen extends State<HomeScreenState> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    DataContainer data = DataProvider.of(context).dataContainer;
+    //DataContainerState data = DataContainer.of(context);
+    getRecommendations(userLocation, context).then(loadRecs);
+    getAllAttractions(userLocation, context).then(loadAllRecs);
+    getLikedAttraction(context).then(loadLikedRecs);
   }
 
   void loadUser(String userName) {
@@ -933,17 +930,51 @@ class HomeScreen extends State<HomeScreenState> {
     }
   }
 
+  void loadRecs(List<Attraction> list) {
+    DateTime currentTime = DateTime.now();
+    DataContainerState data = DataContainer.of(context);
+    //var diffRec = currentTime.minute - lastupdatedRec.minute;
+    var diff = currentTime.second - lastupdatedRec.second;
+    if (diff < 0) {
+      diff += 60;
+    }
+
+    if (data.getAttractions().length == 0 || diff > 5) {
+      setState(() {
+        data.setAttractions(list);
+      });
+      lastupdatedRec = DateTime.now();
+    }
+  }
+
+  void loadAllRecs(List<Attraction> list) {
+    DateTime currentTime = DateTime.now();
+    DataContainerState data = DataContainer.of(context);
+    //var diffRec = currentTime.minute - lastupdatedRec.minute;
+    var diff = currentTime.second - lastupdatedAll.second;
+    if (diff < 0) {
+      diff += 60;
+    }
+
+    if (data.getAllNearbyAttractions().length == 0 || diff > 5) {
+      setState(() {
+        data.setAllNearbyAttractions(list);
+      });
+      lastupdatedAll = DateTime.now();
+    }
+  }
+
+  void loadLikedRecs(List<Attraction> list) {
+    DataContainerState data = DataContainer.of(context);
+    setState(() {
+      data.setFavourites(list);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     loadString('currentUser').then(loadUser);
-    loadInt('dist').then(loadDist);
-    loadBool('disableDist').then(loadDisableDistUpdate);
-    new Future.delayed(Duration.zero, () {
-      getRecommendations(userLocation, context);
-      getAllAttractions(userLocation, context);
-      getLikedAttraction(context);
-    });
   }
 }
 
