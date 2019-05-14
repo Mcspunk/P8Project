@@ -178,11 +178,17 @@ class HomeScreen extends State<HomeScreenState> {
     List<Attraction> attractionList = data.getAttractions();
     for (var attraction in attractionList) {
       double score = attraction.getRating();
-      double distPen = 5 /maxDist * distanceBetweenCoordinates(userLocation, attraction.getCoordinate());
-      double penalisedScore = score - (0.8 * distPen);
+      double distPen = (5 /(maxDist * 1000)) * (1000 +attraction.getDistance());
+      double weight = calcWeight(score);
+      double penalisedScore = score - (weight * distPen);
       attraction.setPenalisedScore(penalisedScore);
       print(penalisedScore);
     }
+    //setState(() {});
+  }
+
+  double calcWeight(double score) {
+    return (-0.1 * score) + 0.7;
   }
 
   Widget _homeScreen() {
@@ -504,7 +510,7 @@ class HomeScreen extends State<HomeScreenState> {
                         ],
                       )))),
           ListTile(
-            title: Text(ratingstring),
+            title: Text(attraction.getPenalisedScore().toString()),//Text(ratingstring),
             //leading: Text('Score: ' + attraction.getScore().toString()),
             subtitle: Text('Distance: ' +
                 (attraction.getDistance().toStringAsFixed(0) ?? 'N/A') +
@@ -888,7 +894,7 @@ class HomeScreen extends State<HomeScreenState> {
         data.setUpdateRecs(false);
       });
     }
-
+    
     if (username == null) {
       return LogInState();
     }
