@@ -163,28 +163,37 @@ class RatingState extends StatefulWidget {
 class HomeScreen extends State<HomeScreenState> {
   double attractionRating = 0;
   Coordinate userLocation;
-  bool refreshDisabled = false;
+  bool distPenEnabled = true;
   int maxDist;
   String username;
 
   bool checkRefresh(bool val) {
     setState(() {
-      this.refreshDisabled = val ?? false;
+      this.distPenEnabled = val ?? false;
     });
   }
 
   void refreshDistancePenalty() {
-    DataContainer data = DataProvider.of(context).dataContainer;
+    DataContainerState data = DataContainer.of(context);
+    bool wantsdistpen = data.getDistPenEnabled();
     List<Attraction> attractionList = data.getAttractions();
-    for (var attraction in attractionList) {
-      double score = attraction.getRating();
-      double distPen = (5 /(maxDist * 1000)) * (1000 +attraction.getDistance());
-      double weight = calcWeight(score);
-      double penalisedScore = score - (weight * distPen);
-      attraction.setPenalisedScore(penalisedScore);
-      print(penalisedScore);
+    if (wantsdistpen){
+      for (var attraction in attractionList) {
+        double score = attraction.getScore();
+        double distPen = (5 /(data.getDist() * 1000)) * (1000 + attraction.getDistance());
+        double weight = calcWeight(score);
+        double penalisedScore = score - (weight * distPen);
+        attraction.setPenalisedScore(penalisedScore);
+      }
     }
-    //setState(() {});
+    else {
+      for (var attraction in attractionList) {
+        attraction.setPenalisedScore(attraction.getScore());
+      }
+    }
+    attractionList.sort((a,b) => a.getPenalisedScore().compareTo(b.getPenalisedScore()));
+    print('debug');
+    setState(() {});
   }
 
   double calcWeight(double score) {
@@ -203,7 +212,7 @@ class HomeScreen extends State<HomeScreenState> {
             actions: <Widget>[
               IconButton(
                 icon: Icon(Icons.refresh),
-                onPressed: refreshDisabled ? null : refreshDistancePenalty,
+                onPressed: distPenEnabled ? refreshDistancePenalty : refreshDistancePenalty,
               ),
               IconButton(
                   //Tror ikke det er her den her funktionalitet skal være, men kunne ikke få lov til at lave en tab mere
@@ -857,41 +866,6 @@ class HomeScreen extends State<HomeScreenState> {
 
   @override
   Widget build(BuildContext context) {
-    DataContainerState data = DataContainer.of(context);
-    //print("rec: " + data.getAttractions().length.toString() + " | all: " + data.getAllNearbyAttractions().length.toString());
-
-    DateTime currentTime = DateTime.now();
-    //var diffRec = currentTime.minute - lastupdatedRec.minute;
-    var diffRec = currentTime.second - lastupdatedRec.second;
-    if (diffRec < 0) {
-      diffRec += 60;
-    }
-    //var diffAll = currentTime.minute - lastupdatedAll.minute;
-    var diffAll = currentTime.second - lastupdatedAll.second;
-    if (diffAll < 0) {
-      diffAll += 60;
-    }
-    var diffLoc = currentTime.minute - lastupdatedLoc.minute;
-    if (diffLoc < 0) {
-      diffLoc += 60;
-    }
-
-    if (data.getAttractions().length == 0 || diffRec > 5) {
-      getRecommendations(userLocation, context);
-      lastupdatedRec = DateTime.now();
-    }
-    if (data.getAllNearbyAttractions().length == 0 || diffAll > 5) {
-      getAllAttractions(userLocation, context);
-      lastupdatedAll = DateTime.now();
-    }
-    if (userLocation == null || diffLoc > 5) {
-      updateUserLocation();
-      lastupdatedLoc = DateTime.now();
-    }
-
-    if (username == null) {
-      return LogInState();
-    }
     return _homeScreen();
   }
 
@@ -917,15 +891,14 @@ class HomeScreen extends State<HomeScreenState> {
     });
   }
 
-  void loadDisableDistUpdate(bool disableDist) {
-    bool val;
-    if (disableDist == null) {
+  void loadDistPenEnabled(bool value) {
+    if (value == null) {
       setState(() {
-        this.refreshDisabled = false;
+        this.distPenEnabled = true;
       });
     } else {
       setState(() {
-        this.refreshDisabled = disableDist;
+        this.distPenEnabled = value;
       });
     }
   }
@@ -945,6 +918,7 @@ class HomeScreen extends State<HomeScreenState> {
       });
       lastupdatedRec = DateTime.now();
     }
+    refreshDistancePenalty();
   }
 
   void loadAllRecs(List<Attraction> list) {
@@ -975,6 +949,7 @@ class HomeScreen extends State<HomeScreenState> {
   void initState() {
     super.initState();
     loadString('currentUser').then(loadUser);
+    loadBool('distPenEnabled').then(loadDistPenEnabled);
   }
 }
 

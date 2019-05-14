@@ -293,11 +293,9 @@ Future<List<Attraction>> getRecommendations(
           ));
         
       }
+
       return recAttractions;
-      DataContainerState data = DataContainer.of(context);
-      if (recAttractions.length != 0) {
-        data.setAttractions(recAttractions);
-      }
+
     } else {
       displayMsg('No connection to server\nGR', context);
     }
@@ -306,6 +304,7 @@ Future<List<Attraction>> getRecommendations(
     print(e);
   }
 }
+
 
 Future<void> updateLikedAttraction(BuildContext context) async {
   DataContainerState data = DataContainer.of(context);
