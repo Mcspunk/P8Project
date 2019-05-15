@@ -123,6 +123,14 @@ class ICAMF:
 
                     loss += abs(error_user_item)
 
+                    if abs(error_user_item > 10):
+                        print("hmm")
+                        print(f'\tUser_bias_max: {np.max(self.user_bias)}\tUser_bias_min: {np.min(self.user_bias)}\n')
+                        print(f'\tItem_bias_max: {np.max(self.item_bias)}\tItem_bias_min: {np.min(self.item_bias)}\n')
+                        print(f'Context_Matrix_max: {np.max(self.context_factor_matrix)}\tContext_Matrix_min: {np.min(self.context_factor_matrix)}\n')
+                        print(f'\tUser_factor_max: {np.max(self.user_factor_matrix)}\tUser_factor_min: {np.min(self.user_factor_matrix)}\n')
+                        print(f'\tItem_factor_max: {np.max(self.item_factor_matrix)}\tItem_factor_min: {np.min(self.user_factor_matrix)}\n\n')
+
                     user_bias = self.user_bias[user_id]
                     item_bias = self.item_bias[item_id]
                     sgd_user_bias = error_user_item - (self.regularizer_1 * user_bias)
@@ -181,9 +189,6 @@ class ICAMF:
             print(f'Context_Matrix_max: {np.max(self.context_factor_matrix)}\tContext_Matrix_min: {np.min(self.context_factor_matrix)}\n'
                   f'\tUser_factor_max: {np.max(self.user_factor_matrix)}\tUser_factor_min: {np.min(self.user_factor_matrix)}\n'
                   f'\tItem_factor_max: {np.max(self.item_factor_matrix)}\tItem_factor_min: {np.min(self.user_factor_matrix)}\n\n')
-
-
-
 
     def predict(self, user, item, context):
 
@@ -308,12 +313,12 @@ class Measurement:
         for key, val in other_measurement.confusion_matrix.items():
 
             copy_self.confusion_matrix[key].true_positive = (copy_self.confusion_matrix[key].true_positive + val.true_positive)
-            copy_self.confusion_matrix[key].precision = (copy_self.confusion_matrix[key].true_negative + val.true_negative)
-            copy_self.confusion_matrix[key].precision = (copy_self.confusion_matrix[key].false_positive + val.false_positive)
-            copy_self.confusion_matrix[key].precision = (copy_self.confusion_matrix[key].false_negative + val.false_negative)
+            copy_self.confusion_matrix[key].true_negative = (copy_self.confusion_matrix[key].true_negative + val.true_negative)
+            copy_self.confusion_matrix[key].false_positive = (copy_self.confusion_matrix[key].false_positive + val.false_positive)
+            copy_self.confusion_matrix[key].false_negative = (copy_self.confusion_matrix[key].false_negative + val.false_negative)
             copy_self.confusion_matrix[key].precision = (copy_self.confusion_matrix[key].precision + val.precision)/2
-            copy_self.confusion_matrix[key].precision = (copy_self.confusion_matrix[key].recall + val.recall)/2
-            copy_self.confusion_matrix[key].precision = (copy_self.confusion_matrix[key].accuracy + val.recall)/2
+            copy_self.confusion_matrix[key].recall = (copy_self.confusion_matrix[key].recall + val.recall)/2
+            copy_self.confusion_matrix[key].accuracy = (copy_self.confusion_matrix[key].accuracy + val.accuracy)/2
 
         for outer_key in other_measurement.labeled_as_dict.keys():
             for inner_key, val in other_measurement.labeled_as_dict[outer_key].items():

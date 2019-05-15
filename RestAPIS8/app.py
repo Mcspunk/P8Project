@@ -511,7 +511,7 @@ def insert_geocoding_database():
 #    app.run()
 
 #train_recommender_kfold(1,0.001,0.001,20,0)
-train_and_save_model(regularizer=0.001,learning_rate=0.02, num_factors=20, iterations=100)
+train_and_save_model(regularizer=0.001,learning_rate=0.002, num_factors=20, iterations=100)
 
 #with open("dummy_model.pkl", "rb") as f:
 #    icamf_recommender = dill.load(f)
