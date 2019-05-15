@@ -5,10 +5,15 @@ import psycopg2
 import creds_psql as creds
 from typing import List
 from collections import defaultdict
+from functools import partial
 
 np.random.seed(seed=8)
 ContextRatingPair = namedtuple("ContextRatingPair", "context rating")
 ItemRatingPair = namedtuple("ItemRatingPair", "item rating")
+
+
+def tree():
+    return defaultdict(tree)
 
 
 class RatingObj:
@@ -44,7 +49,9 @@ class RatingObj:
         self.condition_context_multimap = defaultdict(set)
         self.ratings_count = 0
         self.rating_values = set()
-
+        self.rate_matrix = None
+        self.assign_matrix = None
+        self.user_rated_item_in_ctx_multimap = tree()
         self.user_item_context_rating = dict(list())
 
     def split_data(self, k_folds):
@@ -87,8 +94,6 @@ class RatingObj:
     def get_item_id_from_user_item_id(self, user_item_id):
         return self.ui_item_ids.get(user_item_id)
 
-    def get_conditions(self, ctx):
-        ctx = 0
 
     def to_traditional_sparse_rating(self, sparse_matrix):
         reviews = 0
@@ -222,25 +227,27 @@ def read_data_binary():
         if row is None:
             break
         user = row[1]
-        row_id = rating_obj.user_ids.get(user, len(rating_obj.user_ids))
-        rating_obj.user_ids[user] = row_id
+        user_id = rating_obj.user_ids.get(user, len(rating_obj.user_ids))
+        rating_obj.user_ids[user] = user_id
 
         item = row[2]
-        col_id = rating_obj.items_ids.get(item, len(rating_obj.items_ids))
-        rating_obj.items_ids[item] = col_id
+        item_id = rating_obj.items_ids.get(item, len(rating_obj.items_ids))
+        rating_obj.items_ids[item] = item_id
 
         rating = row[3]
         rating_obj.rating_values.add(rating)
         rating_obj.ratings_count += 1
-        user_item = str(row_id) + "," + str(col_id)
+        user_item = str(user_id) + "," + str(item_id)
         user_item_id = rating_obj.ui_ids.get(user_item, len(rating_obj.ui_ids))
         rating_obj.ui_ids[user_item] = user_item_id
 
-        rating_obj.ui_user_ids[user_item_id] = row_id
-        rating_obj.ui_item_ids[user_item_id] = col_id
 
-        rating_obj.user_item_user_ids_multimap[user_item_id].add(row_id)
-        rating_obj.user_item_item_ids_multimap[user_item_id].add(col_id)
+
+        rating_obj.ui_user_ids[user_item_id] = user_id
+        rating_obj.ui_item_ids[user_item_id] = item_id
+
+        rating_obj.user_item_user_ids_multimap[user_item_id].add(user_id)
+        rating_obj.user_item_item_ids_multimap[user_item_id].add(item_id)
 
         # Indexing context
 
@@ -260,6 +267,8 @@ def read_data_binary():
 
         context_rating_pair = ContextRatingPair(context=context_id, rating=rating)
         rating_obj.user_item_context_rating.setdefault(user_item_id, list()).append(context_rating_pair)
+
+        rating_obj.user_rated_item_in_ctx_multimap[user_id][item_id][context_id] = rating
 
     for key, val in rating_obj.ids_ctx.items():
         rating_obj.ids_ctx_list[key] = [int(s) for s in val.split(',')]

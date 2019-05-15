@@ -6,6 +6,7 @@ from recordclass import recordclass
 import datetime
 from multiprocessing import Process, Queue
 from functools import reduce
+from math import sqrt
 import operator
 import dill
 import copy
@@ -74,9 +75,10 @@ class ICAMF:
     num_items = 0
     init_mean = 0.0
     init_std = 0.1
+    soft_clipping:float = 5.0
     num_factors = 10
 
-    def __init__(self, train_matrix, test_matrix, rating_obj, fold, regularizer, learning_rate, num_factors, iterations):
+    def __init__(self, train_matrix, test_matrix, rating_obj, fold, regularizer, learning_rate, num_factors, iterations, soft_clipping=5.0):
         self.train_matrix = train_matrix
         self.global_mean_rating = np.mean(self.train_matrix.data)
         self.test_matrix = test_matrix
@@ -88,7 +90,7 @@ class ICAMF:
         self.rating_object = rating_obj
         self.num_users = self.rating_object.users
         self.num_items = self.rating_object.items
-
+        self.soft_clipping = 5
         self.user_bias = np.random.uniform(low=self.init_mean, high=self.init_std, size=self.num_users)
         self.item_bias = np.random.uniform(low=self.init_mean, high=self.init_std, size=self.num_items)
 
@@ -99,6 +101,7 @@ class ICAMF:
 
         self.context_factor_matrix = np.random.uniform(self.init_mean, high=self.init_std,
                                                        size=(len(self.rating_object.ids_cond), self.num_factors))
+        self.loss_list = list()
 
 
     def build_ICAMF(self):
@@ -121,31 +124,25 @@ class ICAMF:
                     prediction = self.predict(user_id, item_id, context)
                     error_user_item = rating_user_item_context - prediction
 
+                    user_factor_gradients = list()
+                    item_factor_gradients = list()
+                    context_condition_factor_gradients = [list() for condition in conditions]
+
                     loss += abs(error_user_item)
 
-                    if abs(error_user_item > 10):
-                        print("hmm")
-                        print(f'\tUser_bias_max: {np.max(self.user_bias)}\tUser_bias_min: {np.min(self.user_bias)}\n')
-                        print(f'\tItem_bias_max: {np.max(self.item_bias)}\tItem_bias_min: {np.min(self.item_bias)}\n')
-                        print(f'Context_Matrix_max: {np.max(self.context_factor_matrix)}\tContext_Matrix_min: {np.min(self.context_factor_matrix)}\n')
-                        print(f'\tUser_factor_max: {np.max(self.user_factor_matrix)}\tUser_factor_min: {np.min(self.user_factor_matrix)}\n')
-                        print(f'\tItem_factor_max: {np.max(self.item_factor_matrix)}\tItem_factor_min: {np.min(self.user_factor_matrix)}\n\n')
 
-                    user_bias = self.user_bias[user_id]
-                    item_bias = self.item_bias[item_id]
-                    sgd_user_bias = error_user_item - (self.regularizer_1 * user_bias)
-                    sgd_item_bias = error_user_item - (self.regularizer_1 * item_bias)
-
-                    self.user_bias[user_id] += sgd_user_bias * self.learning_rate
-                    self.item_bias[item_id] += sgd_item_bias * self.learning_rate
-
-                    loss += 0.5 * self.regularizer_1 * item_bias * item_bias
-                    loss += 0.5 * self.regularizer_1 * user_bias * user_bias
+                    #Calculate loss
+                    loss += 0.5 * self.regularizer_1 * self.item_bias[item_id]*self.item_bias[item_id]
+                    loss += 0.5 * self.regularizer_1 * self.user_bias[user_id]*self.user_bias[user_id]
                     loss += 0.5 * self.regularizer_1 * np.linalg.norm(self.user_factor_matrix[user_id]) * np.linalg.norm(self.user_factor_matrix[user_id])
                     loss += 0.5 * self.regularizer_1 * np.linalg.norm(self.item_factor_matrix[item_id]) * np.linalg.norm(self.user_factor_matrix[item_id])
 
                     for condition in conditions:
                         loss += 0.5 * self.regularizer_1 * np.linalg.norm(self.context_factor_matrix[condition]) * np.linalg.norm(self.context_factor_matrix[condition])
+
+                    #Calculate gradients
+                    user_bias_gradient = error_user_item - (self.regularizer_1 * self.user_bias[user_id])
+                    item_bias_gradient = error_user_item - (self.regularizer_1 * self.item_bias[item_id])
 
                     for factor in range(0, self.num_factors):
                         user_latent_factor = self.user_factor_matrix[user_id][factor]
@@ -161,34 +158,48 @@ class ICAMF:
                         for condition in conditions:
                             condition_values = latent_factor_values(index=condition, value=self.context_factor_matrix[condition][factor], delta=-(self.context_factor_matrix[condition][factor]*self.regularizer_1))
                             latent_values_list.append(condition_values)
-                        for tuple_element in latent_values_list:
+                        for idx, tuple_element in enumerate(latent_values_list):
                             val = 0
                             for inner_element in latent_values_list:
                                 if tuple_element.index != inner_element.index:
-                                    try:
-                                        val += error_user_item * inner_element.value
-                                    except FloatingPointError as e:
-                                        print(
-                                            f'Context_Matrix_max: {np.max(self.context_factor_matrix)}\tContext_Matrix_min: {np.min(self.context_factor_matrix)}\n'
-                                            f'\tUser_factor_max: {np.max(self.user_factor_matrix)}\tUser_factor_min: {np.min(self.user_factor_matrix)}\n'
-                                            f'\tItem_factor_max: {np.max(self.item_factor_matrix)}\tItem_factor_min: {np.min(self.user_factor_matrix)}\n\n')
+                                    val += error_user_item * inner_element.value
+                            if idx == 0:
+                                user_factor_gradients.append(tuple_element.delta)
+                            elif idx == 1:
+                                item_factor_gradients.append(tuple_element.delta)
+                            else:
+                                context_condition_factor_gradients[idx-2].append(tuple_element.delta)
 
-                                        print(f'Error_user_item = {error_user_item}, inner_element_value {inner_element}, Error {e}')
-                            tuple_element.delta += val
+                    gradient_sum_squared = 0
+                    gradient_sum_squared += item_bias_gradient*item_bias_gradient + user_bias_gradient*user_bias_gradient + sum(x*x for x in user_factor_gradients) + sum(x*x for x in item_factor_gradients)
 
-                            #loss += self.regularizer_1 * tuple_element.value * tuple_element.value
+                    for condition_factor_gradients in context_condition_factor_gradients:
+                        gradient_sum_squared += sum(x*x for x in condition_factor_gradients)
 
-                        self.user_factor_matrix[user_id][factor] += self.learning_rate * latent_values_list[0].delta
-                        self.item_factor_matrix[item_id][factor] += self.learning_rate * latent_values_list[1].delta
+                    norm = sqrt(gradient_sum_squared)
+                    factor = 1
+                    if norm > self.soft_clipping:
+                        factor = self.soft_clipping/norm
 
-                        for index, condition in enumerate(conditions):
-                            self.context_factor_matrix[condition][factor] += self.learning_rate * latent_values_list[index+2].delta
+                    #Update gradients:  First biases, then user_matrix, item_matrix, and contaxt_matrix
+
+                    self.user_bias[user_id] += self.learning_rate * factor * user_bias_gradient
+                    self.item_bias[item_id] += self.learning_rate * factor * item_bias_gradient
+
+                    for factor_index, gradient in enumerate(user_factor_gradients):
+                        self.user_factor_matrix[user_id][factor_index] += self.learning_rate * factor * gradient
+                    for factor_index, gradient in enumerate(item_factor_gradients):
+                        self.item_factor_matrix[item_id][factor_index] += self.learning_rate * factor * gradient
+
+                    for idx, condition in enumerate(conditions):
+                        for factor_index, gradient in enumerate(context_condition_factor_gradients[idx]):
+                            self.context_factor_matrix[condition][factor_index] += self.learning_rate * factor * gradient
 
             print(f'Fold: {str(self.fold)} ' + "Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
             print("Loss: " + str(loss))
-            print(f'Context_Matrix_max: {np.max(self.context_factor_matrix)}\tContext_Matrix_min: {np.min(self.context_factor_matrix)}\n'
-                  f'\tUser_factor_max: {np.max(self.user_factor_matrix)}\tUser_factor_min: {np.min(self.user_factor_matrix)}\n'
-                  f'\tItem_factor_max: {np.max(self.item_factor_matrix)}\tItem_factor_min: {np.min(self.user_factor_matrix)}\n\n')
+            self.loss_list.append(loss)
+
+
 
     def predict(self, user, item, context):
 
