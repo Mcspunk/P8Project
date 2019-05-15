@@ -393,14 +393,14 @@ def update_binary_review_table():
     dataprocessor.transform_reviews_table_to_binary()
 
 
-def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iterations):
+def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iterations, clipping=False):
     recommender.train_eval_parallel(k_fold=kfold, regularizer=regularizer, learning_rate=learning_rate,
-                                    num_factors=num_factors, iterations=iterations)
+                                    num_factors=num_factors, iterations=iterations, clipping=clipping)
 
 
-def train_and_save_model(regularizer, learning_rate, num_factors, iterations):
+def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping=False):
     recommender.train_and_save_model(regularizer=regularizer, learning_rate=learning_rate,
-                                     num_factors=num_factors,iterations=iterations)
+                                     num_factors=num_factors,iterations=iterations,clipping=clipping)
 
 
 def place_details():
@@ -510,8 +510,9 @@ def insert_geocoding_database():
 #if __name__ == '__main__':
 #    app.run()
 
-#train_recommender_kfold(1,0.001,0.001,20,0)
-train_and_save_model(regularizer=0.001,learning_rate=0.002, num_factors=25, iterations=1)
+#To run without clipping set to False or del argument
+train_recommender_kfold(kfold=2, regularizer=0.001 , learning_rate=0.001, num_factors=10, iterations=2, clipping=5)
+#train_and_save_model(regularizer=0.001,learning_rate=0.002, num_factors=10, iterations=1, clipping=5)
 
 #with open("dummy_model.pkl", "rb") as f:
 #    icamf_recommender = dill.load(f)

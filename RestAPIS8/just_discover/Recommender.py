@@ -26,7 +26,7 @@ def __train_eval_parallel_worker(recommender, output):
     output.put(measurement)
 
 
-def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterations):
+def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterations, clipping):
     rating_obj = dp.read_data_binary()
     rating_obj.split_data(k_folds=k_fold)
     recommender_list = list()
@@ -35,7 +35,7 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
     for fold in range(k_fold):
         train_sparse_matrix, test_sparse_matrix = rating_obj.get_kth_fold(fold+1)
         icamf = ICAMF(train_sparse_matrix, test_sparse_matrix, rating_obj, fold=fold+1, regularizer=regularizer,
-                      learning_rate=learning_rate, num_factors=num_factors, iterations=iterations)
+                      learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping)
         recommender_list.append(icamf)
 
     for recommender in recommender_list:
@@ -56,11 +56,11 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
     print(summary)
 
 
-def train_and_save_model(regularizer, learning_rate, num_factors, iterations):
+def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping):
     rating_obj = dp.read_data_binary()
     rating_obj.rate_matrix = rating_obj.rate_matrix.tocsc()
     icamf = ICAMF(rating_obj.rate_matrix, None, rating_obj, fold="Final_Model", regularizer=regularizer,
-                  learning_rate=learning_rate, num_factors=num_factors, iterations=iterations)
+                  learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping)
     icamf.build_ICAMF()
     with open(f'{icamf.get_config()}.pkl', "wb") as recommender_file:
         dill.dump(icamf, recommender_file)
@@ -75,10 +75,9 @@ class ICAMF:
     num_items = 0
     init_mean = 0.0
     init_std = 0.1
-    soft_clipping:float = 5.0
     num_factors = 10
 
-    def __init__(self, train_matrix, test_matrix, rating_obj, fold, regularizer, learning_rate, num_factors, iterations, soft_clipping=5.0):
+    def __init__(self, train_matrix, test_matrix, rating_obj, fold, regularizer, learning_rate, num_factors, iterations, soft_clipping=False):
         self.train_matrix = train_matrix
         self.global_mean_rating = np.mean(self.train_matrix.data)
         self.test_matrix = test_matrix
@@ -90,7 +89,7 @@ class ICAMF:
         self.rating_object = rating_obj
         self.num_users = self.rating_object.users
         self.num_items = self.rating_object.items
-        self.soft_clipping = 5
+        self.soft_clipping = soft_clipping
         self.user_bias = np.random.uniform(low=self.init_mean, high=self.init_std, size=self.num_users)
         self.item_bias = np.random.uniform(low=self.init_mean, high=self.init_std, size=self.num_items)
 
@@ -129,7 +128,6 @@ class ICAMF:
                     context_condition_factor_gradients = [list() for condition in conditions]
 
                     loss += abs(error_user_item)
-
 
                     #Calculate loss
                     loss += 0.5 * self.regularizer_1 * self.item_bias[item_id]*self.item_bias[item_id]
@@ -178,8 +176,9 @@ class ICAMF:
 
                     norm = sqrt(gradient_sum_squared)
                     factor = 1
-                    if norm > self.soft_clipping:
-                        factor = self.soft_clipping/norm
+                    if self.soft_clipping is not False:
+                        if norm > self.soft_clipping:
+                            factor = self.soft_clipping/norm
 
                     #Update gradients:  First biases, then user_matrix, item_matrix, and contaxt_matrix
 
@@ -198,7 +197,6 @@ class ICAMF:
             print(f'Fold: {str(self.fold)} ' + "Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
             print("Loss: " + str(loss))
             self.loss_list.append(loss)
-
 
 
     def predict(self, user, item, context):
@@ -293,18 +291,19 @@ class ICAMF:
 
         mae = mae/ratings
 
-        measurement = Measurement(confusion_matrix, labeled_as_dict, mae, self.fold, self.get_config())
+        measurement = Measurement(confusion_matrix, labeled_as_dict, mae, self.fold, self.get_config(), self.loss_list)
         return measurement
 
 
 class Measurement:
 
-    def __init__(self, confusion_matrix:Dict[int, confusion_matrix_row], labeled_as_dict, mae, fold, configuration):
+    def __init__(self, confusion_matrix:Dict[int, confusion_matrix_row], labeled_as_dict, mae, fold, configuration, loss_list):
         self.confusion_matrix = confusion_matrix
         self.labeled_as_dict = labeled_as_dict
         self.configuration = configuration
         self.mae = mae
         self.fold = fold
+        self.loss_list = loss_list
 
         precision = 0
         accuracy = 0
@@ -339,13 +338,15 @@ class Measurement:
         copy_self.recall = (copy_self.recall + other_measurement.recall)/2
         copy_self.accuracy = (copy_self.accuracy + other_measurement.accuracy)/2
         copy_self.mae = (copy_self.mae + other_measurement.mae)/2
-
+        copy_self.loss_list = [(x + y)/2 for x, y in zip(self.loss_list, other_measurement.loss_list)]
         return copy_self
 
     def __str__(self):
         result = []
         conf = f'Configurations: {self.configuration}'.center(60, '*') + '\n'
+        losses = f'Loss for each iteration: {str(self.loss_list)}\n'
         result.append(conf)
+        result.append(losses)
         headline = '\n' + f'Measumerements of k_fold: {self.fold}'.center(60, '*') + '\n'
         result.append(headline)
         labels = sorted(list(self.labeled_as_dict.keys()))
