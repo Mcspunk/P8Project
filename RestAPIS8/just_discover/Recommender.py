@@ -233,7 +233,7 @@ class ICAMF:
 
     def get_config(self):
 
-        return f'Lrate_{self.learning_rate} regularizer_{self.regularizer_1} latent_factors_{self.num_factors}'
+        return f'Lrate_{self.learning_rate} regularizer_{self.regularizer_1} latent_factors_{self.num_factors} clipping:{str(self.soft_clipping)}'
 
     def evaluate(self):
 

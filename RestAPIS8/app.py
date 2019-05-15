@@ -511,7 +511,7 @@ def insert_geocoding_database():
 #    app.run()
 
 #To run without clipping set to False or del argument
-train_recommender_kfold(kfold=2, regularizer=0.001 , learning_rate=0.001, num_factors=10, iterations=2, clipping=5)
+train_recommender_kfold(kfold=5, regularizer=0.001 , learning_rate=0.001, num_factors=10, iterations=2, clipping=5)
 #train_and_save_model(regularizer=0.001,learning_rate=0.002, num_factors=10, iterations=1, clipping=5)
 
 #with open("dummy_model.pkl", "rb") as f:
