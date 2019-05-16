@@ -176,8 +176,8 @@ class ICAMF:
                         try:
                             gradient_sum_squared += item_bias_gradient*item_bias_gradient + user_bias_gradient*user_bias_gradient + sum(x*x for x in user_factor_gradients) + sum(x*x for x in item_factor_gradients)
 
-                            for condition_factor_gradients in context_condition_factor_gradients:
-                                gradient_sum_squared += sum(x*x for x in condition_factor_gradients)
+                       #     for condition_factor_gradients in context_condition_factor_gradients:
+                       #         gradient_sum_squared += sum(x*x for x in condition_factor_gradients)
                             norm = sqrt(gradient_sum_squared)
                         except FloatingPointError:
                             norm = self.soft_clipping*self.soft_clipping
@@ -194,9 +194,16 @@ class ICAMF:
                     for factor_index, gradient in enumerate(item_factor_gradients):
                         self.item_factor_matrix[item_id][factor_index] += self.learning_rate * factor * gradient
 
+                    #parametrisk clipping
                     for idx, condition in enumerate(conditions):
                         for factor_index, gradient in enumerate(context_condition_factor_gradients[idx]):
-                            self.context_factor_matrix[condition][factor_index] += self.learning_rate * factor * gradient
+                            if self.soft_clipping is not False:
+                                if self.soft_clipping < np.linalg.norm(context_condition_factor_gradients):
+                                    gradient = (gradient * self.soft_clipping)/np.linalg.norm(context_condition_factor_gradients)
+                                    self.context_factor_matrix[condition][factor_index] += self.learning_rate * gradient
+
+                            else:
+                               self.context_factor_matrix[condition][factor_index] += self.learning_rate * gradient
 
             print(f'Fold: {str(self.fold)} ' + "Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
             print("Loss: " + str(loss))
