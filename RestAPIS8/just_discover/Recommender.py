@@ -134,11 +134,13 @@ class ICAMF:
                     loss += 0.5 * self.regularizer_1 * self.item_bias[item_id]*self.item_bias[item_id]
                     loss += 0.5 * self.regularizer_1 * self.user_bias[user_id]*self.user_bias[user_id]
                     loss += 0.5 * self.regularizer_1 * np.linalg.norm(self.user_factor_matrix[user_id]) * np.linalg.norm(self.user_factor_matrix[user_id])
-                    loss += 0.5 * self.regularizer_1 * np.linalg.norm(self.item_factor_matrix[item_id]) * np.linalg.norm(self.user_factor_matrix[item_id])
+                    loss += 0.5 * self.regularizer_1 * np.linalg.norm(self.item_factor_matrix[item_id]) * np.linalg.norm(self.item_factor_matrix[item_id])
 
                     for condition in conditions:
-                        loss += 0.5 * self.regularizer_1 * np.linalg.norm(self.context_factor_matrix[condition]) * np.linalg.norm(self.context_factor_matrix[condition])
-
+                        try:
+                            loss += 0.5 * self.regularizer_1 * np.linalg.norm(self.context_factor_matrix[condition]) * np.linalg.norm(self.context_factor_matrix[condition])
+                        except FloatingPointError:
+                            loss += 0
                     #Calculate gradients
                     user_bias_gradient = error_user_item - (self.regularizer_1 * self.user_bias[user_id])
                     item_bias_gradient = error_user_item - (self.regularizer_1 * self.item_bias[item_id])
