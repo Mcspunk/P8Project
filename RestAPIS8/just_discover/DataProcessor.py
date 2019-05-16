@@ -135,7 +135,6 @@ class RatingObj:
                                        shape=(number_of_users, number_of_items))
 
     def make_user_context_item_multimap(self, sparse_matrix):
-        tree = lambda: defaultdict(tree)
         user_context_item_multimap = tree()
 
         for idx, matrix_entry in enumerate(sparse_matrix):
@@ -293,10 +292,10 @@ def read_data_binary():
 
     element_index = 0
     end_ptr = 0
-    for idx, user_item_row in enumerate(rating_obj.user_item_context_rating.items()):
-        end_ptr += len(user_item_row[1])
+    for idx, user_item_row in enumerate(rating_obj.user_item_context_rating.values()):
+        end_ptr += len(user_item_row)
         row_ptr_np_array[idx + 1] = end_ptr
-        for ctx_rate_pair in user_item_row[1]:
+        for ctx_rate_pair in user_item_row:
             row_data_np_array[element_index] = ctx_rate_pair.rating
             column_id_np_array[element_index] = ctx_rate_pair.context
             element_index += 1

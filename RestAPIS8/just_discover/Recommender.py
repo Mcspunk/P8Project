@@ -10,6 +10,8 @@ from math import sqrt
 import operator
 import dill
 import copy
+from joblib import Parallel, delayed
+from multiprocessing.dummy import Pool as ThreadPool
 import sys
 
 
@@ -20,10 +22,10 @@ confusion_matrix_row = recordclass('confusion_matrix_row', 'rating true_positive
 measurement_queue = Queue()
 
 
-def __train_eval_parallel_worker(recommender, output):
+def __train_eval_parallel_worker(recommender):
     recommender.build_ICAMF()
     measurement = recommender.evaluate()
-    output.put(measurement)
+    return measurement
 
 
 def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterations, clipping):
@@ -31,13 +33,24 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
     rating_obj.split_data(k_folds=k_fold)
     recommender_list = list()
 
-    processes = []
     for fold in range(k_fold):
         train_sparse_matrix, test_sparse_matrix = rating_obj.get_kth_fold(fold+1)
         icamf = ICAMF(train_sparse_matrix, test_sparse_matrix, rating_obj, fold=fold+1, regularizer=regularizer,
                       learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping)
         recommender_list.append(icamf)
 
+    measurement_results = Parallel(max_nbytes='5G', backend='multiprocessing', n_jobs=-1, verbose=1)(map(delayed(__train_eval_parallel_worker), recommender_list))
+
+    print("Kfold training complete \n")
+    print("Calculating measurements... \n")
+    for result in measurement_results:
+        with open(f'Evaluations\\results_fold_{result.fold}_config_{result.configuration}.txt', "w+") as file:
+            file.write(str(result))
+    summary = reduce(operator.add, measurement_results)
+    with open(f'Evaluations\\results_fold_{summary.fold}_config_{summary.configuration}.txt', "w+") as file:
+        file.write(str(summary))
+    print(summary)
+    '''
     for recommender in recommender_list:
         p = Process(target=__train_eval_parallel_worker, args=(recommender, measurement_queue))
         processes.append(p)
@@ -55,7 +68,7 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
     with open(f'Evaluations\\results_fold_{summary.fold}_config_{summary.configuration}.txt', "w+") as file:
         file.write(str(summary))
     print(summary)
-
+    '''
 
 def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping):
     rating_obj = dp.read_data_binary()
@@ -159,11 +172,12 @@ class ICAMF:
                         for condition in conditions:
                             condition_values = latent_factor_values(index=condition, value=self.context_factor_matrix[condition][factor], delta=-(self.context_factor_matrix[condition][factor]*self.regularizer_1))
                             latent_values_list.append(condition_values)
+
                         for idx, tuple_element in enumerate(latent_values_list):
-                            val = 0
                             for inner_element in latent_values_list:
                                 if tuple_element.index != inner_element.index:
-                                    val += error_user_item * inner_element.value
+                                    tuple_element.delta += error_user_item * inner_element.value
+
                             if idx == 0:
                                 user_factor_gradients.append(tuple_element.delta)
                             elif idx == 1:
