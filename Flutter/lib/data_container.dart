@@ -1,11 +1,10 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'data_provider.dart';
 
 import 'utility.dart';
 
-class DataContainerState extends State<DataContainer>{ 
+class DataContainerState extends State<DataContainer> {
   List<Attraction> _currentAttractions = [];
   List<Attraction> _favourites = [];
   List<Attraction> _allNearbyAttractions = [];
@@ -17,8 +16,48 @@ class DataContainerState extends State<DataContainer>{
   bool _updateRecs = false;
   bool _distPenEnabled = true;
 
-  DataContainerState(){
-    _categoryRatings = Map.fromIterables(['Museum', 'Parks', 'Ferris Wheel'], [0,0,0]);
+  DataContainerState() {
+    _categoryRatings = Map.fromIterables([
+      'Museum',
+      'Art Museum',
+      'Sights and landmarks',      
+      'Points of interests',
+      'Historic sigths',
+      'Conserts & shows',
+      'Theatre',
+      'Nature and parks',
+      'Churches & cathedrals',
+      'Gardens',
+      'Cafe',
+      'Seafood',
+      'Steakhouse',
+      'Indian',
+      'British',
+      'Mediterranean',
+      'French',
+      'Italian',
+      'European'
+    ], [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]);
   }
 
   List<Attraction> getAttractions() => _currentAttractions;
@@ -31,37 +70,37 @@ class DataContainerState extends State<DataContainer>{
     return _distPenEnabled;
   }
 
-  void setAttractions(attractions){
-      _currentAttractions = attractions;
+  void setAttractions(attractions) {
+    _currentAttractions = attractions;
   }
 
   List<Attraction> getFavourites() => _favourites;
 
-  void setFavourites(favouriteAttractions){
+  void setFavourites(favouriteAttractions) {
     _favourites = favouriteAttractions;
   }
 
   List<Marker> getMarkers() => _markers;
 
-  void setMarkers(markers){
+  void setMarkers(markers) {
     _markers = markers;
   }
 
   int getDist() => _dist;
 
-  void setDist(distance){
+  void setDist(distance) {
     _dist = distance;
   }
 
   bool getupdateRecs() => _updateRecs;
 
-  void setUpdateRecs(boolean){
+  void setUpdateRecs(boolean) {
     _updateRecs = boolean;
   }
 
   List<Attraction> getAllNearbyAttractions() => _allNearbyAttractions;
 
-  void setAllNearbyAttractions(nearbyAttractions){
+  void setAllNearbyAttractions(nearbyAttractions) {
     _allNearbyAttractions = nearbyAttractions;
   }
 
@@ -69,26 +108,23 @@ class DataContainerState extends State<DataContainer>{
 
   String getTripType() => _triptype;
 
-  void setTripType(tripType){
+  void setTripType(tripType) {
     _triptype = tripType;
   }
 
   bool getcreateRecAttOnly() => _createRecAttOnly;
 
-  void setcreateRecAttOnly(bool createRecAttOnly){
+  void setcreateRecAttOnly(bool createRecAttOnly) {
     _createRecAttOnly = createRecAttOnly;
   }
 
   @override
   Widget build(BuildContext context) {
-    return new DataProvider(
-      dataContainer: this,
-      child: widget.child
-    );
+    return new DataProvider(dataContainer: this, child: widget.child);
   }
 }
 
-class DataContainer extends StatefulWidget{
+class DataContainer extends StatefulWidget {
   Widget child;
 
   DataContainer({this.child});
@@ -96,7 +132,8 @@ class DataContainer extends StatefulWidget{
   @override
   DataContainerState createState() => new DataContainerState();
 
-  static DataContainerState of(BuildContext context){
-    return (context.inheritFromWidgetOfExactType(DataProvider)as DataProvider).dataContainer;
+  static DataContainerState of(BuildContext context) {
+    return (context.inheritFromWidgetOfExactType(DataProvider) as DataProvider)
+        .dataContainer;
   }
 }

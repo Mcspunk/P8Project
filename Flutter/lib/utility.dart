@@ -96,8 +96,24 @@ Future<void> updatePreferences(BuildContext context) async {
   var preEncode = {
     "username": await loadString('currentUser'),
     "Museum": ratings['Museum'],
-    "Parks": ratings['Parks'],
-    "Ferris_wheel": ratings['Ferris Wheel'],
+    "Art Museum": ratings['Art Museum'],
+    "Sights and landmarks": ratings['Sights and landmarks'],
+    "Points of interests": ratings['Points of interests'],
+    "Historic sigths": ratings['Historic sigths'],
+    "Conserts & shows": ratings['Conserts & shows'],
+    "Theatre": ratings['Theatre'],
+    "Nature and parks": ratings['Nature and parks'],
+    "Churches & cathedrals": ratings['Churches & cathedrals'],
+    "Gardens": ratings['Gardens'],
+    "Cafe": ratings['Cafe'],
+    "Seafood": ratings['Seafood'],
+    "Steakhouse": ratings['Steakhouse'],
+    "Indian": ratings['Indian'],
+    "British": ratings['British'],
+    "Mediterranean": ratings['Mediterranean'],
+    "French": ratings['French'],
+    "Italian": ratings['Italian'],
+    "European": ratings['European'],
   };
   var postEncode = jsonEncode(preEncode);
   try {
@@ -123,11 +139,27 @@ Future<void> getPreferences(BuildContext context) async {
     var response = await http.post('http://10.0.2.2:5000/api/get-preferences/',
         body: postEncode, headers: {"Content-Type": "application/json"});
     var prefspre = response.headers['prefs'];
-    var prefspost = jsonDecode(prefspre);
+    var prefspost = jsonDecode(prefspre);    
 
     data.getCategoryRatings()['Museum'] = prefspost['Museum'];
-    data.getCategoryRatings()['Parks'] = prefspost['Parks'];
-    data.getCategoryRatings()['Ferris Wheel'] = prefspost['Ferris_wheel'];
+    data.getCategoryRatings()['Art Museum'] = prefspost['Art Museum'];
+    data.getCategoryRatings()['Sights and landmarks'] = prefspost['Sights and landmarks'];
+    data.getCategoryRatings()['Points of interests'] = prefspost['Points of interests'];
+    data.getCategoryRatings()['Historic sigths'] = prefspost['Historic sigths'];
+    data.getCategoryRatings()['Conserts & shows'] = prefspost['Conserts & shows'];
+    data.getCategoryRatings()['Theatre'] = prefspost['Theatre'];
+    data.getCategoryRatings()['Nature and parks'] = prefspost['Nature and parks'];
+    data.getCategoryRatings()['Churches & cathedrals'] = prefspost['Churches & cathedrals'];
+    data.getCategoryRatings()['Gardens'] = prefspost['Gardens'];
+    data.getCategoryRatings()['Cafe'] = prefspost['Cafe'];
+    data.getCategoryRatings()['Seafood'] = prefspost['Seafood'];
+    data.getCategoryRatings()['Steakhouse'] = prefspost['Steakhouse'];
+    data.getCategoryRatings()['Indian'] = prefspost['Indian'];
+    data.getCategoryRatings()['British'] = prefspost['British'];
+    data.getCategoryRatings()['Mediterranean'] = prefspost['Mediterranean'];
+    data.getCategoryRatings()['French'] = prefspost['French'];
+    data.getCategoryRatings()['Italian'] = prefspost['Italian'];
+    data.getCategoryRatings()['European'] = prefspost['European'];
   } catch (e) {
     print(e);
   }
@@ -185,7 +217,7 @@ Future<List<Attraction>> getAllAttractions(
       var attracts = response.headers['attractions'];
       var decoded = attracts == null ? [] : jsonDecode(attracts);
       var t = decoded as List;
-      List<Attraction> recAttractions = [];
+      List<Attraction> recAttractions = List<Attraction>();
       for (var i = 0; i < t.length; i++) {
         
         List<String> open = [];
@@ -232,6 +264,9 @@ Future<List<Attraction>> getAllAttractions(
 
 Future<List<Attraction>> getRecommendations(
     Coordinate coordinate, BuildContext context) async {
+  if(coordinate == null){
+    return List<Attraction>();
+  }
   DataContainerState data = DataContainer.of(context);
   DateTime dt = DateTime.now();
   int distance = await loadInt('dist') ?? 1; //ID, Context (commpany:triptype, monthvisited:måned)
@@ -240,8 +275,13 @@ Future<List<Attraction>> getRecommendations(
   String usercontext = "month_visited:" + months[dt.month] + ",company:" + (tt ?? 'alone');
   if(coordinate == null){
     if(await PermissionHandler().checkPermissionStatus(PermissionGroup.location) == PermissionStatus.granted) {
+      
+      try{
       Position pos = await Geolocator().getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
       coordinate = new Coordinate(pos.latitude, pos.longitude);
+      } catch(e){
+        print(e);
+      }
     }    
   }
 
@@ -261,7 +301,7 @@ Future<List<Attraction>> getRecommendations(
       var attracts = response.headers['attractions'];
       var decoded = attracts == null ? [] : jsonDecode(attracts);
       var t = decoded as List;
-      List<Attraction> recAttractions = [];
+      List<Attraction> recAttractions = List<Attraction>();
       for (var i = 0; i < t.length; i++) {
         List<String> open = [];
         if (t[i]['opening_hours'] == "NA"){
@@ -303,7 +343,7 @@ Future<List<Attraction>> getRecommendations(
       return recAttractions;
 
     } else {
-      displayMsg('No connection to server\nGR', context);
+      print('No connection to server: GR');
     }
   } catch (e) {
     print('gr: ');
@@ -350,7 +390,7 @@ Future<List<Attraction>> getLikedAttraction(BuildContext context) async {
       var attracts = response.headers['attractions'];
       var decoded = attracts == null ? [] : jsonDecode(attracts);
       var t = decoded as List;
-      List<Attraction> recAttractions = [];
+      List<Attraction> recAttractions = List<Attraction>();
       for (var i = 0; i < t.length; i++) {
         List<String> open = [];
         if (t[i]['opening_hours'] == "NA"){
@@ -417,6 +457,7 @@ Future<void> checkLogIn(
       displayMsg('No connection to server.\nLI', context);
     }
   } catch (e) {
+    print('checkLogIn');
     print(e);
   }
 }
@@ -430,8 +471,8 @@ Future<void> checkSignUp(
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
       saveString('currentUser', username.toString());
-      var a = jsonDecode(response.headers['id']);
-      saveInt('currentUserID', a['id']);
+      var id = jsonDecode(response.headers['id']);
+      saveInt('currentUserID', id);
       Navigator.pushNamedAndRemoveUntil(context, '/context_prompt', (Route<dynamic> route) => false);
     } else if (response.statusCode == 208) {
       displayMsg('Username already taken.', context);
@@ -439,6 +480,7 @@ Future<void> checkSignUp(
       displayMsg('No connection to server.\nSU', context);
     }
   } catch (e) {
+    print('checkSignUp');
     print(e);
   }
 }

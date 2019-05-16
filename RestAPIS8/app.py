@@ -9,6 +9,8 @@ import just_discover.DataProcessor as dataprocessor
 import requests
 import pickle
 import dill
+from random import choice
+from string import ascii_uppercase
 import copy
 
 host = "jd-database.ccwvupidct47.eu-west-3.rds.amazonaws.com"
@@ -20,6 +22,7 @@ app = Flask(__name__)
 cors = CORS(app, support_credentials=True, resources={r"/api/*": {"origins": "*", "support_credentials": True}})
 
 icamf_recommender: recommender.ICAMF
+
 
 @app.route('/api/get-preferences/', methods=['POST'])
 def get_preferences():
@@ -35,12 +38,31 @@ def get_preferences():
     DBres = cursor.fetchone()
 
     result = DBres[3]
-    #{"pref_0":res[6], "pref_1":res[7], "pref_2":res[8], "pref_3":res[9], "pref_4":res[10], "pref_5":res[11], "pref_6":res[12]}
+    # {"pref_0":res[6], "pref_1":res[7], "pref_2":res[8], "pref_3":res[9], "pref_4":res[10], "pref_5":res[11], "pref_6":res[12]}
 
-    #res2 = json.dumps(result)
+    # res2 = json.dumps(result)
     res = json.loads(result)
 
-    temp = {"Museum": res['Museum'], "Parks": res['Parks'], "Ferris_wheel": res['FerrisWheel']}
+    temp = {"Museum": res['Museum'],
+            "Art Museum": res['Art Museum'],
+            "Sights and landmarks": res['Sights and landmarks'],
+            "Points of interests": res['Points of interests'],
+            "Historic sigths": res['Historic sigths'],
+            "Conserts & shows": res['Conserts & shows'],
+            "Theatre": res['Theatre'],
+            "Nature and parks": res['Nature and parks'],
+            "Churches & cathedrals": res['Churches & cathedrals'],
+            "Gardens": res['Gardens'],
+            "Cafe": res['Cafe'],
+            "Seafood": res['Seafood'],
+            "Steakhouse": res['Steakhouse'],
+            "Indian": res['Indian'],
+            "British": res['British'],
+            "Mediterranean": res['Mediterranean'],
+            "French": res['French'],
+            "Italian": res['Italian'],
+            "European": res['European']}
+
 
     result = json.dumps(temp)
 
@@ -48,7 +70,8 @@ def get_preferences():
     cursor.close()
     conn.close()
 
-    return Response(status=200, headers={"Prefs":result},  content_type='text/json')
+    return Response(status=200, headers={"Prefs": result}, content_type='text/json')
+
 
 @app.route('/api/update-preferences/', methods=['POST'])
 def update_preferences():
@@ -57,24 +80,55 @@ def update_preferences():
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
 
-    #pref = json.load(json_date)
+    # pref = json.load(json_date)
     name = json_date['username']
     pref_0 = str(json_date['Museum'])
-    pref_1 = str(json_date['Parks'])
-    pref_2 = str(json_date['Ferris_wheel'])
+    pref_1 = str(json_date['Art Museum'])
+    pref_2 = str(json_date['Sights and landmarks'])
+    pref_3 = str(json_date['Points of interests'])
+    pref_4 = str(json_date['Historic sigths'])
+    pref_5 = str(json_date['Conserts & shows'])
+    pref_6 = str(json_date['Theatre'])
+    pref_7 = str(json_date['Nature and parks'])
+    pref_8 = str(json_date['Churches & cathedrals'])
+    pref_9 = str(json_date['Gardens'])
+    pref_10 = str(json_date['Cafe'])
+    pref_11 = str(json_date['Seafood'])
+    pref_12 = str(json_date['Steakhouse'])
+    pref_13 = str(json_date['Indian'])
+    pref_14 = str(json_date['British'])
+    pref_15 = str(json_date['Mediterranean'])
+    pref_16 = str(json_date['French'])
+    pref_17 = str(json_date['Italian'])
+    pref_18 = str(json_date['European'])
 
-    tempstring = '{"Museum": ' + pref_0 + ', "Parks": ' + pref_1 + ', "FerrisWheel": ' + pref_2 + '}'
+    tempstring = '{"Museum": ' + pref_0 + \
+                 ', "Art Museum": ' + pref_1 + \
+                 ', "Sights and landmarks": ' + pref_2 + \
+                 ', "Points of interests": ' + pref_3 + \
+                 ', "Historic sigths": ' + pref_4 + \
+                 ', "Conserts & shows": ' + pref_5 + \
+                 ', "Theatre": ' + pref_6 + \
+                 ', "Nature and parks": ' + pref_7 + \
+                 ', "Churches & cathedrals": ' + pref_8 + \
+                 ', "Gardens": ' + pref_9 + \
+                 ', "Cafe": ' + pref_10 + \
+                 ', "Seafood": ' + pref_11 + \
+                 ', "Steakhouse": ' + pref_12 + \
+                 ', "Indian": ' + pref_13 + \
+                 ', "British": ' + pref_14 + \
+                 ', "Mediterranean": ' + pref_15 + \
+                 ', "French": ' + pref_16 + \
+                 ', "Italian": ' + pref_17 + \
+                 ', "European": ' + pref_18 + '}'
 
     sqlString = "UPDATE justdiscover.users SET preferences = '" + tempstring + "' WHERE user_name = CAST ('" + name + "' as TEXT);"
     cursor.execute(sqlString)
-
-
 
     conn.commit()
     cursor.close()
     conn.close()
     return Response(status=200)
-
 
 
 @app.route('/api/give-review/', methods=['POST'])
@@ -103,10 +157,9 @@ def give_review():
     cursor.execute(userIDSQL)
     userID = cursor.fetchone()[0]
 
-    insertSQL = "INSERT INTO justdiscover.reviews VALUES " + str(rID) + ", " + str(rating) + ", " + date + ", " + triptype + ", " + userID + ", " + str(poiID) + ";"
-    #cursor.execute(insertSQL)
-
-
+    insertSQL = "INSERT INTO justdiscover.reviews VALUES " + str(rID) + ", " + str(
+        rating) + ", " + date + ", " + triptype + ", " + userID + ", " + str(poiID) + ";"
+    # cursor.execute(insertSQL)
 
     conn.commit()
     cursor.close()
@@ -127,7 +180,8 @@ def get_all_recommendations():
     max_dist_in_m = dist * 1000
     attracs = []
 
-    sqlstring = "SELECT * FROM justdiscover.poi_backup WHERE ST_Distance_Sphere(geometry(justdiscover.poi_backup.location_coordinate), st_makepoint " + str(coordinate) + ") <= " + str(max_dist_in_m) + ";"
+    sqlstring = "SELECT * FROM justdiscover.poi_backup WHERE ST_Distance_Sphere(geometry(justdiscover.poi_backup.location_coordinate), st_makepoint " + str(
+        coordinate) + ") <= " + str(max_dist_in_m) + ";"
     cursor.execute(sqlstring)
     attractions = cursor.fetchall()
 
@@ -184,7 +238,6 @@ def update_liked():
     return Response(content_type='text/json', status=200)
 
 
-
 @app.route('/api/request-liked-attractions/', methods=['POST'])
 def get_liked_attractions():
     json_data = request.get_json(force=True)
@@ -195,17 +248,16 @@ def get_liked_attractions():
 
     sqlstring = "SELECT liked_attractions from justdiscover.users WHERE user_name = '" + username + "';"
     cursor.execute(sqlstring)
-    if(cursor.rowcount == 0):
+    if (cursor.rowcount == 0):
         return Response(status=200)
     attracs = []
 
     liked = cursor.fetchone()[0]
 
-    if(liked != None):
+    if (liked != None):
         like = liked.split('|')
 
-        like.pop(len(like)-1)
-
+        like.pop(len(like) - 1)
 
         for r in like:
             sqlstring = "SELECT * FROM justdiscover.poi_backup WHERE id = " + str(r) + ";"
@@ -247,7 +299,6 @@ def get_liked_attractions():
 
 @app.route('/api/request-recommendations/', methods=['POST'])
 def get_recommendations():
-
     json_data = request.get_json(force=True)
     threshold_min_rating = 3
     max_dist = json_data['dist']
@@ -259,10 +310,12 @@ def get_recommendations():
 
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
-    sqlString = "SELECT poi_backup.id FROM justdiscover.poi_backup WHERE ST_Distance_Sphere(geometry(justdiscover.poi_backup.location_coordinate), st_makepoint " + str(coordinate) + ") <= " + str(max_dist_in_km) + ";"
+    sqlString = "SELECT poi_backup.id FROM justdiscover.poi_backup WHERE ST_Distance_Sphere(geometry(justdiscover.poi_backup.location_coordinate), st_makepoint " + str(
+        coordinate) + ") <= " + str(max_dist_in_km) + ";"
     cursor.execute(sqlString)
     poi_within_distance_list = [tup[0] for tup in list(cursor)]
-    recommendation_list = icamf_recommender.top_recommendations(user_id, poi_within_distance_list, context, threshold_min_rating)
+    recommendation_list = icamf_recommender.top_recommendations(user_id, poi_within_distance_list, context,
+                                                                threshold_min_rating)
 
     attracs = []
 
@@ -270,7 +323,8 @@ def get_recommendations():
         sqlstring = "SELECT * FROM justdiscover.poi_backup WHERE id = " + str(r[0]) + ";"
         cursor.execute(sqlstring)
         attraction = cursor.fetchone()
-        sqlstring = "SELECT st_distance_sphere(geometry(a.location_coordinate), st_makepoint " + str(coordinate) + ") FROM justdiscover.poi_backup a WHERE a.id = " + str(r[0]) + ";"
+        sqlstring = "SELECT st_distance_sphere(geometry(a.location_coordinate), st_makepoint " + str(
+            coordinate) + ") FROM justdiscover.poi_backup a WHERE a.id = " + str(r[0]) + ";"
         cursor.execute(sqlstring)
         distance = cursor.fetchone()
 
@@ -282,11 +336,10 @@ def get_recommendations():
         dblong = c[1]
 
         open_hours = attraction[4]
-        if(open_hours == None):
+        if (open_hours == None):
             open_hours = 'NA'
 
-
-        tempAttraction = {"id":attraction[0],
+        tempAttraction = {"id": attraction[0],
                           "name": attraction[9],
                           "opening_hours": open_hours,
                           "img_path": attraction[8],
@@ -310,7 +363,6 @@ def get_recommendations():
     return Response(headers={"attractions": attracs}, content_type='text/json', status=200)
 
 
-
 @app.route('/api/create-user/', methods=['POST'])
 def create_user():
     json_data = request.get_json(force=True)
@@ -327,12 +379,12 @@ def create_user():
     cursor.execute(sqlstring)
     name = cursor.fetchone()
 
-    if(name == None):
+    if (name == None):
         now = datetime.datetime.now()
         date = str(now.year) + '-' + str(now.month) + '-' + str(now.day)
-        stringid = ''
-        sqlstring = "INSERT INTO justdiscover.users VALUES '', " + json_data['password'] + ", "+  date + ", '', " + json_data['username'] + ";"
-        #cursor.execute(sqlstring)
+        stringid = ''.join(choice(ascii_uppercase) for i in range(32))
+        sqlstring = "INSERT INTO justdiscover.users(id, password, created, user_name) VALUES ('" + stringid + "', '" + json_data['password'] + "', '" + date + "', '" + json_data['username'] + "');"
+        cursor.execute(sqlstring)
         sqlstring2 = "SELECT id_sk FROM justdiscover.users WHERE user_name = '" + str(json_data['username']) + "';"
         print(json_data['username'] + ' - ' + json_data['password'] + ' | Created')
         cursor.execute(sqlstring2)
@@ -344,7 +396,7 @@ def create_user():
     else:
         return Response(status=208)
 
-    #cursor.execute("INSERT INTO justdiscover.users VALUES (json_data['uid'],json_data['password'],current_date(),json_data['preferences'],json_data['username'])")
+    # cursor.execute("INSERT INTO justdiscover.users VALUES (json_data['uid'],json_data['password'],current_date(),json_data['preferences'],json_data['username'])")
     conn.commit()
     cursor.close()
     conn.close()
@@ -364,7 +416,7 @@ def login():
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
     tempUser = cursor.execute("SELECT * FROM justdiscover.users WHERE user_name = %s AND password = %s",
-                   (json_data['username'], json_data['password']))
+                              (json_data['username'], json_data['password']))
     result = cursor.fetchone()
 
     res = json.dumps({"id": result[5], "t": 0})
@@ -386,13 +438,9 @@ def hello_world():
 
 @app.route('/api/test/', methods=['GET'])
 def test():
-
     insert_poi_details()
 
-
-
     return Response(status=200)
-
 
 
 def update_binary_review_table():
@@ -406,7 +454,7 @@ def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iter
 
 def train_and_save_model(regularizer, learning_rate, num_factors, iterations):
     recommender.train_and_save_model(regularizer=regularizer, learning_rate=learning_rate,
-                                     num_factors=num_factors,iterations=iterations)
+                                     num_factors=num_factors, iterations=iterations)
 
 
 def place_details():
@@ -426,19 +474,21 @@ def place_details():
         params['placeid'] = geocoding["results"][0]["place_id"]
         r = requests.get(url=endpoint, params=params, )
         data = r.json()
-        poi_place_details_list.append((poi_id,data))
+        poi_place_details_list.append((poi_id, data))
     for empty_poi in poi_no_results:
         poi_place_details_list.append((empty_poi, None))
     with open(f'poi_details.pkl', "wb") as file:
         dill.dump(poi_place_details_list, file)
     return poi_place_details_list
 
+
 def geocoding_of_poi():
     api_key = "Insert_API_KEY"
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
 
-    cursor.execute("SELECT justdiscover.poi_backup.id,justdiscover.poi_backup.name, justdiscover.poi_backup.address FROM justdiscover.poi_backup")
+    cursor.execute(
+        "SELECT justdiscover.poi_backup.id,justdiscover.poi_backup.name, justdiscover.poi_backup.address FROM justdiscover.poi_backup")
     id_name_address_tuple_list = list()
     while True:
         row = cursor.fetchone()
@@ -447,7 +497,7 @@ def geocoding_of_poi():
         poi_id = row[0]
         name = row[1]
         address = row[2]
-        id_name_address_tuple_list.append((poi_id,name,address))
+        id_name_address_tuple_list.append((poi_id, name, address))
 
     id_geocoding_json_list = list()
     params = dict()
@@ -458,11 +508,12 @@ def geocoding_of_poi():
         params['address'] = location
         r = requests.get(url=endpoint, params=params, )
         data = r.json()
-        id_geocoding_json_list.append((tuple[0],data))
+        id_geocoding_json_list.append((tuple[0], data))
     cursor.close()
     conn.close()
 
     return id_geocoding_json_list
+
 
 def insert_poi_details():
     with open("poi_details.pkl", "rb") as f:
@@ -483,33 +534,38 @@ def insert_poi_details():
 
         if 'international_phone_number' in details_json['result']:
             phone_number = details_json['result']['international_phone_number']
-            sqlstring = "UPDATE justdiscover.poi_backup SET phonenumber = '" + str(phone_number) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"
-            #cursor.execute(sqlstring)
+            sqlstring = "UPDATE justdiscover.poi_backup SET phonenumber = '" + str(
+                phone_number) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) + ";"
+            # cursor.execute(sqlstring)
         if 'types' in details_json['result']:
             categories = details_json['result']['types']
-            sqlstring = "UPDATE justdiscover.poi_backup SET category = '" + json.dumps(categories) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"
-            #cursor.execute(sqlstring)
+            sqlstring = "UPDATE justdiscover.poi_backup SET category = '" + json.dumps(
+                categories) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) + ";"
+            # cursor.execute(sqlstring)
         if 'website' in details_json['result']:
             website = details_json['result']['website']
-            sqlstring = "UPDATE justdiscover.poi_backup SET url = '" + website + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"
-            #cursor.execute(sqlstring)
+            sqlstring = "UPDATE justdiscover.poi_backup SET url = '" + website + "' WHERE justdiscover.poi_backup.id = " + str(
+                poi_id) + ";"
+            # cursor.execute(sqlstring)
         if 'opening_hours' in details_json['result']:
             opening_hours = details_json['result']['opening_hours']['weekday_text']
-            sqlstring = "UPDATE justdiscover.poi_backup SET open_hours = '" + json.dumps(opening_hours) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"
-            #cursor.execute(sqlstring)
+            sqlstring = "UPDATE justdiscover.poi_backup SET open_hours = '" + json.dumps(
+                opening_hours) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) + ";"
+            # cursor.execute(sqlstring)
         else:
-            sqlstring = "UPDATE justdiscover.poi_backup SET open_hours = NULL WHERE justdiscover.poi_backup.id = " + str(poi_id) + ";"
-            #cursor.execute(sqlstring)
+            sqlstring = "UPDATE justdiscover.poi_backup SET open_hours = NULL WHERE justdiscover.poi_backup.id = " + str(
+                poi_id) + ";"
+            # cursor.execute(sqlstring)
 
         if 'price_level' in details_json['result']:
             price_level = details_json['result']['price_level']
-            sqlstring = "UPDATE justdiscover.poi_backup SET price_level = '" + str(price_level) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) +";"
-            #cursor.execute(sqlstring)
+            sqlstring = "UPDATE justdiscover.poi_backup SET price_level = '" + str(
+                price_level) + "' WHERE justdiscover.poi_backup.id = " + str(poi_id) + ";"
+            # cursor.execute(sqlstring)
 
-    #conn.commit()
-    #cursor.close()
-    #conn.close()
-
+    # conn.commit()
+    # cursor.close()
+    # conn.close()
 
 
 def insert_geocoding_database():
@@ -525,7 +581,9 @@ def insert_geocoding_database():
         latitude = geocoding['results'][0]['geometry']['location']['lat']
         longitude = geocoding['results'][0]['geometry']['location']['lng']
         point = (latitude, longitude)
-        cursor.execute("UPDATE justdiscover.poi_backup SET address = %s, location_coordinate = POINT %s WHERE justdiscover.poi_backup.id = %s ", (formatted_address, (point), poi_id))
+        cursor.execute(
+            "UPDATE justdiscover.poi_backup SET address = %s, location_coordinate = POINT %s WHERE justdiscover.poi_backup.id = %s ",
+            (formatted_address, (point), poi_id))
 
     conn.commit()
     cursor.close()
@@ -533,15 +591,12 @@ def insert_geocoding_database():
 
 
 if __name__ == '__main__':
-
     app.run()
-
 
 with open("dummy_model.pkl", "rb") as f:
     icamf_recommender = dill.load(f)
 
-#train_and_save_model(0.001,0.002,25,20)
-#train_recommender_kfold(5, 0.001, 0.002,25,100)
-#train_recommender_kfold(5, 0.001, 0.002,25,100)
-#train_recommender_kfold(5, 0.001, 0.002,25,100)
-
+# train_and_save_model(0.001,0.002,25,20)
+# train_recommender_kfold(5, 0.001, 0.002,25,100)
+# train_recommender_kfold(5, 0.001, 0.002,25,100)
+# train_recommender_kfold(5, 0.001, 0.002,25,100)

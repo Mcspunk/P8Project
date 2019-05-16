@@ -3,7 +3,6 @@ import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test2/data_container.dart';
-import 'package:test2/data_provider.dart';
 import 'utility.dart';
 
 void saveCategoryRatings(
@@ -55,30 +54,44 @@ class SelectInterests extends State<InterestsState> {
   List<double> _ratings = [];//0, 0, 0, 0, 0, 0, 0, 0, 0];
 
   @override
-  void initState() {
+  void didChangeDependencies(){
     getCategories(context).then(loadCategories);
     getRatings(context).then(loadRatings);
+    super.didChangeDependencies();
+  }
+
+  @override
+  void initState() {    
     super.initState();
   }
 
-  void loadCategories(List<String> tripType) {
-    setState(() {
-      _categories = tripType ??
-          ['Park', 'Zoo', 'Museum', 'Casino', 'Indian', '1', '1', '1', '1'];
-    });
+  void loadCategories(List<String> categories) {    
+    if(categories != null){
+      setState(() {
+        _categories = categories;
+      });
+    }    
   }
 
   void loadRatings(List<String> stringRatings) {
     setState(() {
-      if (stringRatings != null) {
+      if (stringRatings != null && stringRatings.length != 0) {
         List<double> doubleRatings = [];
+        for (var item in stringRatings) {
+          doubleRatings.add(double.parse(item));
+        }
+        /*
         for (int i = 0; i < stringRatings.length; i++) {
           doubleRatings.add(double.parse(stringRatings[i]));
         }
+        */
         this._ratings = doubleRatings;
-      } else {
-        this._ratings = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      } 
+      /*
+      else {
+        this._ratings = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
       }
+      */
     });
   }
 
@@ -99,7 +112,6 @@ class SelectInterests extends State<InterestsState> {
           ),
           onPressed: () {
             updatePreferences(context);
-            //saveCategoryRatings('Categories', this._categories, this._ratings);
             Navigator.pop(context);
           }),
     );

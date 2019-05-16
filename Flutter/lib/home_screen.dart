@@ -176,23 +176,24 @@ class HomeScreen extends State<HomeScreenState> {
   void refreshDistancePenalty() {
     DataContainerState data = DataContainer.of(context);
     bool wantsdistpen = data.getDistPenEnabled();
-    List<Attraction> attractionList = List<Attraction>.from(data.getAttractions());
-    if (wantsdistpen){
+    List<Attraction> attractionList =
+        List<Attraction>.from(data.getAttractions() ?? List<Attraction>());
+    if (wantsdistpen) {
       for (var attraction in attractionList) {
         double score = attraction.getScore();
-        double distPen = (5 /(data.getDist() * 1000)) * (1000 + attraction.getDistance());
+        double distPen =
+            (5 / ((data.getDist() ?? 1) * 1000)) * (1000 + attraction.getDistance());
         double weight = calcWeight(score);
         double penalisedScore = score - (weight * distPen);
         attraction.setPenalisedScore(penalisedScore);
       }
-    }
-    else {
+    } else {
       for (var attraction in attractionList) {
         attraction.setPenalisedScore(attraction.getScore());
       }
     }
-    attractionList.sort((a,b) => b.getPenalisedScore().compareTo(a.getPenalisedScore()));
-    print('debug');
+    attractionList
+        .sort((a, b) => b.getPenalisedScore().compareTo(a.getPenalisedScore()));
     data.setAttractions(attractionList);
     setState(() {});
   }
@@ -214,7 +215,7 @@ class HomeScreen extends State<HomeScreenState> {
               IconButton(
                 icon: Icon(Icons.refresh),
                 onPressed: distPenEnabled ? refreshDistancePenalty : refreshDistancePenalty,
-              ),
+              ),              
               IconButton(
                   //Tror ikke det er her den her funktionalitet skal være, men kunne ikke få lov til at lave en tab mere
                   icon: const Icon(Icons.map),
@@ -293,7 +294,8 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _attractionView() {
-    List<Attraction> data = DataContainer.of(context).getAttractions();
+    List<Attraction> data =
+        DataContainer.of(context).getAttractions() ?? List<Attraction>();
     List<Attraction> attractions = [];
     for (var attraction in data) {
       if (!attraction.getIsFoodPlace()) {
@@ -317,7 +319,7 @@ class HomeScreen extends State<HomeScreenState> {
     DataContainerState data = DataContainer.of(context);
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: data.getAttractions().length != 0
+      child: data.getAttractions() != null && data.getAttractions().length != 0
           ? _buildRecList(data.getAttractions())
           : ListTile(
               title: Text('No attractions found'),
@@ -329,7 +331,8 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget _restaurantView() {
-    List<Attraction> data = DataContainer.of(context).getAttractions();
+    List<Attraction> data =
+        DataContainer.of(context).getAttractions() ?? List<Attraction>();
     List<Attraction> restaurants = [];
     for (var attraction in data) {
       if (attraction.getIsFoodPlace()) {
@@ -353,7 +356,7 @@ class HomeScreen extends State<HomeScreenState> {
     DataContainerState data = DataContainer.of(context);
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: data.getFavourites().length != 0
+      child: data.getFavourites() != null && data.getFavourites().length != 0
           ? _buildRecList(data.getFavourites())
           : ListTile(
               title: Text('No liked attractions'),
@@ -408,7 +411,7 @@ class HomeScreen extends State<HomeScreenState> {
               trailing: Container(
                   width: deviceSize.width * (3 / 7),
                   child: Text(
-                      "Today's opening hours:\n" +
+                      "Opening hours:\n" +
                           attraction.getOpeningHours()[dt.weekday - 1],
                       style: Theme.of(context).textTheme.body2)))
         ],
@@ -418,23 +421,27 @@ class HomeScreen extends State<HomeScreenState> {
 
   Widget buildRecTile(Attraction attraction) {
     var match;
-    if(attraction.getPenalisedScore() != null){
+    if (attraction.getPenalisedScore() != null) {
       match = attraction.getPenalisedScore() / 5 * 100;
     }
-    
-    DateTime dt = DateTime.now();
-    String ratingstring = attraction.getPenalisedScore() == null || match == null
-        ? 'Rating: ' + attraction.getRating().toStringAsFixed(2)
-        : 'Match: ' +
-            match.toStringAsFixed(2) +
-            '%' +
-            '\nRating: ' +
-            attraction.getRating().toString();
 
-    
-    String distanceString = attraction.getDistance() != null ? 'Distance: ' +
-                (attraction.getDistance() > 1000 ? (attraction.getDistance() / 1000).toStringAsFixed(2) : attraction.getDistance().toStringAsFixed(0)) +
-                (attraction.getDistance() > 1000 ? "km" : "m") : "";
+    DateTime dt = DateTime.now();
+    String ratingstring =
+        attraction.getPenalisedScore() == null || match == null
+            ? 'Rating: ' + attraction.getRating().toStringAsFixed(2)
+            : 'Match: ' +
+                match.toStringAsFixed(2) +
+                '%' +
+                '\nRating: ' +
+                attraction.getRating().toString();
+
+    String distanceString = attraction.getDistance() != null
+        ? 'Distance: ' +
+            (attraction.getDistance() > 1000
+                ? (attraction.getDistance() / 1000).toStringAsFixed(2)
+                : attraction.getDistance().toStringAsFixed(0)) +
+            (attraction.getDistance() > 1000 ? "km" : "m")
+        : "";
 
     DataContainerState data = DataContainer.of(context);
     final deviceSize = MediaQuery.of(context).size;
@@ -719,8 +726,8 @@ class HomeScreen extends State<HomeScreenState> {
                               attraction.getCoordinate().getLong()),
                           builder: (context) => Container(
                                 child: Icon(
-                                  Icons.location_on,
-                                  color: Colors.red,
+                                  attraction.getIsFoodPlace() ? Icons.fastfood : Icons.account_balance,
+                                  color: attraction.getIsFoodPlace() ? Colors.red :Colors.green,
                                 ),
                               ),
                         ),
@@ -732,7 +739,7 @@ class HomeScreen extends State<HomeScreenState> {
                           builder: (context) => Container(
                                 child: Icon(
                                   Icons.my_location,
-                                  color: Colors.red,
+                                  color: Colors.blue,
                                 ),
                               ),
                         ),
@@ -791,8 +798,9 @@ class HomeScreen extends State<HomeScreenState> {
 
   List<Marker> createMarkers(bool recOnly /*List<Attraction> allAttractions*/) {
     DataContainerState data = DataContainer.of(context);
-    List<Attraction> allAttractions =
-        recOnly ? data.getAttractions() : data.getAllNearbyAttractions();
+    List<Attraction> allAttractions = recOnly
+        ? data.getAttractions() ?? List<Attraction>()
+        : data.getAllNearbyAttractions() ?? List<Attraction>();
 
     List<Marker> returnList = [];
     for (Attraction item in allAttractions) {
@@ -852,9 +860,15 @@ class HomeScreen extends State<HomeScreenState> {
     if (await PermissionHandler()
             .checkPermissionStatus(PermissionGroup.location) ==
         PermissionStatus.granted) {
-      await Geolocator()
-          .getLastKnownPosition(desiredAccuracy: LocationAccuracy.high)
-          .then(setUserloc);
+      try {
+        await Geolocator().getLastKnownPosition(desiredAccuracy: LocationAccuracy.high).then(setUserloc);
+      } catch (exception, stackTrace) {
+        print('----------------------------------------------------------------------------');
+        print('home_screen/updateUserLocation():');
+        print(exception);
+        print(stackTrace);
+        print('----------------------------------------------------------------------------');
+      }
     }
     //To be used, when we fix ERROR_ALREADY_REQUESTING_PERMISSIONS error z.z
     else {
@@ -875,7 +889,6 @@ class HomeScreen extends State<HomeScreenState> {
 
   @override
   Widget build(BuildContext context) {
-    
     DateTime currentTime = DateTime.now();
     var diffLoc = currentTime.minute - lastupdatedLoc.minute;
     if (diffLoc < 0) {
@@ -908,7 +921,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   void loadDist(int maxDist) {
-    DataContainerState data = DataContainer.of(context);    
+    DataContainerState data = DataContainer.of(context);
     setState(() {
       this.maxDist = maxDist;
       data.setDist(maxDist);
@@ -936,7 +949,8 @@ class HomeScreen extends State<HomeScreenState> {
       diff += 60;
     }
 
-    if (data.getAttractions() != null && (data.getAttractions().length == 0 || diff > 5)) {
+    if (data.getAttractions() != null &&
+        (data.getAttractions().length == 0 || diff > 5)) {
       setState(() {
         data.setAttractions(list);
       });
@@ -954,7 +968,8 @@ class HomeScreen extends State<HomeScreenState> {
       diff += 60;
     }
 
-    if (data.getAllNearbyAttractions().length == 0 || diff > 5) {
+    if ((data.getAllNearbyAttractions() ?? List<Attraction>()).length == 0 ||
+        diff > 5) {
       setState(() {
         data.setAllNearbyAttractions(list);
       });

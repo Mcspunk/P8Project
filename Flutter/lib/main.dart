@@ -25,7 +25,7 @@ main() async {
     await PermissionHandler().checkPermissionStatus(PermissionGroup.location);
     initPushNotif();
     Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.location]);
-    await AndroidAlarmManager.periodic(const Duration(minutes: 1), helloAlarmID, locationChecker);    
+    await AndroidAlarmManager.periodic(const Duration(minutes: 1), helloAlarmID, locationChecker);
  
   }
   else {
@@ -57,7 +57,7 @@ class MyApp extends StatelessWidget {
     return DataProvider(
       dataContainer: DataContainerState(),
       child: MaterialApp(
-        title: 'Sign in',
+        title: 'Just Discover',
         theme: utilTheme(),
         home: determineHome(),
         onGenerateRoute: (RouteSettings settings) {
