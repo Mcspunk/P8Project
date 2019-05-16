@@ -11,8 +11,7 @@ import operator
 import dill
 import copy
 from joblib import Parallel, delayed
-from multiprocessing.dummy import Pool as ThreadPool
-import sys
+
 
 
 np.random.seed(seed=8)
@@ -39,7 +38,7 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
                       learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping)
         recommender_list.append(icamf)
 
-    measurement_results = Parallel(max_nbytes='5G', backend='multiprocessing', n_jobs=-1, verbose=1)(map(delayed(__train_eval_parallel_worker), recommender_list))
+    measurement_results = Parallel(max_nbytes='5G', backend='multiprocessing', n_jobs=k_fold, verbose=1)(map(delayed(__train_eval_parallel_worker), recommender_list))
 
     print("Kfold training complete \n")
     print("Calculating measurements... \n")
@@ -50,25 +49,6 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
     with open(f'Evaluations\\results_fold_{summary.fold}_config_{summary.configuration}.txt', "w+") as file:
         file.write(str(summary))
     print(summary)
-    '''
-    for recommender in recommender_list:
-        p = Process(target=__train_eval_parallel_worker, args=(recommender, measurement_queue))
-        processes.append(p)
-        p.start()
-
-    for process in processes:
-        process.join()
-    print("Kfold training complete \n")
-    print("Calculating measurements... \n")
-    measurement_results = [measurement_queue.get() for p in processes]
-    for result in measurement_results:
-        with open(f'Evaluations\\results_fold_{result.fold}_config_{result.configuration}.txt', "w+") as file:
-            file.write(str(result))
-    summary = reduce(operator.add, measurement_results)
-    with open(f'Evaluations\\results_fold_{summary.fold}_config_{summary.configuration}.txt', "w+") as file:
-        file.write(str(summary))
-    print(summary)
-    '''
 
 def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping):
     rating_obj = dp.read_data_binary()
