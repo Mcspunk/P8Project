@@ -216,7 +216,7 @@ def read_data_binary():
     for counter, context in enumerate(colnames):
         context_split = context.strip().split(":")
         context_dim = context_split[0]
-        dimc = rating_obj.dim_ids.get(context_dim, rating_obj.dim_ids.keys().__len__())
+        dimc = rating_obj.dim_ids.get(context_dim, len(rating_obj.dim_ids.keys()))
         rating_obj.dim_ids[context_dim] = dimc
         rating_obj.cond_ids[context] = counter
         rating_obj.dim_cond_dict[dimc].add(counter)
@@ -293,7 +293,6 @@ def read_data_binary():
 
     element_index = 0
     end_ptr = 0
-
     for idx, user_item_row in enumerate(rating_obj.user_item_context_rating.items()):
         end_ptr += len(user_item_row[1])
         row_ptr_np_array[idx + 1] = end_ptr

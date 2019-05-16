@@ -45,8 +45,9 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
 
     for process in processes:
         process.join()
-
-    measurement_results = [measurement_queue.get(p) for p in processes]
+    print("Kfold training complete \n")
+    print("Calculating measurements... \n")
+    measurement_results = [measurement_queue.get() for p in processes]
     for result in measurement_results:
         with open(f'Evaluations\\results_fold_{result.fold}_config_{result.configuration}.txt', "w+") as file:
             file.write(str(result))
