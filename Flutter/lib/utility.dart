@@ -95,15 +95,15 @@ Future<void> updatePreferences(BuildContext context) async {
   var ratings = data.getCategoryRatings();
   var preEncode = {
     "username": await loadString('currentUser'),
-    "Museum": ratings['Museum'],
-    "Art Museum": ratings['Art Museum'],
-    "Sights and landmarks": ratings['Sights and landmarks'],
-    "Points of interests": ratings['Points of interests'],
-    "Historic sigths": ratings['Historic sigths'],
-    "Conserts & shows": ratings['Conserts & shows'],
-    "Theatre": ratings['Theatre'],
-    "Nature and parks": ratings['Nature and parks'],
-    "Churches & cathedrals": ratings['Churches & cathedrals'],
+    "Museums": ratings['Museums'],
+    "Art Museums": ratings['Art Museums'],
+    "Sights & Landmarks": ratings['Sights & Landmarks'],
+    "Points of Interest & Landmarks": ratings['Points of Interest & Landmarks'],
+    "Historic Sites": ratings['Historic Sites'],
+    "Concerts & Shows": ratings['Concerts & Shows'],
+    "Theaters": ratings['Theaters'],
+    "Nature & Parks": ratings['Nature & Parks'],
+    "Churches & Cathedrals": ratings['Churches & Cathedrals'],
     "Gardens": ratings['Gardens'],
     "Cafe": ratings['Cafe'],
     "Seafood": ratings['Seafood'],
@@ -141,15 +141,15 @@ Future<void> getPreferences(BuildContext context) async {
     var prefspre = response.headers['prefs'];
     var prefspost = jsonDecode(prefspre);    
 
-    data.getCategoryRatings()['Museum'] = prefspost['Museum'];
-    data.getCategoryRatings()['Art Museum'] = prefspost['Art Museum'];
-    data.getCategoryRatings()['Sights and landmarks'] = prefspost['Sights and landmarks'];
-    data.getCategoryRatings()['Points of interests'] = prefspost['Points of interests'];
-    data.getCategoryRatings()['Historic sigths'] = prefspost['Historic sigths'];
-    data.getCategoryRatings()['Conserts & shows'] = prefspost['Conserts & shows'];
-    data.getCategoryRatings()['Theatre'] = prefspost['Theatre'];
-    data.getCategoryRatings()['Nature and parks'] = prefspost['Nature and parks'];
-    data.getCategoryRatings()['Churches & cathedrals'] = prefspost['Churches & cathedrals'];
+    data.getCategoryRatings()['Museums'] = prefspost['Museums'];
+    data.getCategoryRatings()['Art Museums'] = prefspost['Art Museums'];
+    data.getCategoryRatings()['Sights & Landmarks'] = prefspost['Sights & Landmarks'];
+    data.getCategoryRatings()['Points of Interest & Landmarks'] = prefspost['Points of Interest & Landmarks'];
+    data.getCategoryRatings()['Historic Sites'] = prefspost['Historic Sites'];
+    data.getCategoryRatings()['Concerts & Shows'] = prefspost['Concerts & Shows'];
+    data.getCategoryRatings()['Theaters'] = prefspost['Theaters'];
+    data.getCategoryRatings()['Nature & Parks'] = prefspost['Nature & Parks'];
+    data.getCategoryRatings()['Churches & Cathedrals'] = prefspost['Churches & Cathedrals'];
     data.getCategoryRatings()['Gardens'] = prefspost['Gardens'];
     data.getCategoryRatings()['Cafe'] = prefspost['Cafe'];
     data.getCategoryRatings()['Seafood'] = prefspost['Seafood'];

@@ -895,9 +895,6 @@ class HomeScreen extends State<HomeScreenState> {
       diffLoc += 60;
     }
 
-    if (username == null) {
-      return LogInState();
-    }
     return _homeScreen();
   }
 
