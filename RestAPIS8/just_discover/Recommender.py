@@ -167,16 +167,17 @@ class ICAMF:
                                 item_factor_gradients.append(tuple_element.delta)
                             else:
                                 context_condition_factor_gradients[idx-2].append(tuple_element.delta)
-
-                    gradient_sum_squared = 0
-                    gradient_sum_squared += item_bias_gradient*item_bias_gradient + user_bias_gradient*user_bias_gradient + sum(x*x for x in user_factor_gradients) + sum(x*x for x in item_factor_gradients)
-
-                    for condition_factor_gradients in context_condition_factor_gradients:
-                        gradient_sum_squared += sum(x*x for x in condition_factor_gradients)
-
-                    norm = sqrt(gradient_sum_squared)
                     factor = 1
                     if self.soft_clipping is not False:
+                        gradient_sum_squared = 0
+                        try:
+                            gradient_sum_squared += item_bias_gradient*item_bias_gradient + user_bias_gradient*user_bias_gradient + sum(x*x for x in user_factor_gradients) + sum(x*x for x in item_factor_gradients)
+
+                            for condition_factor_gradients in context_condition_factor_gradients:
+                                gradient_sum_squared += sum(x*x for x in condition_factor_gradients)
+                            norm = sqrt(gradient_sum_squared)
+                        except FloatingPointError:
+                            norm = self.soft_clipping*self.soft_clipping
                         if norm > self.soft_clipping:
                             factor = self.soft_clipping/norm
 
@@ -233,7 +234,7 @@ class ICAMF:
 
     def get_config(self):
 
-        return f'Lrate_{self.learning_rate} regularizer_{self.regularizer_1} latent_factors_{self.num_factors} clipping:{str(self.soft_clipping)}'
+        return f'Lrate_{self.learning_rate} regularizer_{self.regularizer_1} latent_factors_{self.num_factors} clipping_{str(self.soft_clipping)}'
 
     def evaluate(self):
 
