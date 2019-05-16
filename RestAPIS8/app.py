@@ -447,14 +447,14 @@ def update_binary_review_table():
     dataprocessor.transform_reviews_table_to_binary()
 
 
-def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iterations):
+def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iterations, clipping=False):
     recommender.train_eval_parallel(k_fold=kfold, regularizer=regularizer, learning_rate=learning_rate,
-                                    num_factors=num_factors, iterations=iterations)
+                                    num_factors=num_factors, iterations=iterations, clipping=clipping)
 
 
-def train_and_save_model(regularizer, learning_rate, num_factors, iterations):
+def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping=False):
     recommender.train_and_save_model(regularizer=regularizer, learning_rate=learning_rate,
-                                     num_factors=num_factors, iterations=iterations)
+                                     num_factors=num_factors,iterations=iterations,clipping=clipping)
 
 
 def place_details():
@@ -567,7 +567,6 @@ def insert_poi_details():
     # cursor.close()
     # conn.close()
 
-
 def insert_geocoding_database():
     conn = psy.connect(host=host, database=database, user=user, password=password)
     cursor = conn.cursor()
@@ -590,13 +589,17 @@ def insert_geocoding_database():
     conn.close()
 
 
-if __name__ == '__main__':
-    app.run()
+#if __name__ == '__main__':
+#    app.run()
 
-with open("dummy_model.pkl", "rb") as f:
-    icamf_recommender = dill.load(f)
+#To run without clipping set to False or del argument
+train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.001, num_factors=10, iterations=2, clipping=False)
+#train_and_save_model(regularizer=0.001,learning_rate=0.002, num_factors=10, iterations=1, clipping=5)
 
-# train_and_save_model(0.001,0.002,25,20)
-# train_recommender_kfold(5, 0.001, 0.002,25,100)
-# train_recommender_kfold(5, 0.001, 0.002,25,100)
-# train_recommender_kfold(5, 0.001, 0.002,25,100)
+#with open("dummy_model.pkl", "rb") as f:
+#    icamf_recommender = dill.load(f)
+
+#train_and_save_model(0.001,0.002,25,20)
+#train_recommender_kfold(5, 0.001, 0.002,25,100)
+#train_recommender_kfold(5, 0.001, 0.002,25,100)
+#train_recommender_kfold(5, 0.001, 0.002,25,100)
