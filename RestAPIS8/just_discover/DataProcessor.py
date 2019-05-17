@@ -99,6 +99,11 @@ class RatingObj:
         self.rate_matrix = None
         self.assign_matrix = None
 
+    def post_process_memory_for_saving(self):
+        self.rate_matrix = None
+        self.assign_matrix = None
+
+
 
     def to_traditional_sparse_rating(self, sparse_matrix):
         reviews = 0
