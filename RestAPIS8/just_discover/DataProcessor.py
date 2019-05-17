@@ -94,6 +94,11 @@ class RatingObj:
     def get_item_id_from_user_item_id(self, user_item_id):
         return self.ui_item_ids.get(user_item_id)
 
+    def post_process_memory_for_training(self):
+        self.user_rated_item_in_ctx_multimap.clear()
+        self.rate_matrix = None
+        self.assign_matrix = None
+
 
     def to_traditional_sparse_rating(self, sparse_matrix):
         reviews = 0
