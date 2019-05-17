@@ -36,8 +36,8 @@ import 'package:permission_handler/permission_handler.dart';
     else {
       print('No permission');
     }
-
-    if ((distanceInMeters ?? _distanceLimit) > _distanceLimit) {
+    distanceInMeters = distanceInMeters  ?? _distanceLimit;
+    if (distanceInMeters > _distanceLimit) {
       saveString('latestUserLocationLat', _currentUserLocation.latitude.toString());
       saveString('latestUserLocationLong', _currentUserLocation.longitude.toString());
       //int a = 3; // await API_CALL
