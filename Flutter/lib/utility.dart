@@ -141,6 +141,7 @@ Future<void> getPreferences(BuildContext context) async {
     String _apiAdress = apiAdress + '/get-preferences/';
     var response = await http.post(_apiAdress,
         body: postEncode, headers: {"Content-Type": "application/json"});
+    if(response.statusCode == 200){
     var prefspre = response.headers['prefs'];
     var prefspost = jsonDecode(prefspre);    
 
@@ -163,9 +164,11 @@ Future<void> getPreferences(BuildContext context) async {
     data.getCategoryRatings()['French'] = prefspost['French'];
     data.getCategoryRatings()['Italian'] = prefspost['Italian'];
     data.getCategoryRatings()['European'] = prefspost['European'];
+    }
   } catch (e) {
     print(e);
   }
+  
 }
 
 Future<int> getRecCount(Coordinate coordinate) async {  

@@ -59,6 +59,7 @@ class Settings extends State<SettingsState> {
   @override
   Widget build(BuildContext context) {
     DataContainerState data = DataContainer.of(context);
+    getPreferences(context);
     return Scaffold(
       appBar: AppBar(
         title: Row(

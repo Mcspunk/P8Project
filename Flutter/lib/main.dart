@@ -54,7 +54,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    getPreferences(context);
     return DataProvider(
       dataContainer: DataContainerState(),
       child: MaterialApp(
