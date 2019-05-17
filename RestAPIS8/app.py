@@ -43,15 +43,15 @@ def get_preferences():
     # res2 = json.dumps(result)
     res = json.loads(result)
 
-    temp = {"Museum": res['Museum'],
-            "Art Museum": res['Art Museum'],
-            "Sights and landmarks": res['Sights and landmarks'],
-            "Points of interests": res['Points of interests'],
-            "Historic sigths": res['Historic sigths'],
-            "Conserts & shows": res['Conserts & shows'],
-            "Theatre": res['Theatre'],
-            "Nature and parks": res['Nature and parks'],
-            "Churches & cathedrals": res['Churches & cathedrals'],
+    temp = {"Museums": res['Museums'],
+            "Art Museums": res['Art Museums'],
+            "Sights & Landmarks": res['Sights & Landmarks'],
+            "Points of Interest & Landmarks": res['Points of Interest & Landmarks'],
+            "Historic Sites": res['Historic Sites'],
+            "Concerts & Shows": res['Concerts & Shows'],
+            "Theaters": res['Theaters'],
+            "Nature & Parks": res['Nature & Parks'],
+            "Churches & Cathedrals": res['Churches & Cathedrals'],
             "Gardens": res['Gardens'],
             "Cafe": res['Cafe'],
             "Seafood": res['Seafood'],
@@ -62,7 +62,6 @@ def get_preferences():
             "French": res['French'],
             "Italian": res['Italian'],
             "European": res['European']}
-
 
     result = json.dumps(temp)
 
@@ -82,15 +81,15 @@ def update_preferences():
 
     # pref = json.load(json_date)
     name = json_date['username']
-    pref_0 = str(json_date['Museum'])
-    pref_1 = str(json_date['Art Museum'])
-    pref_2 = str(json_date['Sights and landmarks'])
-    pref_3 = str(json_date['Points of interests'])
-    pref_4 = str(json_date['Historic sigths'])
-    pref_5 = str(json_date['Conserts & shows'])
-    pref_6 = str(json_date['Theatre'])
-    pref_7 = str(json_date['Nature and parks'])
-    pref_8 = str(json_date['Churches & cathedrals'])
+    pref_0 = str(json_date['Museums'])
+    pref_1 = str(json_date['Art Museums'])
+    pref_2 = str(json_date['Sights & Landmarks'])
+    pref_3 = str(json_date['Points of Interest & Landmarks'])
+    pref_4 = str(json_date['Historic Sites'])
+    pref_5 = str(json_date['Concerts & Shows'])
+    pref_6 = str(json_date['Theaters'])
+    pref_7 = str(json_date['Nature & Parks'])
+    pref_8 = str(json_date['Churches & Cathedrals'])
     pref_9 = str(json_date['Gardens'])
     pref_10 = str(json_date['Cafe'])
     pref_11 = str(json_date['Seafood'])
@@ -102,15 +101,15 @@ def update_preferences():
     pref_17 = str(json_date['Italian'])
     pref_18 = str(json_date['European'])
 
-    tempstring = '{"Museum": ' + pref_0 + \
-                 ', "Art Museum": ' + pref_1 + \
-                 ', "Sights and landmarks": ' + pref_2 + \
-                 ', "Points of interests": ' + pref_3 + \
-                 ', "Historic sigths": ' + pref_4 + \
-                 ', "Conserts & shows": ' + pref_5 + \
-                 ', "Theatre": ' + pref_6 + \
-                 ', "Nature and parks": ' + pref_7 + \
-                 ', "Churches & cathedrals": ' + pref_8 + \
+    tempstring = '{"Museums": ' + pref_0 + \
+                 ', "Art Museums": ' + pref_1 + \
+                 ', "Sights & Landmarks": ' + pref_2 + \
+                 ', "Points of Interest & Landmarks": ' + pref_3 + \
+                 ', "Historic Sites": ' + pref_4 + \
+                 ', "Concerts & Shows": ' + pref_5 + \
+                 ', "Theaters": ' + pref_6 + \
+                 ', "Nature & Parks": ' + pref_7 + \
+                 ', "Churches & Cathedrals": ' + pref_8 + \
                  ', "Gardens": ' + pref_9 + \
                  ', "Cafe": ' + pref_10 + \
                  ', "Seafood": ' + pref_11 + \
@@ -122,7 +121,16 @@ def update_preferences():
                  ', "Italian": ' + pref_17 + \
                  ', "European": ' + pref_18 + '}'
 
-    sqlString = "UPDATE justdiscover.users SET preferences = '" + tempstring + "' WHERE user_name = CAST ('" + name + "' as TEXT);"
+    sqlString = "SELECT preferences FROM justdiscover.users WHERE user_name = '" + name +"'"
+    cursor.execute(sqlString)
+    prefs = cursor.fetchone()
+    if prefs[0] == tempstring:
+        return Response(status=200)
+
+    userVec = createNewUserVector(tempstring)
+    bestSimUser, bestSimScore = calcUserSim(userVec)
+
+    sqlString = "UPDATE justdiscover.users SET preferences = '" + tempstring + "', most_sim_user = '" + str(bestSimUser) + "'  WHERE user_name = CAST ('" + name + "' as TEXT);"
     cursor.execute(sqlString)
 
     conn.commit()
@@ -309,6 +317,14 @@ def get_recommendations():
     max_dist_in_km = max_dist * 1000
 
     conn = psy.connect(host=host, database=database, user=user, password=password)
+
+    if user_id not in icamf_recommender.rating_object.user_ids:
+        cursorGetUser = conn.cursor()
+        cursorGetUser.execute("SELECT most_sim_user FROM justdiscover.users WHERE id_sk = '%s'", [user_id])
+        user_id = cursorGetUser.fetchone()[0]
+        cursorGetUser.close()
+
+
     cursor = conn.cursor()
     sqlString = "SELECT poi_backup.id FROM justdiscover.poi_backup WHERE ST_Distance_Sphere(geometry(justdiscover.poi_backup.location_coordinate), st_makepoint " + str(
         coordinate) + ") <= " + str(max_dist_in_km) + ";"
@@ -447,14 +463,14 @@ def update_binary_review_table():
     dataprocessor.transform_reviews_table_to_binary()
 
 
-def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iterations):
+def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iterations, clipping=False):
     recommender.train_eval_parallel(k_fold=kfold, regularizer=regularizer, learning_rate=learning_rate,
-                                    num_factors=num_factors, iterations=iterations)
+                                    num_factors=num_factors, iterations=iterations, clipping=clipping)
 
 
-def train_and_save_model(regularizer, learning_rate, num_factors, iterations):
+def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping=False):
     recommender.train_and_save_model(regularizer=regularizer, learning_rate=learning_rate,
-                                     num_factors=num_factors, iterations=iterations)
+                                     num_factors=num_factors,iterations=iterations,clipping=clipping)
 
 
 def place_details():
@@ -593,13 +609,216 @@ with open("dummy_model.pkl", "rb") as f:
     icamf_recommender = dill.load(f)
 
 if __name__ == '__main__':
-    print('Running webservice')
-    app.run(host="0.0.0.0", port=8080)
-    print('Init complete')
+    app.run()
+
+categoryDict = {}
+
+def countCategories(input:str):
+    if input is None:
+        print('hej')
+
+    split = input.split(',')
+    corrected = [elem.replace('\"', '').replace(']', '').replace('[', '').replace('&amp;', '&').replace(' More', '').strip() for elem in split]
+    for i in corrected:
+        if i == 'point_of_interest' or i == 'establishment':
+            continue
+        if i in categoryDict:
+            val = categoryDict.get(i)
+            val += 1
+            categoryDict[i] = val
+        else:
+            categoryDict[i] = 1
+
+
+def determineCategories():
+    conn = psy.connect(host=host, database=database, user=user, password=password)
+    cursor = conn.cursor()
+    cursor.execute("SELECT justdiscover.poi.category FROM justdiscover.poi")
+
+    while True:
+        row = cursor.fetchone()
+        if row is None:
+            break
+        countCategories(row[0])
+    for i in categoryDict:
+        print(i)
+        print(str(categoryDict.get(i)) + '|')
+        print('\n')
+    cursor.close()
+    conn.close()
+
+
+def fixDBString():
+    conn = psy.connect(host=host, database=database, user=user, password=password)
+    cursor = conn.cursor()
+    cursor.execute("SELECT justdiscover.poi.category, justdiscover.poi.id FROM justdiscover.poi")
+    listOfTuples = cursor.fetchall()
+    for row in listOfTuples:
+        tmp = row[0]
+        splittemp = tmp.split(',')
+        split = []
+        for i in splittemp:
+            if '$' not in i:
+                split.append(i)
+        corrected = [elem.replace('\"', '').replace(']', '').replace('[', '').replace('&amp;', '&').replace(' More', '').strip() for elem in split]
+
+        freshString = ",".join(corrected)
+
+
+        cursor.execute("UPDATE justdiscover.poi_backup SET category = %s WHERE id = %s", (freshString, row[1]))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print('done')
 
 
 
-#train_and_save_model(0.001,0.002,10,1)
+def createNewUserVector(stringDict):
+    #tjek om bruger har lavet en rating -> for så skal vi ikke bruge categorierne mere = ingen similarity score
+    conn = psy.connect(host=host, database=database, user=user, password=password)
+    #cursor = conn.cursor()
+    #cursor.execute("SELECT preferences FROM justdiscover.users WHERE id_sk = %s", [userID])
+    #userRow = cursor.fetchone()
+    userDict = json.loads(stringDict)
+
+    cursorPOI = conn.cursor()
+    cursorPOI.execute("SELECT category, id FROM justdiscover.poi_backup")
+    listOfTuples = cursorPOI.fetchall()
+
+    userVec = []
+    for i in listOfTuples:
+        div = 0
+        total = 0
+        poiCategories = i[0].split(',')
+        for categ in poiCategories:
+            if categ in userDict:
+                val = userDict[categ]
+                if val > 0:
+                    total += val
+                    div += 1
+        if div != 0:
+            userVec.append((i[1], total/div))
+    cursorPOI.close()
+    #cursor.close()
+    conn.close()
+    return userVec
+
+
+def norm(val):
+    return (1 - 0) * ((val - 1) / (5 - 1)) * 1
+
+
+def calcUserSim(userVec):
+
+    """
+    userVec = [(2, 2.5), (3, 2)]
+
+    contextDict1 = {
+        1: 2,
+        2: 3
+    }
+
+    contextDict2 = {
+        1: 2
+    }
+
+    itemDict = {
+        1: contextDict1,
+        2: contextDict2
+    }
+
+    context3 = {1: 5}
+
+    context4 = {1: 5}
+
+    itemDict2 = {
+        1: context3,
+        2: context4
+    }
+
+
+
+    userDict = {
+        1: itemDict2,
+        2: itemDict
+    }
+
+    users = userDict
+    """
+    bestSim = 0.0
+    bestSimUser = None
+    IdTranslate = icamf_recommender.rating_object.items_ids
+    users = icamf_recommender.rating_object.user_rated_item_in_ctx_multimap
+
+    # convert values from DB format to Dictionary format
+    poi_id_rating_tuple_list = [(IdTranslate[poi], rating) for poi, rating in userVec]
+
+    for u in users:
+        DBuser = users[u]
+        matches = 0
+        sqdiffs = 0.0
+
+        for userval in poi_id_rating_tuple_list:
+            itemID = userval[0]
+
+            if itemID in DBuser:
+                ratedItem = DBuser[itemID]
+                matches += 1
+                count = 0
+                temp = 0
+
+                for context in ratedItem:
+                    # If there is multiple ratings in different contexts -> average
+                    temp += ratedItem[context]
+                    count += 1
+                normDB = norm(temp / count)
+                normUser = norm(userval[1])
+                # temp/count = average
+                sqdiffs += (normDB - normUser) * (normDB - normUser)
+        if matches == 0:
+            continue
+        MSD = sqdiffs / matches
+
+        lenDBuser = len(DBuser)
+        lenUserVec = len(userVec)
+        jaccard = matches / (lenDBuser + lenUserVec - matches)
+
+        tempSim = jaccard * (1 - MSD)
+
+        if tempSim > bestSim:
+            bestSim = tempSim
+            bestSimUser = u
+    bestSimUser = icamf_recommender.rating_object.ids_user[bestSimUser]
+
+    return bestSimUser, bestSim
+
+#determineCategories()
+#print("debug")
+
+with open("dummy_model.pkl", "rb") as f:
+    icamf_recommender = dill.load(f)
+
+# train_and_save_model(0.001,0.002,25,20)
 # train_recommender_kfold(5, 0.001, 0.002,25,100)
 # train_recommender_kfold(5, 0.001, 0.002,25,100)
 # train_recommender_kfold(5, 0.001, 0.002,25,100)
+
+# print(bestSimUser)
+# print(bestSimScore)
+
+
+if __name__ == '__main__':
+    app.run()
+
+#To run without clipping set to False or del argument
+#train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.001, num_factors=10, iterations=2, clipping=False)
+#train_and_save_model(regularizer=0.001,learning_rate=0.002, num_factors=10, iterations=1, clipping=5)
+
+#with open("dummy_model.pkl", "rb") as f:
+#    icamf_recommender = dill.load(f)
+
+#train_and_save_model(0.001,0.002,25,20)
+#train_recommender_kfold(5, 0.001, 0.002,25,100)
+#train_recommender_kfold(5, 0.001, 0.002,25,100)
+#train_recommender_kfold(5, 0.001, 0.002,25,100)

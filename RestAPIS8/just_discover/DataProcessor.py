@@ -5,15 +5,18 @@ import psycopg2
 import creds_psql as creds
 from typing import List
 from collections import defaultdict
+from functools import partial
 
 np.random.seed(seed=8)
 ContextRatingPair = namedtuple("ContextRatingPair", "context rating")
 ItemRatingPair = namedtuple("ItemRatingPair", "item rating")
 
 
+def tree():
+    return defaultdict(tree)
+
+
 class RatingObj:
-    assign_matrix: scipy.sparse.csr_matrix
-    rate_matrix: scipy.sparse.csr_matrix
 
     def __init__(self):
 
@@ -46,7 +49,9 @@ class RatingObj:
         self.condition_context_multimap = defaultdict(set)
         self.ratings_count = 0
         self.rating_values = set()
-
+        self.rate_matrix = None
+        self.assign_matrix = None
+        self.user_rated_item_in_ctx_multimap = tree()
         self.user_item_context_rating = dict(list())
 
     def split_data(self, k_folds):
@@ -81,7 +86,7 @@ class RatingObj:
         scipy.sparse.csr_matrix.eliminate_zeros(train_matrix)
         scipy.sparse.csr_matrix.eliminate_zeros(test_matrix)
 
-        return train_matrix, test_matrix
+        return train_matrix.tocsc(), test_matrix.tocsc()
 
     def get_user_id_from_user_item_id(self, user_item_id):
         return self.ui_user_ids.get(user_item_id)
@@ -89,8 +94,6 @@ class RatingObj:
     def get_item_id_from_user_item_id(self, user_item_id):
         return self.ui_item_ids.get(user_item_id)
 
-    def get_conditions(self, ctx):
-        ctx = 0
 
     def to_traditional_sparse_rating(self, sparse_matrix):
         reviews = 0
@@ -204,14 +207,13 @@ def transform_reviews_table_to_binary():
 def read_data_binary():
     rating_obj = RatingObj()
     conn_string = "host=" + creds.PGHOST + " port=" + creds.PORT + " dbname=" + creds.PGDATABASE + " user=" + creds.PGUSER + " password=" + creds.PGPASSWORD
-
     db = psycopg2.connect(conn_string)
     cursor = db.cursor()
     cursor.execute("SELECT * FROM justdiscover.reviews_binary ORDER BY id ASC")
 
     colnames: List[str] = [desc[0] for desc in cursor.description[4:]]
-    counter = 0
-    for context in colnames:
+
+    for counter, context in enumerate(colnames):
         context_split = context.strip().split(":")
         context_dim = context_split[0]
         dimc = rating_obj.dim_ids.get(context_dim, rating_obj.dim_ids.keys().__len__())
@@ -219,32 +221,33 @@ def read_data_binary():
         rating_obj.cond_ids[context] = counter
         rating_obj.dim_cond_dict[dimc].add(counter)
         rating_obj.cond_dim_dict[counter] = dimc
-        counter += 1
 
     while True:
         row = cursor.fetchone()
         if row is None:
             break
         user = row[1]
-        row_id = rating_obj.user_ids.get(user, len(rating_obj.user_ids))
-        rating_obj.user_ids[user] = row_id
+        user_id = rating_obj.user_ids.get(user, len(rating_obj.user_ids))
+        rating_obj.user_ids[user] = user_id
 
         item = row[2]
-        col_id = rating_obj.items_ids.get(item, len(rating_obj.items_ids))
-        rating_obj.items_ids[item] = col_id
+        item_id = rating_obj.items_ids.get(item, len(rating_obj.items_ids))
+        rating_obj.items_ids[item] = item_id
 
         rating = row[3]
         rating_obj.rating_values.add(rating)
         rating_obj.ratings_count += 1
-        user_item = str(row_id) + "," + str(col_id)
+        user_item = str(user_id) + "," + str(item_id)
         user_item_id = rating_obj.ui_ids.get(user_item, len(rating_obj.ui_ids))
         rating_obj.ui_ids[user_item] = user_item_id
 
-        rating_obj.ui_user_ids[user_item_id] = row_id
-        rating_obj.ui_item_ids[user_item_id] = col_id
 
-        rating_obj.user_item_user_ids_multimap[user_item_id].add(row_id)
-        rating_obj.user_item_item_ids_multimap[user_item_id].add(col_id)
+
+        rating_obj.ui_user_ids[user_item_id] = user_id
+        rating_obj.ui_item_ids[user_item_id] = item_id
+
+        rating_obj.user_item_user_ids_multimap[user_item_id].add(user_id)
+        rating_obj.user_item_item_ids_multimap[user_item_id].add(item_id)
 
         # Indexing context
 
@@ -264,6 +267,8 @@ def read_data_binary():
 
         context_rating_pair = ContextRatingPair(context=context_id, rating=rating)
         rating_obj.user_item_context_rating.setdefault(user_item_id, list()).append(context_rating_pair)
+
+        rating_obj.user_rated_item_in_ctx_multimap[user_id][item_id][context_id] = rating
 
     for key, val in rating_obj.ids_ctx.items():
         rating_obj.ids_ctx_list[key] = [int(s) for s in val.split(',')]

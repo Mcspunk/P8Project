@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'dart:async';
@@ -52,6 +54,7 @@ Future<List<String>> getRatings(BuildContext context) async {
 class SelectInterests extends State<InterestsState> {
   List<String> _categories = []; //'Park', 'Zoo', 'Museum', 'Casino', 'Indian', '1', '1', '1', '1'];
   List<double> _ratings = [];//0, 0, 0, 0, 0, 0, 0, 0, 0];
+
 
   @override
   void didChangeDependencies(){
@@ -110,8 +113,23 @@ class SelectInterests extends State<InterestsState> {
             Icons.arrow_forward,
             size: 40,
           ),
-          onPressed: () {
-            updatePreferences(context);
+          onPressed: () async {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              
+                
+                //mainAxisAlignment: MainAxisAlignment.center,
+                child:
+                  CircularProgressIndicator(strokeWidth: 10, semanticsLabel: 'label', semanticsValue: 'value',),
+                  //Text('Doing stuff with your new preferences')
+                
+              
+            );
+            print('start');
+            await updatePreferences(context);
+            print('end');
+            Navigator.pop(context);
             Navigator.pop(context);
           }),
     );
