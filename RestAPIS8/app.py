@@ -797,11 +797,14 @@ if __name__ == '__main__':
 
 
 #To run without clipping set to False or del argument
-#train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.001, num_factors=10, iterations=2, clipping=False)
-#train_and_save_model(regularizer=0.001,learning_rate=0.002, num_factors=10, iterations=1, clipping=5)
+
+train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.001, num_factors=20, iterations=50, clipping=5)
+train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.002, num_factors=20, iterations=50, clipping=5)
+train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.005, num_factors=20, iterations=50, clipping=5)
+
+
+#train_and_save_model(regularizer=0.001, learning_rate=0.002, num_factors=20, iterations=1, clipping=5)
 
 #with open("dummy_model.pkl", "rb") as f:
 #    icamf_recommender = dill.load(f)
-
-#train_and_save_model(0.001,0.002,25,20)
 
