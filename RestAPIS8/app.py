@@ -589,14 +589,17 @@ def insert_geocoding_database():
     cursor.close()
     conn.close()
 
-
-if __name__ == '__main__':
-    app.run()
-
 with open("dummy_model.pkl", "rb") as f:
     icamf_recommender = dill.load(f)
 
-# train_and_save_model(0.001,0.002,25,20)
+if __name__ == '__main__':
+    print('Running webservice')
+    app.run(host="0.0.0.0", port=8080)
+    print('Init complete')
+
+
+
+#train_and_save_model(0.001,0.002,10,1)
 # train_recommender_kfold(5, 0.001, 0.002,25,100)
 # train_recommender_kfold(5, 0.001, 0.002,25,100)
 # train_recommender_kfold(5, 0.001, 0.002,25,100)
