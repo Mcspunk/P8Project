@@ -349,7 +349,7 @@ Future<List<Attraction>> getRecommendations(
       return recAttractions;
 
     } else {
-      print('No connection to server: GR');
+      displayMsg('No connection to server: \nGR', context);
     }
   } catch (e) {
     print('gr: ');
