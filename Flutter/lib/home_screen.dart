@@ -160,12 +160,37 @@ class RatingState extends StatefulWidget {
   RatingDialog createState() => RatingDialog();
 }
 
-class HomeScreen extends State<HomeScreenState> {
+class HomeScreen extends State<HomeScreenState> with WidgetsBindingObserver{
   double attractionRating = 0;
   Coordinate userLocation;
   bool distPenEnabled = true;
   int maxDist;
   String username;
+
+  @override
+  void dispose() { 
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  didChangeAppLifecycleState(AppLifecycleState state){
+    super.didChangeAppLifecycleState(state);
+    switch(state){
+      case AppLifecycleState.inactive:
+        print('Inactive state');
+        break;
+      case AppLifecycleState.paused:
+        print('Paused state');
+        break;
+      case AppLifecycleState.resumed:
+        print('Resumed state');
+        break;
+      case AppLifecycleState.suspending:
+        print('Suspending state');
+        break;
+    }
+  }
 
   bool checkRefresh(bool val) {
     setState(() {
@@ -991,6 +1016,7 @@ class HomeScreen extends State<HomeScreenState> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     loadString('currentUser').then(loadUser);
     loadBool('distPenEnabled').then(loadDistPenEnabled);
   }
