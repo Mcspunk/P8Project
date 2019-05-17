@@ -114,17 +114,39 @@ class SelectInterests extends State<InterestsState> {
             size: 40,
           ),
           onPressed: () async {
+            bool madeRating = false;
+            for (var rating in _ratings) {
+              if(rating > 0)
+              madeRating = true;
+            }
+            if(!madeRating){
+              return displayMsg('You have not given any ratings of categories. Please make ratings to proceed. Thank you :)', context);
+            }
+
+
+
             showDialog(
               context: context,
               barrierDismissible: false,
-              
-                
                 //mainAxisAlignment: MainAxisAlignment.center,
-                child:
-                  CircularProgressIndicator(strokeWidth: 10, semanticsLabel: 'label', semanticsValue: 'value',),
-                  //Text('Doing stuff with your new preferences')
-                
-              
+                child: Center(
+                  child: Card(
+                    child: Column(
+                      
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        ListTile(
+                          title: Text('Updating your preferences'),
+                          subtitle: Text('This should only take a moment'),
+                        ),
+                        CircularProgressIndicator(strokeWidth: 10,),
+                        ListTile(),
+                        
+                      ],
+                    )
+                  )
+                )
             );
             print('start');
             await updatePreferences(context);
