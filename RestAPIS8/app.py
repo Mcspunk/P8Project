@@ -605,11 +605,6 @@ def insert_geocoding_database():
     cursor.close()
     conn.close()
 
-with open("dummy_model.pkl", "rb") as f:
-    icamf_recommender = dill.load(f)
-
-if __name__ == '__main__':
-    app.run()
 
 categoryDict = {}
 
@@ -793,23 +788,13 @@ def calcUserSim(userVec):
 
     return bestSimUser, bestSim
 
-#determineCategories()
-#print("debug")
 
 with open("dummy_model.pkl", "rb") as f:
     icamf_recommender = dill.load(f)
 
-# train_and_save_model(0.001,0.002,25,20)
-# train_recommender_kfold(5, 0.001, 0.002,25,100)
-# train_recommender_kfold(5, 0.001, 0.002,25,100)
-# train_recommender_kfold(5, 0.001, 0.002,25,100)
-
-# print(bestSimUser)
-# print(bestSimScore)
-
-
 if __name__ == '__main__':
-    app.run()
+    app.run(host="0.0.0.0", port=8080)
+
 
 #To run without clipping set to False or del argument
 #train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.001, num_factors=10, iterations=2, clipping=False)
@@ -819,6 +804,4 @@ if __name__ == '__main__':
 #    icamf_recommender = dill.load(f)
 
 #train_and_save_model(0.001,0.002,25,20)
-#train_recommender_kfold(5, 0.001, 0.002,25,100)
-#train_recommender_kfold(5, 0.001, 0.002,25,100)
-#train_recommender_kfold(5, 0.001, 0.002,25,100)
+

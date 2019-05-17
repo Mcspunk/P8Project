@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:test2/data_container.dart';
-import 'package:test2/data_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -25,8 +24,8 @@ Map months = {
     11: "november",
     12: "december"
   };
-//String apiAdress = "http://ec2-3-14-87-243.us-east-2.compute.amazonaws.com/app/api";
-String apiAdress = "10.0.2.2:5000";
+String apiAdress = "http://ec2-3-14-87-243.us-east-2.compute.amazonaws.com/app/api";
+//String apiAdress = "https://10.0.2.2:5000/api";
 ThemeData utilTheme() {
   return ThemeData(
     // Define the default Brightness and Colors
