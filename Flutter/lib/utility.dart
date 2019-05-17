@@ -25,7 +25,8 @@ Map months = {
     11: "november",
     12: "december"
   };
-
+//String apiAdress = "http://ec2-3-14-87-243.us-east-2.compute.amazonaws.com/app/api";
+String apiAdress = "10.0.2.2:5000";
 ThemeData utilTheme() {
   return ThemeData(
     // Define the default Brightness and Colors
@@ -79,7 +80,8 @@ Future<void> giveReview(double rating, DateTime date, String triptype,
   };
   var postEncode = jsonEncode(preEncode);
   try {
-    var response = await http.post('http://10.0.2.2:5000/api/give-review/',
+    String _apiadress = apiAdress + '/give-review/';
+    var response = await http.post(_apiadress,
         body: postEncode, headers: {"Content-Type": "application/json"});
 
     if (response.statusCode != 200) {
@@ -117,8 +119,9 @@ Future<void> updatePreferences(BuildContext context) async {
   };
   var postEncode = jsonEncode(preEncode);
   try {
+    String _apiAdress = apiAdress + '/update-preferences/';
     var response = await http.post(
-        'http://10.0.2.2:5000/api/update-preferences/',
+        _apiAdress,
         body: postEncode,
         headers: {"Content-Type": "application/json"});
 
@@ -136,7 +139,8 @@ Future<void> getPreferences(BuildContext context) async {
     String user = await loadString('currentUser');
     var preEncode = {"username": user, "un": user};
     var postEncode = jsonEncode(preEncode);
-    var response = await http.post('http://10.0.2.2:5000/api/get-preferences/',
+    String _apiAdress = apiAdress + '/get-preferences/';
+    var response = await http.post(_apiAdress,
         body: postEncode, headers: {"Content-Type": "application/json"});
     var prefspre = response.headers['prefs'];
     var prefspost = jsonDecode(prefspre);    
@@ -182,8 +186,9 @@ Future<int> getRecCount(Coordinate coordinate) async {
   };
   var jsonedString = jsonEncode(jsonstring);
   try {
+    String _apiAdress = apiAdress + '/request-recommendations/';
     var response = await http.post(
-        'http://10.0.2.2:5000/api/request-recommendations/',
+        _apiAdress,
         body: jsonedString,
         headers: {"Content-Type": "application/json"});
     var attracts = response.headers['attractions'];
@@ -209,8 +214,9 @@ Future<List<Attraction>> getAllAttractions(
   };
   var jsonedString = jsonEncode(jsonstring);
   try {
+    String _apiAdress = apiAdress + '/request-all-attractions/';
     var response = await http.post(
-        'http://10.0.2.2:5000/api/request-all-attractions/',
+        _apiAdress,
         body: jsonedString,
         headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
@@ -293,8 +299,9 @@ Future<List<Attraction>> getRecommendations(
   };
   var jsonedString = jsonEncode(jsonstring);
   try {
+    String _apiAdress = apiAdress + '/request-recommendations/';
     var response = await http.post(
-        'http://10.0.2.2:5000/api/request-recommendations/',
+        _apiAdress,
         body: jsonedString,
         headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
@@ -365,8 +372,9 @@ Future<void> updateLikedAttraction(BuildContext context) async {
     };
     var postEncode = jsonEncode(preEncode);
     try {
+      String _apiAdress = apiAdress + '/update-liked-attractions/';
       var response = await http.post(
-          'http://10.0.2.2:5000/api/update-liked-attractions/',
+          _apiAdress,
           body: postEncode,
           headers: {"Content-Type": "application/json"});
       if (response.statusCode != 200) {
@@ -382,8 +390,9 @@ Future<List<Attraction>> getLikedAttraction(BuildContext context) async {
   var jsonstring = {"username": await loadString('currentUser')};
   var jsonedString = jsonEncode(jsonstring);
   try {
+    String _apiAdress = apiAdress + '/request-liked-attractions/';
     var response = await http.post(
-        'http://10.0.2.2:5000/api/request-liked-attractions/',
+        _apiAdress,
         body: jsonedString,
         headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
@@ -439,7 +448,8 @@ Future<void> checkLogIn(
   var jsonstring = {"username": username, "password": password};
   var jsonedString = jsonEncode(jsonstring);
   try {
-    var response = await http.post('http://10.0.2.2:5000/api/login/',
+    String _apiadress = apiAdress + '/login/';
+    var response = await http.post(_apiadress,
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
       saveString('currentUser', username.toString());   
@@ -467,7 +477,8 @@ Future<void> checkSignUp(
   var jsonstring = {"username": username, "password": password};
   var jsonedString = jsonEncode(jsonstring);
   try {
-    var response = await http.post('http://10.0.2.2:5000/api/create-user/',
+    String _apiAdress = apiAdress + '/create-user/';
+    var response = await http.post(_apiAdress,
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
       saveString('currentUser', username.toString());

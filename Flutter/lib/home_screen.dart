@@ -846,7 +846,6 @@ class HomeScreen extends State<HomeScreenState> {
           ),
     ));
 
-    //data.setMarkers(returnList);
     return returnList;
   }
 
