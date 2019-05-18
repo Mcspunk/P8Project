@@ -4,7 +4,6 @@ from typing import Dict
 import numpy as np
 from recordclass import recordclass
 import datetime
-from multiprocessing import Process, Queue
 from functools import reduce
 from math import sqrt
 import operator
@@ -26,8 +25,8 @@ def __train_eval_parallel_worker(recommender):
     return measurement
 
 
-def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterations, clipping):
-    rating_obj = dp.read_data_binary()
+def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterations, clipping, min_num_ratings=1):
+    rating_obj = dp.read_data_binary(min_num_ratings)
     rating_obj.split_data(k_folds=k_fold)
     recommender_list = list()
 
@@ -49,8 +48,8 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
         file.write(str(summary))
     print(summary)
 
-def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping):
-    rating_obj = dp.read_data_binary()
+def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping, min_num_ratings=1):
+    rating_obj = dp.read_data_binary(min_num_ratings)
     rating_obj.rate_matrix = rating_obj.rate_matrix.tocsc()
     icamf = ICAMF(rating_obj.rate_matrix, None, rating_obj, fold="Final_Model", regularizer=regularizer,
                   learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping)

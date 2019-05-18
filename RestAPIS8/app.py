@@ -1,4 +1,4 @@
-from flask import Flask, make_response
+from flask import Flask
 import json
 from flask_cors import CORS
 from flask import request, Response
@@ -9,7 +9,6 @@ import just_discover.DataProcessor as dataprocessor
 import requests
 import pickle
 import dill
-import copy
 
 host = "jd-database.ccwvupidct47.eu-west-3.rds.amazonaws.com"
 database = "jd_database"
@@ -393,14 +392,14 @@ def update_binary_review_table():
     dataprocessor.transform_reviews_table_to_binary()
 
 
-def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iterations, clipping=False):
+def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iterations, clipping=False, min_num_ratings=1):
     recommender.train_eval_parallel(k_fold=kfold, regularizer=regularizer, learning_rate=learning_rate,
-                                    num_factors=num_factors, iterations=iterations, clipping=clipping)
+                                    num_factors=num_factors, iterations=iterations, clipping=clipping,min_num_ratings= min_num_ratings)
 
 
-def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping=False):
+def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping=False, min_num_ratings=1):
     recommender.train_and_save_model(regularizer=regularizer, learning_rate=learning_rate,
-                                     num_factors=num_factors,iterations=iterations,clipping=clipping)
+                                     num_factors=num_factors,iterations=iterations,clipping=clipping,min_num_ratings=min_num_ratings)
 
 
 def place_details():
@@ -512,9 +511,10 @@ def insert_geocoding_database():
 
 #To run without clipping set to False or del argument
 
-train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.001, num_factors=20, iterations=50, clipping=5)
-train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.002, num_factors=20, iterations=50, clipping=5)
-train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.005, num_factors=20, iterations=50, clipping=5)
+
+train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.001, num_factors=20, iterations=50, clipping=5, min_num_ratings=3)
+#train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.002, num_factors=20, iterations=50, clipping=5)
+#train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.005, num_factors=20, iterations=50, clipping=5)
 
 
 #train_and_save_model(regularizer=0.001, learning_rate=0.002, num_factors=20, iterations=1, clipping=5)
