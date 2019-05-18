@@ -37,8 +37,6 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
                       learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping)
         recommender_list.append(icamf)
     rating_obj.post_process_memory_for_training()
-    #recommender_list = [ rec.rating_object.post_process_memory_for_training() for rec in recommender_list]
-
     measurement_results = Parallel(max_nbytes='6G', backend='multiprocessing', n_jobs=k_fold, verbose=1)(map(delayed(__train_eval_parallel_worker), recommender_list))
 
     print("Kfold training complete \n")
@@ -125,6 +123,7 @@ class ICAMF:
                     context_condition_factor_gradients = [list() for condition in conditions]
 
                     loss += abs(error_user_item)
+                    #loss += error_user_item*error_user_item
 
                     #Calculate loss
                     loss += 0.5 * self.regularizer_1 * self.item_bias[item_id]*self.item_bias[item_id]
@@ -245,6 +244,7 @@ class ICAMF:
     def evaluate(self):
 
         mae = 0
+        mse = 0
         ratings = 0
 
         labeled_as_dict = defaultdict(dict)
@@ -267,6 +267,7 @@ class ICAMF:
                 prediction = self.predict(user_id, item_id, context)
                 error_user_item = rating_user_item_context - prediction
                 mae += abs(error_user_item)
+                mse += error_user_item*error_user_item
                 ratings += 1
 
                 closest_rating = min(confusion_matrix.keys(), key=lambda x:abs(x-prediction))
@@ -297,18 +298,20 @@ class ICAMF:
                 entry.accuracy = (entry.true_positive + entry.true_negative) / (entry.true_positive + entry.true_negative + entry.false_positive + entry.false_negative)
 
         mae = mae/ratings
+        mse = mse/ratings
 
-        measurement = Measurement(confusion_matrix, labeled_as_dict, mae, self.fold, self.get_config(), self.loss_list)
+        measurement = Measurement(confusion_matrix, labeled_as_dict, mae, mse, self.fold, self.get_config(), self.loss_list)
         return measurement
 
 
 class Measurement:
 
-    def __init__(self, confusion_matrix:Dict[int, confusion_matrix_row], labeled_as_dict, mae, fold, configuration, loss_list):
+    def __init__(self, confusion_matrix:Dict[int, confusion_matrix_row], labeled_as_dict, mae, mse, fold, configuration, loss_list):
         self.confusion_matrix = confusion_matrix
         self.labeled_as_dict = labeled_as_dict
         self.configuration = configuration
         self.mae = mae
+        self.mse = mse
         self.fold = fold
         self.loss_list = loss_list
 
@@ -345,6 +348,7 @@ class Measurement:
         copy_self.recall = (copy_self.recall + other_measurement.recall)/2
         copy_self.accuracy = (copy_self.accuracy + other_measurement.accuracy)/2
         copy_self.mae = (copy_self.mae + other_measurement.mae)/2
+        copy_self.mse = (copy_self.mse + other_measurement.mse)/2
         copy_self.loss_list = [(x + y)/2 for x, y in zip(self.loss_list, other_measurement.loss_list)]
         return copy_self
 
@@ -379,6 +383,6 @@ class Measurement:
 
         result.extend(confusion_matrix_str_list)
 
-        over_all_stats = ['\n','Total summary'.center(60,'*'),'\n\n' ,'Precision:'.ljust(14) + f'{round(self.precision,6)} \n', 'Recall:'.ljust(14) + f'{round(self.recall,6)} \n', 'Accuracy:'.ljust(14) + f'{round(self.accuracy,6)} \n', 'MAE:'.ljust(14) + f'{round(self.mae,6)} \n']
+        over_all_stats = ['\n','Total summary'.center(60,'*'),'\n\n' ,'Precision:'.ljust(14) + f'{round(self.precision,6)} \n', 'Recall:'.ljust(14) + f'{round(self.recall,6)} \n', 'Accuracy:'.ljust(14) + f'{round(self.accuracy,6)} \n', 'MAE:'.ljust(14) + f'{round(self.mae,6)} \n',  'MSE:'.ljust(14) + f'{round(self.mse,6)} \n']
         result.extend(over_all_stats)
         return "".join(result)

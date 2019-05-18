@@ -333,3 +333,51 @@ RestAPIS8/venv/
 RestAPIS8/venv/Evaluations/
 
 RestAPIS8/dummy_model\.pkl
+
+RestAPIS8/Evaluations/results_fold_1 & 2 & 3 & 4 & 5_config_Lrate_0\.001 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_1 & 2 & 3 & 4 & 5_config_Lrate_0\.01 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_1 & 2 & 3 & 4 & 5_config_Lrate_0\.02 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_1 & 2 & 3 & 4 & 5_config_Lrate_0\.04 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_1_config_Lrate_0\.001 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_1_config_Lrate_0\.01 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_1_config_Lrate_0\.02 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_1_config_Lrate_0\.04 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_2_config_Lrate_0\.001 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_2_config_Lrate_0\.01 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_2_config_Lrate_0\.02 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_2_config_Lrate_0\.04 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_3_config_Lrate_0\.001 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_3_config_Lrate_0\.01 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_3_config_Lrate_0\.02 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_3_config_Lrate_0\.04 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_4_config_Lrate_0\.001 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_4_config_Lrate_0\.01 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_4_config_Lrate_0\.02 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_4_config_Lrate_0\.04 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_5_config_Lrate_0\.001 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_5_config_Lrate_0\.01 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_5_config_Lrate_0\.02 regularizer_0\.001 latent_factors_20 clipping_5\.txt
+
+RestAPIS8/Evaluations/results_fold_5_config_Lrate_0\.04 regularizer_0\.001 latent_factors_20 clipping_5\.txt
