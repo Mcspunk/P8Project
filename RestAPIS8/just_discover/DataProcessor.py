@@ -5,7 +5,6 @@ import psycopg2
 import creds_psql as creds
 from typing import List
 from collections import defaultdict
-from functools import partial
 
 np.random.seed(seed=8)
 ContextRatingPair = namedtuple("ContextRatingPair", "context rating")
@@ -213,12 +212,12 @@ def transform_reviews_table_to_binary():
     conn.close()
 
 
-def read_data_binary():
+def read_data_binary(min_num_ratings=1):
     rating_obj = RatingObj()
     conn_string = "host=" + creds.PGHOST + " port=" + creds.PORT + " dbname=" + creds.PGDATABASE + " user=" + creds.PGUSER + " password=" + creds.PGPASSWORD
     db = psycopg2.connect(conn_string)
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM justdiscover.reviews_binary ORDER BY id ASC")
+    cursor.execute("SELECT * FROM justdiscover.reviews_binary WHERE user_name in (SELECT user_name FROM justdiscover.reviews_binary GROUP BY user_name having COUNT(*) >=  %s) ORDER BY reviews_binary.id ASC", (min_num_ratings,))
 
     colnames: List[str] = [desc[0] for desc in cursor.description[4:]]
 
