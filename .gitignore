@@ -330,7 +330,7 @@ ASALocalRun/
 .mfractor/
 
 RestAPIS8/venv/
-RestAPIS8/venv/Evaluations/
+RestAPIS8/Evaluations/
 
 RestAPIS8/dummy_model\.pkl
 
