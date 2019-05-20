@@ -512,7 +512,9 @@ def insert_geocoding_database():
 #To run without clipping set to False or del argument
 
 
-train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.001, num_factors=20, iterations=50, clipping=5, min_num_ratings=3)
+train_recommender_kfold(kfold=5, regularizer=0.002, learning_rate=0.05, num_factors=20, iterations=10, clipping=5, min_num_ratings=1)
+
+
 #train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.002, num_factors=20, iterations=50, clipping=5)
 #train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.005, num_factors=20, iterations=50, clipping=5)
 

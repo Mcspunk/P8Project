@@ -56,7 +56,7 @@ def train_and_save_model(regularizer, learning_rate, num_factors, iterations, cl
     icamf.build_ICAMF()
     rating_obj.post_process_memory_for_saving()
     icamf.post_process_memory_for_saving()
-    with open(f'{icamf.get_config()}.pkl', "wb") as recommender_file:
+    with open(f'{icamf.configuration}.pkl', "wb") as recommender_file:
         dill.dump(icamf, recommender_file)
 
 
@@ -95,6 +95,14 @@ class ICAMF:
         self.context_factor_matrix = np.random.uniform(self.init_mean, high=self.init_std,
                                                        size=(len(self.rating_object.ids_cond), self.num_factors))
         self.loss_list = list()
+        self.test_accuracy_list = list()
+        self.test_precision_list = list()
+        self.test_recall_list = list()
+        self.train_accuracy_list = list()
+        self.train_precision_list = list()
+        self.train_recall_list = list()
+        self.configuration = f'Lrate_{self.learning_rate} regularizer_{self.regularizer_1} latent_factors_{self.num_factors} clipping_{str(self.soft_clipping)}'
+
 
 
     def build_ICAMF(self):
@@ -195,9 +203,21 @@ class ICAMF:
                             self.context_factor_matrix[condition][
                                 factor_index] += self.learning_rate * gradient*factor
 
+            self.evaluate_test_and_train()
+
             print(f'Fold: {str(self.fold)} ' + "Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
             print("Loss: " + str(loss))
             self.loss_list.append(loss)
+
+    def evaluate_test_and_train(self):
+        measurement_training = self.evaluate(test_is_training=True)
+        self.train_accuracy_list.append(measurement_training.accuracy)
+        self.train_precision_list.append(measurement_training.precision)
+        self.train_recall_list.append(measurement_training.recall)
+        measurement_test = self.evaluate()
+        self.test_accuracy_list.append(measurement_test.accuracy)
+        self.test_precision_list.append(measurement_test.precision)
+        self.test_recall_list.append(measurement_test.recall)
 
 
     def predict(self, user, item, context):
@@ -236,12 +256,11 @@ class ICAMF:
             item_ranking_list.sort(key=lambda tup: tup[1], reverse=True)
         return item_ranking_list
 
-    def get_config(self):
-
-        return f'Lrate_{self.learning_rate} regularizer_{self.regularizer_1} latent_factors_{self.num_factors} clipping_{str(self.soft_clipping)}'
-
-    def evaluate(self):
-
+    def evaluate(self, test_is_training=False):
+        if test_is_training:
+            test_matrix = self.train_matrix
+        else:
+            test_matrix = self.test_matrix
         mae = 0
         mse = 0
         ratings = 0
@@ -255,8 +274,8 @@ class ICAMF:
         for rating in self.rating_object.rating_values:
             confusion_matrix[rating] = confusion_matrix_row(rating, 0, 0, 0, 0, 0, 0, 0)
 
-        for idx_ctx in range(0, self.test_matrix._shape[1]):
-            column = self.test_matrix.getcol(idx_ctx)
+        for idx_ctx in range(0, test_matrix._shape[1]):
+            column = test_matrix.getcol(idx_ctx)
             for idx_inner in range(0, column.nnz):
                 user_item_id = column.indices[idx_inner]
                 user_id = self.rating_object.get_user_id_from_user_item_id(user_item_id)
@@ -295,25 +314,6 @@ class ICAMF:
                 entry.recall = entry.true_positive / (entry.true_positive + entry.false_negative)
             if (entry.true_positive + entry.true_negative + entry.false_positive + entry.false_negative) > 0:
                 entry.accuracy = (entry.true_positive + entry.true_negative) / (entry.true_positive + entry.true_negative + entry.false_positive + entry.false_negative)
-
-        mae = mae/ratings
-        mse = mse/ratings
-
-        measurement = Measurement(confusion_matrix, labeled_as_dict, mae, mse, self.fold, self.get_config(), self.loss_list)
-        return measurement
-
-
-class Measurement:
-
-    def __init__(self, confusion_matrix:Dict[int, confusion_matrix_row], labeled_as_dict, mae, mse, fold, configuration, loss_list):
-        self.confusion_matrix = confusion_matrix
-        self.labeled_as_dict = labeled_as_dict
-        self.configuration = configuration
-        self.mae = mae
-        self.mse = mse
-        self.fold = fold
-        self.loss_list = loss_list
-
         precision = 0
         accuracy = 0
         recall = 0
@@ -322,9 +322,36 @@ class Measurement:
             accuracy += entry.accuracy
             recall += entry.recall
         size_confusion_matrix = len(confusion_matrix)
-        self.precision = precision/size_confusion_matrix
-        self.recall = recall / size_confusion_matrix
-        self.accuracy = accuracy / size_confusion_matrix
+        precision = precision / size_confusion_matrix
+        recall = recall / size_confusion_matrix
+        accuracy = accuracy / size_confusion_matrix
+
+        mae = mae/ratings
+        mse = mse/ratings
+
+        measurement = Measurement(recommender=self, confusion_matrix=confusion_matrix, labeled_as_dict=labeled_as_dict, mae=mae, mse=mse, accuracy=accuracy, precision=precision, recall=recall)
+        return measurement
+
+
+class Measurement:
+
+    def __init__(self, recommender, confusion_matrix:Dict[int, confusion_matrix_row], labeled_as_dict, mae, mse, accuracy, precision, recall):
+        self.confusion_matrix = confusion_matrix
+        self.labeled_as_dict = labeled_as_dict
+        self.configuration = recommender.configuration
+        self.mae = mae
+        self.mse = mse
+        self.fold = recommender.fold
+        self.loss_list = recommender.loss_list
+        self.test_accuracy_list = recommender.test_accuracy_list
+        self.test_precision_list = recommender.test_precision_list
+        self.test_recall_list = recommender.test_recall_list
+        self.train_accuracy_list = recommender.train_accuracy_list
+        self.train_precision_list = recommender.train_precision_list
+        self.train_recall_list = recommender.train_recall_list
+        self.precision = precision
+        self.accuracy = accuracy
+        self.recall = recall
 
     def __add__(self, other_measurement):
         copy_self = copy.deepcopy(self)
@@ -349,14 +376,34 @@ class Measurement:
         copy_self.mae = (copy_self.mae + other_measurement.mae)/2
         copy_self.mse = (copy_self.mse + other_measurement.mse)/2
         copy_self.loss_list = [(x + y)/2 for x, y in zip(self.loss_list, other_measurement.loss_list)]
+
+        copy_self.accuracy_list = [(x + y) / 2 for x, y in zip(self.test_accuracy_list, other_measurement.test_accuracy_list)]
+        copy_self.precision_list = [(x + y) / 2 for x, y in zip(self.test_precision_list, other_measurement.test_precision_list)]
+        copy_self.recall_list = [(x + y) / 2 for x, y in zip(self.test_recall_list, other_measurement.test_recall_list)]
+
+        copy_self.train_accuracy_list = [(x + y) / 2 for x, y in zip(self.train_accuracy_list, other_measurement.train_accuracy_list)]
+        copy_self.train_precision_list = [(x + y) / 2 for x, y in zip(self.train_precision_list, other_measurement.train_precision_list)]
+        copy_self.train_recall_list = [(x + y) / 2 for x, y in zip(self.train_recall_list, other_measurement.train_recall_list)]
         return copy_self
 
     def __str__(self):
         result = []
         conf = f'Configurations: {self.configuration}'.center(60, '*') + '\n'
         losses = f'Loss for each iteration: {str(self.loss_list)}\n'
+        accuracies = f'Accuracy_test for each iteration: {str(self.test_accuracy_list)}\n'
+        precisions = f'Precision_test for each iteration: {str(self.test_precision_list)}\n'
+        recalls = f'Recall_test for each iteration: {str(self.test_recall_list)}\n'
+        accuracies_train = f'Accuracy_training for each iteration: {str(self.train_accuracy_list)}\n'
+        precisions_train = f'Precision_training for each iteration: {str(self.train_precision_list)}\n'
+        recalls_train = f'Recall_training for each iteration: {str(self.train_recall_list)}\n'
         result.append(conf)
         result.append(losses)
+        result.append(accuracies)
+        result.append(precisions)
+        result.append(recalls)
+        result.append(accuracies_train)
+        result.append(precisions_train)
+        result.append(recalls_train)
         headline = '\n' + f'Measumerements of k_fold: {self.fold}'.center(60, '*') + '\n'
         result.append(headline)
         labels = sorted(list(self.labeled_as_dict.keys()))
