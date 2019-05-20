@@ -292,7 +292,7 @@ class ICAMF:
             if (entry.true_positive+entry.false_positive) > 0:
                 entry.precision = entry.true_positive / (entry.true_positive+entry.false_positive)
             if (entry.true_positive + entry.true_negative) > 0:
-                entry.recall = entry.true_positive / (entry.true_positive + entry.true_negative)
+                entry.recall = entry.true_positive / (entry.true_positive + entry.false_negative)
             if (entry.true_positive + entry.true_negative + entry.false_positive + entry.false_negative) > 0:
                 entry.accuracy = (entry.true_positive + entry.true_negative) / (entry.true_positive + entry.true_negative + entry.false_positive + entry.false_negative)
 
