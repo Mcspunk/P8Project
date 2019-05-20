@@ -21,7 +21,7 @@ class Settings extends State<SettingsState> {
     loadInt('dist').then(loadDistance);
     loadString('tripType').then(loadTripType);
     loadBool('createRecAttOnly').then(loadcreateRecAttOnly);
-    loadBool('distPenEnabled').then(loadDistPenEnabled);
+    loadBool('distPenEnabled').then(loadDistPenEnabled);    
     //clearSharedPrefs();
     super.initState();
   }
@@ -49,17 +49,16 @@ class Settings extends State<SettingsState> {
       this._n = distance ?? 1;
     });
   }
-/*
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    DataContainer data = DataContainer.of(context);
+    getPreferences(context);
   }
-*/
+
   @override
   Widget build(BuildContext context) {
-    DataContainerState data = DataContainer.of(context);
-    getPreferences(context);
+    DataContainerState data = DataContainer.of(context);    
     return Scaffold(
       appBar: AppBar(
         title: Row(

@@ -174,6 +174,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   void refreshDistancePenalty() {
+    if(context != null){
     DataContainerState data = DataContainer.of(context);
     bool wantsdistpen = data.getDistPenEnabled();
     List<Attraction> attractionList =
@@ -196,6 +197,7 @@ class HomeScreen extends State<HomeScreenState> {
         .sort((a, b) => b.getPenalisedScore().compareTo(a.getPenalisedScore()));
     data.setAttractions(attractionList);
     setState(() {});
+    }
   }
 
   double calcWeight(double score) {
@@ -893,6 +895,9 @@ class HomeScreen extends State<HomeScreenState> {
     if (diffLoc < 0) {
       diffLoc += 60;
     }
+    if(diffLoc > 1){
+      loadString('currentUser').then(loadUser);
+    }
 
     return _homeScreen();
   }
@@ -902,7 +907,7 @@ class HomeScreen extends State<HomeScreenState> {
     loadInt('dist').then(loadDist);
     loadString('tripType').then(loadTripType);
 
-    DataContainerState data = DataContainer.of(context);
+    //DataContainerState data = DataContainer.of(context);
     getRecommendations(userLocation, context).then(loadRecs);
     getAllAttractions(userLocation, context).then(loadAllRecs);
     getLikedAttraction(context).then(loadLikedRecs);
@@ -917,11 +922,13 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   void loadDist(int maxDist) {
+    if(context != null){
     DataContainerState data = DataContainer.of(context);
     setState(() {
       this.maxDist = maxDist;
       data.setDist(maxDist);
     });
+    }
   }
 
   void loadDistPenEnabled(bool value) {
@@ -937,6 +944,7 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   void loadRecs(List<Attraction> list) {
+    if(context != null){
     DateTime currentTime = DateTime.now();
     DataContainerState data = DataContainer.of(context);
     //var diffRec = currentTime.minute - lastupdatedRec.minute;
@@ -953,9 +961,11 @@ class HomeScreen extends State<HomeScreenState> {
       lastupdatedRec = DateTime.now();
     }
     refreshDistancePenalty();
+    }
   }
 
   void loadAllRecs(List<Attraction> list) {
+    if(context != null){
     DateTime currentTime = DateTime.now();
     DataContainerState data = DataContainer.of(context);
     //var diffRec = currentTime.minute - lastupdatedRec.minute;
@@ -973,19 +983,24 @@ class HomeScreen extends State<HomeScreenState> {
       setState(() {});
     }
   }
+  }
 
   void loadLikedRecs(List<Attraction> list) {
+    if(context != null){
     DataContainerState data = DataContainer.of(context);
     setState(() {
       data.setFavourites(list);
     });
+    }
   }
 
   void loadTripType(String tt) {
+    if(context != null) {
     DataContainerState data = DataContainer.of(context);
     setState(() {
       data.setTripType(tt);
     });
+    }
   }
 
   @override

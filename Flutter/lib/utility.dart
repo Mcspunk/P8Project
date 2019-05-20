@@ -75,7 +75,7 @@ Future<void> giveReview(double rating, DateTime date, String triptype,
     "date": _date,
     "triptype": triptype,
     "attraction": attraction,
-    "username": await loadString("currentUser")
+    "username": await loadInt("currentUserID")
   };
   var postEncode = jsonEncode(preEncode);
   try {
@@ -95,7 +95,7 @@ Future<void> updatePreferences(BuildContext context) async {
   DataContainerState data = DataContainer.of(context);
   var ratings = data.getCategoryRatings();
   var preEncode = {
-    "username": await loadString('currentUser'),
+    "username": await loadInt('currentUserID'),
     "Museums": ratings['Museums'],
     "Art Museums": ratings['Art Museums'],
     "Sights & Landmarks": ratings['Sights & Landmarks'],
@@ -135,7 +135,7 @@ Future<void> updatePreferences(BuildContext context) async {
 Future<void> getPreferences(BuildContext context) async {
   DataContainerState data = DataContainer.of(context);
   try {
-    String user = await loadString('currentUser');
+    int user = await loadInt('currentUserID');
     var preEncode = {"username": user, "un": user};
     var postEncode = jsonEncode(preEncode);
     String _apiAdress = apiAdress + '/get-preferences/';
@@ -369,7 +369,7 @@ Future<void> updateLikedAttraction(BuildContext context) async {
   }
   if (liked.length != 0) {
     var preEncode = {
-      "username": await loadString('currentUser'),
+      "username": await loadInt('currentUserID'),
       "liked": liked
     };
     var postEncode = jsonEncode(preEncode);
@@ -389,7 +389,7 @@ Future<void> updateLikedAttraction(BuildContext context) async {
 }
 
 Future<List<Attraction>> getLikedAttraction(BuildContext context) async {
-  var jsonstring = {"username": await loadString('currentUser')};
+  var jsonstring = {"username": await loadInt('currentUserID')};
   var jsonedString = jsonEncode(jsonstring);
   try {
     String _apiAdress = apiAdress + '/request-liked-attractions/';

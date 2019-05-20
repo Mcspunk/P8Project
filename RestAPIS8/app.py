@@ -32,7 +32,7 @@ def get_preferences():
 
     name = json_date['username']
 
-    sqlString = "SELECT * FROM justdiscover.users WHERE user_name = '" + name + "';"
+    sqlString = "SELECT * FROM justdiscover.users WHERE id_sk = '" + str(name) + "';"
     cursor.execute(sqlString)
 
     DBres = cursor.fetchone()
@@ -121,7 +121,7 @@ def update_preferences():
                  ', "Italian": ' + pref_17 + \
                  ', "European": ' + pref_18 + '}'
 
-    sqlString = "SELECT preferences FROM justdiscover.users WHERE user_name = '" + name +"'"
+    sqlString = "SELECT preferences FROM justdiscover.users WHERE id_sk = '" + str(name) +"'"
     cursor.execute(sqlString)
     prefs = cursor.fetchone()
     if prefs[0] == tempstring:
@@ -154,7 +154,7 @@ def give_review():
 
     maxIDSQL = "SELECT MAX(id) FROM justdiscover.reviews;"
     attracIDSQL = "SELECT id FROM justdiscover.poi WHERE name = '" + attraction + "';"
-    userIDSQL = "SELECT id FROM justdiscover.users WHERE user_name = '" + username + "';"
+    userIDSQL = "SELECT id FROM justdiscover.users WHERE id_sk = '" + str(username) + "';"
 
     cursor.execute(maxIDSQL)
     reviewID = cursor.fetchone()
@@ -236,7 +236,7 @@ def update_liked():
     username = str(json_data['username'])
     attractions = json_data['liked']
 
-    sqlString = "UPDATE justdiscover.users SET liked_attractions = '" + attractions + "'  WHERE user_name = CAST ('" + username + "' as TEXT);"
+    sqlString = "UPDATE justdiscover.users SET liked_attractions = '" + attractions + "'  WHERE id_sk = CAST ('" + str(username) + "' as TEXT);"
     cursor.execute(sqlString)
 
     conn.commit()
@@ -254,7 +254,7 @@ def get_liked_attractions():
     cursor = conn.cursor()
     username = str(json_data['username'])
 
-    sqlstring = "SELECT liked_attractions from justdiscover.users WHERE user_name = '" + username + "';"
+    sqlstring = "SELECT liked_attractions from justdiscover.users WHERE id_sk = '" + str(username) + "';"
     cursor.execute(sqlstring)
     if (cursor.rowcount == 0):
         return Response(status=200)
