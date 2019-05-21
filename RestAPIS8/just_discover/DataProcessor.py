@@ -212,6 +212,109 @@ def transform_reviews_table_to_binary():
     conn.close()
 
 
+def read_data_binary_file():
+    rating_obj = RatingObj()
+
+    with open('train.csv', 'r') as reader:
+        line = reader.readline()
+        colnames = line.split(',')[3:]
+        for counter, context in enumerate(colnames):
+            context_split = context.strip().split(":")
+            context_dim = context_split[0]
+            dimc = rating_obj.dim_ids.get(context_dim, len(rating_obj.dim_ids.keys()))
+            rating_obj.dim_ids[context_dim] = dimc
+            rating_obj.cond_ids[context] = counter
+            rating_obj.dim_cond_dict[dimc].add(counter)
+            rating_obj.cond_dim_dict[counter] = dimc
+
+        for line in reader:
+            row = line.split(',')
+            user = row[0]
+            user_id = rating_obj.user_ids.get(user, len(rating_obj.user_ids))
+            rating_obj.user_ids[user] = user_id
+
+            item = row[1]
+            item_id = rating_obj.items_ids.get(item, len(rating_obj.items_ids))
+            rating_obj.items_ids[item] = item_id
+
+            rating = float(row[2])
+            rating_obj.rating_values.add(rating)
+            rating_obj.ratings_count += 1
+            user_item = str(user_id) + "," + str(item_id)
+            user_item_id = rating_obj.ui_ids.get(user_item, len(rating_obj.ui_ids))
+            rating_obj.ui_ids[user_item] = user_item_id
+
+            rating_obj.ui_user_ids[user_item_id] = user_id
+            rating_obj.ui_item_ids[user_item_id] = item_id
+
+            rating_obj.user_item_user_ids_multimap[user_item_id].add(user_id)
+            rating_obj.user_item_item_ids_multimap[user_item_id].add(item_id)
+
+            # Indexing context
+
+            condition_list: List[int] = list()
+            for idx, ctx in enumerate(row[3:]):
+                if ctx == '1':
+                    condition_list.append(idx)
+
+            context_str = str(condition_list)[1:-1]
+
+            context_id = rating_obj.ctx_ids.get(context_str, len(rating_obj.ctx_ids))
+            rating_obj.ctx_ids[context_str] = context_id
+            rating_obj.ids_ctx[context_id] = context_str
+
+            for condition in condition_list:
+                rating_obj.condition_context_multimap[condition].add(context_id)
+
+            context_rating_pair = ContextRatingPair(context=context_id, rating=rating)
+            rating_obj.user_item_context_rating.setdefault(user_item_id, list()).append(context_rating_pair)
+
+            #rating_obj.user_rated_item_in_ctx_multimap[user_id][item_id][context_id] = rating
+
+        for key, val in rating_obj.ids_ctx.items():
+            rating_obj.ids_ctx_list[key] = [int(s) for s in val.split(',')]
+
+        rating_obj.ids_user = dict((v, k) for k, v in rating_obj.user_ids.items())
+        rating_obj.ids_items = dict((v, k) for k, v in rating_obj.items_ids.items())
+        rating_obj.ids_cond = dict((v, k) for k, v in rating_obj.cond_ids.items())
+
+        for key, val in rating_obj.ids_ctx_list.items():
+            context_str = ','.join([str(rating_obj.ids_cond[elem]) for elem in val])
+            rating_obj.context_str_ids[context_str] = key
+
+        sorted(rating_obj.rating_values)
+        number_of_rows = len(rating_obj.user_item_context_rating)
+        number_of_row_ptrs = number_of_rows + 1
+        number_of_columns = len(rating_obj.ctx_ids)
+
+        column_id_np_array = np.empty(rating_obj.ratings_count)
+        row_ptr_np_array = np.empty(number_of_row_ptrs)
+        row_data_np_array = np.empty(rating_obj.ratings_count)
+        row_ptr_np_array[0] = 0
+
+        element_index = 0
+        end_ptr = 0
+        for idx, user_item_row in enumerate(rating_obj.user_item_context_rating.values()):
+            end_ptr += len(user_item_row)
+            row_ptr_np_array[idx + 1] = end_ptr
+            for ctx_rate_pair in user_item_row:
+                row_data_np_array[element_index] = ctx_rate_pair.rating
+                column_id_np_array[element_index] = ctx_rate_pair.context
+                element_index += 1
+
+        rating_obj.items = len(rating_obj.items_ids)
+        rating_obj.users = len(rating_obj.user_ids)
+
+        rate_matrix = scipy.sparse.csr_matrix((row_data_np_array, column_id_np_array, row_ptr_np_array),
+                                              shape=(number_of_rows, number_of_columns))
+        rating_obj.rate_matrix = rate_matrix
+
+
+        return rating_obj
+
+
+
+
 def read_data_binary(min_num_ratings=1):
     rating_obj = RatingObj()
     conn_string = "host=" + creds.PGHOST + " port=" + creds.PORT + " dbname=" + creds.PGDATABASE + " user=" + creds.PGUSER + " password=" + creds.PGPASSWORD
@@ -315,5 +418,18 @@ def read_data_binary(min_num_ratings=1):
     rate_matrix = scipy.sparse.csr_matrix((row_data_np_array, column_id_np_array, row_ptr_np_array),
                                           shape=(number_of_rows, number_of_columns))
     rating_obj.rate_matrix = rate_matrix
+
+    test = rating_obj.user_rated_item_in_ctx_multimap
+    rating_count = []
+
+    for user,items in test.items():
+        sum = 0
+        for item in items.values():
+            sum+= len(item.values())
+        rating_count.append((user, sum))
+
+    rating_count.sort(key=lambda tup: tup[1], reverse=True)
+
+
 
     return rating_obj

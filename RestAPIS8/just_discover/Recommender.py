@@ -25,8 +25,12 @@ def __train_eval_parallel_worker(recommender):
     return measurement
 
 
-def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterations, clipping, min_num_ratings=1):
-    rating_obj = dp.read_data_binary(min_num_ratings)
+def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterations, clipping, min_num_ratings=1, read_from_file=False):
+    if read_from_file:
+        rating_obj = dp.read_data_binary_file()
+    else:
+        rating_obj = dp.read_data_binary(min_num_ratings)
+
     rating_obj.split_data(k_folds=k_fold)
     recommender_list = list()
 
@@ -49,7 +53,8 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
     print(summary)
 
 def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping, min_num_ratings=1):
-    rating_obj = dp.read_data_binary(min_num_ratings)
+    #rating_obj = dp.read_data_binary(min_num_ratings)
+    rating_obj = dp.read_data_binary_file()
     rating_obj.rate_matrix = rating_obj.rate_matrix.tocsc()
     icamf = ICAMF(rating_obj.rate_matrix, None, rating_obj, fold="Final_Model", regularizer=regularizer,
                   learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping)
@@ -104,8 +109,7 @@ class ICAMF:
         self.configuration = f'Lrate_{self.learning_rate} regularizer_{self.regularizer_1} latent_factors_{self.num_factors} clipping_{str(self.soft_clipping)}'
 
 
-
-    def build_ICAMF(self):
+    def build_ICAMF(self, evaluate_while_training=False):
         print("Training started: " + f'fold: {str(self.fold)} ' + str(datetime.datetime.now().time()))
 
         for iteration in range(0, self.iterations):
@@ -202,8 +206,8 @@ class ICAMF:
                         for factor_index, gradient in enumerate(context_condition_factor_gradients[idx]):
                             self.context_factor_matrix[condition][
                                 factor_index] += self.learning_rate * gradient*factor
-
-            self.evaluate_test_and_train()
+            if evaluate_while_training:
+                self.evaluate_test_and_train()
 
             print(f'Fold: {str(self.fold)} ' + "Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
             print("Loss: " + str(loss))
