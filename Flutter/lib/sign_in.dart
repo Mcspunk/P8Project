@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'data_container.dart';
 import 'utility.dart';
 import 'home_screen.dart';
 
@@ -26,6 +27,7 @@ class LogIn extends State<LogInState> {
   }
 
   Widget _logInScreen() {
+    DataContainerState data = DataContainer.of(context);
     return Scaffold(
       body: Center(
         child: Container(
@@ -95,7 +97,7 @@ class LogIn extends State<LogInState> {
                         fontSize: 24.0,
                       ),
                     ),
-                    color: Theme.of(context).accentColor,
+                    color: data.getTheme().accentColor,
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -112,7 +114,7 @@ class LogIn extends State<LogInState> {
                         fontSize: 24.0,
                       ),
                     ),
-                    color: Theme.of(context).accentColor,
+                    color: data.getTheme().accentColor,
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -127,6 +129,7 @@ class LogIn extends State<LogInState> {
   }
 
   void _pushLoginScreen() {
+    DataContainerState data = DataContainer.of(context);
     Navigator.of(context)
         .push(MaterialPageRoute<void>(builder: (BuildContext context) {
       return Scaffold(
@@ -144,9 +147,9 @@ class LogIn extends State<LogInState> {
                     width: 375,
                     child: TextFormField(
                       controller: logInUsernamecontroller,
-                      style: Theme.of(context).textTheme.body2,
+                      style: data.getTheme().textTheme.body2,
                       decoration: InputDecoration(
-                        labelStyle: Theme.of(context).textTheme.body2,
+                        labelStyle: data.getTheme().textTheme.body2,
                         labelText: "Username",
                         filled: true,
                         border: OutlineInputBorder(
@@ -168,9 +171,9 @@ class LogIn extends State<LogInState> {
                     width: 375,
                     child: TextFormField(
                       controller: logInPasswordcontroller,
-                       style: Theme.of(context).textTheme.body2,
+                       style: data.getTheme().textTheme.body2,
                       decoration: InputDecoration(
-                        labelStyle: Theme.of(context).textTheme.body2,
+                        labelStyle: data.getTheme().textTheme.body2,
                         labelText: "Password",
                         filled: true,
                         border: OutlineInputBorder(
@@ -199,7 +202,7 @@ class LogIn extends State<LogInState> {
                       'Log in',
                       style: TextStyle(fontSize: 24.0),
                     ),
-                    color: Theme.of(context).accentColor,
+                    color: data.getTheme().accentColor,
                   ),
                 ),
               ],
@@ -211,6 +214,7 @@ class LogIn extends State<LogInState> {
   }
 
   void _pushNewUser() {
+    DataContainerState data = DataContainer.of(context);
     Navigator.of(context)
         .push(MaterialPageRoute<void>(builder: (BuildContext context) {
       return Scaffold(
@@ -228,9 +232,9 @@ class LogIn extends State<LogInState> {
                     width: 375,
                     child: TextFormField(
                       controller: signUpUserNameController,
-                      style: Theme.of(context).textTheme.body2,
+                      style: data.getTheme().textTheme.body2,
                       decoration: InputDecoration(
-                        labelStyle: Theme.of(context).textTheme.body2,
+                        labelStyle: data.getTheme().textTheme.body2,
                         labelText: "Username",
                         filled: true,
                         border: OutlineInputBorder(
@@ -254,9 +258,9 @@ class LogIn extends State<LogInState> {
                     width: 375,
                     child: TextFormField(
                       controller: signUpEmailController,
-                     style: Theme.of(context).textTheme.body2,
+                     style: data.getTheme().textTheme.body2,
                       decoration: InputDecoration(
-                        labelStyle: Theme.of(context).textTheme.body2,
+                        labelStyle: data.getTheme().textTheme.body2,
                         labelText: "Email",
                         filled: true,
                         border: OutlineInputBorder(
@@ -279,9 +283,9 @@ class LogIn extends State<LogInState> {
                     width: 375,
                     child: TextFormField(
                       controller: signUpPasswordController,
-                      style: Theme.of(context).textTheme.body2,
+                      style: data.getTheme().textTheme.body2,
                       decoration: InputDecoration(
-                        labelStyle: Theme.of(context).textTheme.body2,
+                        labelStyle: data.getTheme().textTheme.body2,
                         labelText: "Password",
                         filled: true,
                         border: OutlineInputBorder(
@@ -304,9 +308,9 @@ class LogIn extends State<LogInState> {
                     width: 375,
                     child: TextFormField(
                       controller: signUpPasswordControllerRepeat,
-                      style: Theme.of(context).textTheme.body2,
+                      style: data.getTheme().textTheme.body2,
                       decoration: InputDecoration(
-                        labelStyle: Theme.of(context).textTheme.body2,
+                        labelStyle: data.getTheme().textTheme.body2,
                         labelText: "Repeat Password",
                         filled: true,
                         border: OutlineInputBorder(
@@ -335,7 +339,7 @@ class LogIn extends State<LogInState> {
                       'Next',
                       style: TextStyle(fontSize: 24.0),
                     ),
-                    color: Theme.of(context).accentColor,
+                    color: data.getTheme().accentColor,
                   ),
                 ),
               ],

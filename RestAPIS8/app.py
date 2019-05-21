@@ -130,7 +130,7 @@ def update_preferences():
     userVec = createNewUserVector(tempstring)
     bestSimUser, bestSimScore = calcUserSim(userVec)
 
-    sqlString = "UPDATE justdiscover.users SET preferences = '" + tempstring + "', most_sim_user = '" + str(bestSimUser) + "'  WHERE user_name = CAST ('" + name + "' as TEXT);"
+    sqlString = "UPDATE justdiscover.users SET preferences = '" + tempstring + "', most_sim_user = '" + str(bestSimUser) + "'  WHERE id_sk = '" + str(name) + "';"
     cursor.execute(sqlString)
 
     conn.commit()

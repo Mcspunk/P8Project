@@ -99,7 +99,7 @@ class RatingDialog extends State<RatingState> {
               title: Text('When did you visit?'),
               trailing: RaisedButton(
                 child: Text(dateText),
-                color: Theme.of(context).accentColor,
+                color: data.getTheme().accentColor,
                 onPressed: () async {
                   Future<DateTime> chosenTime = showDatePicker(
                     context: context,
@@ -127,7 +127,7 @@ class RatingDialog extends State<RatingState> {
           ListTile(
             title: RaisedButton(
               child: Text('Submit review'),
-              color: Theme.of(context).accentColor,
+              color: data.getTheme().accentColor,
               onPressed: () {
                 giveReview(attractionRating, selectedTime, tripType,
                     widget.attraction.getName(), context);
@@ -207,7 +207,7 @@ class HomeScreen extends State<HomeScreenState> {
   Widget _homeScreen() {
     DataContainerState data = DataContainer.of(context);
     return MaterialApp(
-      theme: utilTheme(),
+      theme: data == null ? Theme.of(context) : data.getTheme(),
       home: DefaultTabController(
         length: 4,
         child: Scaffold(
@@ -370,9 +370,12 @@ class HomeScreen extends State<HomeScreenState> {
   }
 
   Widget buildRecCardTile(Attraction attraction) {
+    DataContainerState data = DataContainer.of(context);
     final deviceSize = MediaQuery.of(context).size;
     DateTime dt = DateTime.now();
-    return GestureDetector(
+    return Theme(
+      data: data.getTheme(),
+      child: GestureDetector(
       onTap: () {
         _detailedAttractionView(attraction);
       },
@@ -415,10 +418,10 @@ class HomeScreen extends State<HomeScreenState> {
                   child: Text(
                       "Opening hours:\n" +
                           attraction.getOpeningHours()[dt.weekday - 1],
-                      style: Theme.of(context).textTheme.body2)))
+                      style: data.getTheme().textTheme.body2)))
         ],
       ),
-    );
+    ));
   }
 
   Widget buildRecTile(Attraction attraction) {
@@ -447,12 +450,14 @@ class HomeScreen extends State<HomeScreenState> {
 
     DataContainerState data = DataContainer.of(context);
     final deviceSize = MediaQuery.of(context).size;
-    return Container(
+    return Theme(
+      data: data.getTheme(),
+      child: Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(10)),
-        color: Theme.of(context).primaryColorDark,
+        color: data.getTheme().primaryColorDark,
         border: Border.all(
-          color: Theme.of(context).hintColor,
+          color: data.getTheme().hintColor,
         ),
       ),
       child: Column(
@@ -547,27 +552,33 @@ class HomeScreen extends State<HomeScreenState> {
               child: Text(
                   "Opening hours:\n" +
                       attraction.getOpeningHours()[dt.weekday - 1],
-                  style: Theme.of(context).textTheme.body2),
+                  style: data.getTheme().textTheme.body2),
             ),
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget buildInteractiveRecTile(Attraction attraction) {
-    return GestureDetector(
+    DataContainerState data = DataContainer.of(context);
+    return Theme(
+      data: data.getTheme(),
+      child: GestureDetector(
         onTap: () {
           _detailedAttractionView(attraction);
         },
-        child: buildRecTile(attraction));
+        child: buildRecTile(attraction)));
   }
 
   void _detailedAttractionView(Attraction attraction) {
     final deviceSize = MediaQuery.of(context).size;
+    DataContainerState data = DataContainer.of(context);
     Navigator.of(context)
         .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
-      return Scaffold(
+      return Theme(
+        data: data.getTheme(),
+        child: Scaffold(
         appBar: AppBar(title: Text(attraction.getName())),
         body: Column(
           mainAxisSize: MainAxisSize.min,
@@ -579,7 +590,7 @@ class HomeScreen extends State<HomeScreenState> {
                 Padding(
                     padding: EdgeInsets.all(deviceSize.width * (1 / 28)),
                     child: Text('Phone Number: ',
-                        style: Theme.of(context).textTheme.body2)),
+                        style: data.getTheme().textTheme.body2)),
                 Padding(padding: EdgeInsets.all(deviceSize.width * (1 / 12))),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -588,7 +599,7 @@ class HomeScreen extends State<HomeScreenState> {
                         (attraction.getPhoneNumber() != null
                             ? attraction.getPhoneNumber()
                             : 'N/A'),
-                        style: Theme.of(context).textTheme.body2),
+                        style: data.getTheme().textTheme.body2),
                   ],
                 ),
               ]),
@@ -600,25 +611,25 @@ class HomeScreen extends State<HomeScreenState> {
                 Padding(
                     padding: EdgeInsets.all(deviceSize.width * (1 / 28)),
                     child: Text('Weekly opening hours',
-                        style: Theme.of(context).textTheme.body2)),
+                        style: data.getTheme().textTheme.body2)),
                 Padding(padding: EdgeInsets.all(deviceSize.width * (1 / 24))),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(attraction.getOpeningHours()[0],
-                        style: Theme.of(context).textTheme.body2),
+                        style: data.getTheme().textTheme.body2),
                     Text(attraction.getOpeningHours()[1],
-                        style: Theme.of(context).textTheme.body2),
+                        style: data.getTheme().textTheme.body2),
                     Text(attraction.getOpeningHours()[2],
-                        style: Theme.of(context).textTheme.body2),
+                        style: data.getTheme().textTheme.body2),
                     Text(attraction.getOpeningHours()[3],
-                        style: Theme.of(context).textTheme.body2),
+                        style: data.getTheme().textTheme.body2),
                     Text(attraction.getOpeningHours()[4],
-                        style: Theme.of(context).textTheme.body2),
+                        style: data.getTheme().textTheme.body2),
                     Text(attraction.getOpeningHours()[5],
-                        style: Theme.of(context).textTheme.body2),
+                        style: data.getTheme().textTheme.body2),
                     Text(attraction.getOpeningHours()[6],
-                        style: Theme.of(context).textTheme.body2),
+                        style: data.getTheme().textTheme.body2),
                   ],
                 ),
               ]),
@@ -628,7 +639,7 @@ class HomeScreen extends State<HomeScreenState> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 MaterialButton(
-                  color: Theme.of(context).accentColor,
+                  color: data.getTheme().buttonColor,
                   minWidth: 100,
                   height: 50,
                   onPressed: () {
@@ -646,7 +657,7 @@ class HomeScreen extends State<HomeScreenState> {
                   padding: const EdgeInsets.all(8.0),
                 ),
                 MaterialButton(
-                  color: Theme.of(context).accentColor,
+                  color: data.getTheme().buttonColor,
                   minWidth: 100,
                   height: 50,
                   onPressed: () {
@@ -664,7 +675,7 @@ class HomeScreen extends State<HomeScreenState> {
                   padding: const EdgeInsets.all(8.0),
                 ),
                 MaterialButton(
-                  color: Theme.of(context).accentColor,
+                  color: data.getTheme().buttonColor,
                   minWidth: 100,
                   height: 50,
                   child: const Text(
@@ -683,7 +694,7 @@ class HomeScreen extends State<HomeScreenState> {
             )
           ],
         ),
-      );
+      ));
     }));
   }
 
@@ -818,11 +829,13 @@ class HomeScreen extends State<HomeScreenState> {
                     showDialog(
                         context: context,
                         builder: (context) {
-                          return AlertDialog(
+                          return Theme(
+                            data: data.getTheme(),
+                            child: AlertDialog(
                             content: buildRecCardTile(item),
                             contentPadding:
                                 const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
-                          );
+                          ));
                         });
                   },
                   child: Icon(

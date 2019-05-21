@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
+import 'package:test2/data_container.dart';
+
 
 void saveDistance(String key, int value) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -54,6 +56,7 @@ class PromptContext extends State<PromptContextState>{
   }
 
   @override Widget build(BuildContext context) {
+    DataContainerState data = DataContainer.of(context);
     double width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(title: Text('Initial information'),),
@@ -135,7 +138,7 @@ class PromptContext extends State<PromptContextState>{
           Divider(),
           ListTile(
             title: MaterialButton(
-              color: Theme.of(context).accentColor,
+              color: data.getTheme().accentColor,
               child: Text('Continue'),
               onPressed: () {
                 saveDistance('dist', _n);

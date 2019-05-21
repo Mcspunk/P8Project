@@ -26,15 +26,17 @@ Map months = {
   };
 String apiAdress = "http://ec2-3-14-87-243.us-east-2.compute.amazonaws.com/app/api";
 //String apiAdress = "https://10.0.2.2:5000/api";
-ThemeData utilTheme() {
+ThemeData jdDarkTheme() {
   return ThemeData(
     // Define the default Brightness and Colors
     brightness: Brightness.dark,
     primaryColor: Colors.grey[850],
     accentColor: Colors.green,
-    //backgroundColor: Colors.grey[300],
+    buttonColor: Colors.green,
+    backgroundColor: Colors.grey[300],
 
     primaryColorDark: Colors.grey[800],
+    
 
     hintColor: Colors.grey[500],
 
@@ -49,6 +51,37 @@ ThemeData utilTheme() {
       body1: TextStyle(fontSize: 14.0, fontFamily: 'Hind', color: Colors.black),
       body2: TextStyle(
           fontSize: 14.0, fontFamily: 'Hind', color: Colors.grey[300]),
+    ),
+  );
+}
+
+ThemeData jdLightTheme() {
+  return ThemeData(
+    // Define the default Brightness and Colors
+    //brightness: Brightness.light,
+    primaryColor: Colors.white,
+    accentColor: Colors.lightBlue,
+    buttonColor: Colors.white,
+    backgroundColor: Colors.grey[275],
+    scaffoldBackgroundColor: Colors.grey[275],
+    
+    
+
+    primaryColorDark: Colors.white,
+
+    //hintColor: Colors.grey[500],
+
+    // Define the default Font Family
+    fontFamily: 'Montserrat',
+
+    // Define the default TextTheme. Use this to specify the default
+    // text styling for headlines, titles, bodies of text, and more.
+    textTheme: TextTheme(
+      headline: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
+      title: TextStyle(fontSize: 36.0, fontStyle: FontStyle.italic),
+      body1: TextStyle(fontSize: 14.0, fontFamily: 'Hind', color: Colors.black),
+      body2: TextStyle(
+          fontSize: 14.0, fontFamily: 'Hind', color: Colors.black),
     ),
   );
 }
@@ -311,6 +344,7 @@ Future<List<Attraction>> getRecommendations(
       var decoded = attracts == null ? [] : jsonDecode(attracts);
       var t = decoded as List;
       List<Attraction> recAttractions = List<Attraction>();
+      String temp = "";
       for (var i = 0; i < t.length; i++) {
         List<String> open = [];
         if (t[i]['opening_hours'] == "NA"){
@@ -329,7 +363,9 @@ Future<List<Attraction>> getRecommendations(
         }
         double score = t[i]['score'];
         score = score > 5 ? 5 : score;
-
+        
+        
+        temp += (t[i]['id']).toString() + '|';
 
         recAttractions.add(new Attraction(
           t[i]['id'],
@@ -345,10 +381,9 @@ Future<List<Attraction>> getRecommendations(
           score,
           //t[i]['distance']
           distanceBetweenCoordinates(new Coordinate(t[i]['lat'], t[i]['long']), coordinate)
-          ));
-        
+          ));        
       }
-
+      print(temp);
       return recAttractions;
 
     } else {
@@ -455,7 +490,7 @@ Future<void> checkLogIn(
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
       saveString('currentUser', username.toString());   
-      print(await loadString('currentUser'));   
+      //print(await loadString('currentUser'));   
       var t = jsonDecode(response.headers['id']);
       int v = t['id'];
       saveInt('currentUserID', v);

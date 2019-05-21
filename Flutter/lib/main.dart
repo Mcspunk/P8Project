@@ -52,13 +52,14 @@ class MyApp extends StatelessWidget {
     }
   }
 
+  
   @override
   Widget build(BuildContext context) {
     return DataProvider(
       dataContainer: DataContainerState(),
       child: MaterialApp(
         title: 'Just Discover',
-        theme: utilTheme(),
+        theme: jdLightTheme(),
         home: determineHome(),
         onGenerateRoute: (RouteSettings settings) {
           switch (settings.name) {

@@ -15,13 +15,15 @@ class Settings extends State<SettingsState> {
   String dropdownValue = 'Solo';
   bool createRecAttOnly = true;
   bool distPenEnabled = true;
+  bool isDarkTheme = false;
 
   @override
   void initState() {
     loadInt('dist').then(loadDistance);
     loadString('tripType').then(loadTripType);
     loadBool('createRecAttOnly').then(loadcreateRecAttOnly);
-    loadBool('distPenEnabled').then(loadDistPenEnabled);    
+    loadBool('distPenEnabled').then(loadDistPenEnabled);
+    loadBool('theme').then(loadTheme);
     //clearSharedPrefs();
     super.initState();
   }
@@ -29,6 +31,12 @@ class Settings extends State<SettingsState> {
   void loadDistPenEnabled(enabled) {
     setState(() {
      this.distPenEnabled = enabled ?? true; 
+    });
+  }
+
+  void loadTheme(theme) {
+    setState(() {
+      this.isDarkTheme = theme;
     });
   }
 
@@ -54,12 +62,19 @@ class Settings extends State<SettingsState> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     getPreferences(context);
+    loadInt('dist').then(loadDistance);
+    loadString('tripType').then(loadTripType);
+    loadBool('createRecAttOnly').then(loadcreateRecAttOnly);
+    loadBool('distPenEnabled').then(loadDistPenEnabled);
+    loadBool('theme').then(loadTheme);
   }
 
   @override
   Widget build(BuildContext context) {
     DataContainerState data = DataContainer.of(context);    
-    return Scaffold(
+    return Theme(
+      data: data.getTheme(),
+      child: Scaffold(      
       appBar: AppBar(
         title: Row(
           //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -84,6 +99,8 @@ class Settings extends State<SettingsState> {
           saveBool('createRecAttOnly', createRecAttOnly);
           data.setDistPenEnabled(distPenEnabled);
           saveBool('distPenEnabled', distPenEnabled);
+          data.setTheme(isDarkTheme ? jdDarkTheme() : jdLightTheme()); 
+          saveBool('theme', isDarkTheme);
 
           print('saved');
           return new Future.value(true);
@@ -91,10 +108,11 @@ class Settings extends State<SettingsState> {
         child:_customSettings(),
       )
       //primary: false,
-    );
+    ));
   }
 
   Widget _customSettings() {    
+    DataContainerState data = DataContainer.of(context); 
     double width = MediaQuery.of(context).size.width;
     return SizedBox(
       width: width,
@@ -187,12 +205,22 @@ class Settings extends State<SettingsState> {
               createRecAttOnly = !createRecAttOnly;
             }
           ),
+          Divider(),          
           SwitchListTile(
             title: Text('Recommendations are distance sensitive'),
             value: distPenEnabled,
 
             onChanged: (value) {
               distPenEnabled = !distPenEnabled;
+            }
+          ),
+          Divider(),
+          SwitchListTile(
+            title: Text('Dark theme'),
+            value: isDarkTheme,
+
+            onChanged: (value) {
+              isDarkTheme = !isDarkTheme;            
             }
           ),
           Divider(),

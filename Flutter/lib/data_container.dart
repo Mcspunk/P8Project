@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'data_provider.dart';
 
@@ -15,6 +16,7 @@ class DataContainerState extends State<DataContainer> {
   bool _createRecAttOnly = true;
   bool _updateRecs = false;
   bool _distPenEnabled = true;
+  ThemeData _theme = jdLightTheme();
 
   DataContainerState() {
     _categoryRatings = Map.fromIterables([
@@ -116,6 +118,12 @@ class DataContainerState extends State<DataContainer> {
 
   void setcreateRecAttOnly(bool createRecAttOnly) {
     _createRecAttOnly = createRecAttOnly;
+  }
+
+  ThemeData getTheme() => _theme;
+
+  void setTheme(theme){
+    _theme = theme;
   }
 
   @override
