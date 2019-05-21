@@ -130,7 +130,7 @@ def update_preferences():
     userVec = createNewUserVector(tempstring)
     bestSimUser, bestSimScore = calcUserSim(userVec)
 
-    sqlString = "UPDATE justdiscover.users SET preferences = '" + tempstring + "', most_sim_user = '" + str(bestSimUser) + "'  WHERE user_name = CAST ('" + name + "' as TEXT);"
+    sqlString = "UPDATE justdiscover.users SET preferences = '" + tempstring + "', most_sim_user = '" + str(bestSimUser) + "'  WHERE user_name = '" + name + "';"
     cursor.execute(sqlString)
 
     conn.commit()
@@ -236,7 +236,7 @@ def update_liked():
     username = str(json_data['username'])
     attractions = json_data['liked']
 
-    sqlString = "UPDATE justdiscover.users SET liked_attractions = '" + attractions + "'  WHERE id_sk = CAST ('" + str(username) + "' as TEXT);"
+    sqlString = "UPDATE justdiscover.users SET liked_attractions = '" + attractions + "'  WHERE id_sk = '" + str(username) + "';"
     cursor.execute(sqlString)
 
     conn.commit()
@@ -320,7 +320,7 @@ def get_recommendations():
 
     if user_id not in icamf_recommender.rating_object.user_ids:
         cursorGetUser = conn.cursor()
-        cursorGetUser.execute("SELECT most_sim_user FROM justdiscover.users WHERE id_sk = '%s'", [user_id])
+        cursorGetUser.execute("SELECT most_sim_user FROM justdiscover.users WHERE id_sk = '"+user_id+"';")
         user_id = cursorGetUser.fetchone()[0]
         cursorGetUser.close()
 
