@@ -20,7 +20,7 @@ confusion_matrix_row = recordclass('confusion_matrix_row', 'rating true_positive
 
 
 def __train_eval_parallel_worker(recommender):
-    recommender.build_ICAMF()
+    recommender.build_ICAMF(evaluate_while_training=True)
     measurement = recommender.evaluate()
     return measurement
 

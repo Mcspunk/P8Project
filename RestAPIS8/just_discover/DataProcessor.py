@@ -51,6 +51,14 @@ class RatingObj:
         self.rate_matrix = None
         self.assign_matrix = None
         self.user_rated_item_in_ctx_multimap = tree()
+
+        self.rating_users_multimap = tree()
+        self.rating_items_multimap = tree()
+
+        self.item_users_multimap = tree()
+        self.user_rating_multimap = tree()
+
+        self.rating_items_multimap = tree()
         self.user_item_context_rating = dict(list())
 
     def split_data(self, k_folds):
@@ -215,7 +223,7 @@ def transform_reviews_table_to_binary():
 def read_data_binary_file():
     rating_obj = RatingObj()
 
-    with open('train.csv', 'r') as reader:
+    with open('dataset.csv', 'r') as reader:
         line = reader.readline()
         colnames = line.split(',')[3:]
         for counter, context in enumerate(colnames):
@@ -309,10 +317,7 @@ def read_data_binary_file():
                                               shape=(number_of_rows, number_of_columns))
         rating_obj.rate_matrix = rate_matrix
 
-
         return rating_obj
-
-
 
 
 def read_data_binary(min_num_ratings=1):
@@ -352,7 +357,11 @@ def read_data_binary(min_num_ratings=1):
         user_item_id = rating_obj.ui_ids.get(user_item, len(rating_obj.ui_ids))
         rating_obj.ui_ids[user_item] = user_item_id
 
+        rating_obj.rating_items_multimap[rating][item_id] = item_id
+        rating_obj.rating_users_multimap[rating][user_id] = user_id
 
+        rating_obj.item_users_multimap[item_id][user_id] = user_id
+        rating_obj.user_rating_multimap[user_id][rating] = rating
 
         rating_obj.ui_user_ids[user_item_id] = user_id
         rating_obj.ui_item_ids[user_item_id] = item_id
@@ -392,6 +401,8 @@ def read_data_binary(min_num_ratings=1):
         context_str = ','.join([str(rating_obj.ids_cond[elem]) for elem in val])
         rating_obj.context_str_ids[context_str] = key
 
+
+
     sorted(rating_obj.rating_values)
     number_of_rows = len(rating_obj.user_item_context_rating)
     number_of_row_ptrs = number_of_rows + 1
@@ -430,6 +441,143 @@ def read_data_binary(min_num_ratings=1):
 
     rating_count.sort(key=lambda tup: tup[1], reverse=True)
 
-
-
     return rating_obj
+
+
+def save_dataset_to_file(rating_obj, path="dataset.csv"):
+    data = rating_obj.user_rated_item_in_ctx_multimap
+    column_list = ['user','item','rating']
+    column_list.extend([elem for elem in rating_obj.cond_ids.keys()])
+    header = ','.join(elem for elem in column_list)
+    with open(path, 'w') as file:
+        file.write(f'{header}\n')
+        for user, items in data.items():
+            user_name = rating_obj.ids_user[user]
+            for item, values in items.items():
+                item_id = rating_obj.ids_items[item]
+                for ctx, rating in values.items():
+                    line = []
+                    line.append(user_name)
+                    line.append(item_id)
+                    line.append(rating)
+                    line.append(rating)
+                    ctx_list = rating_obj.ids_ctx_list[ctx]
+                    for idx in range(len(rating_obj.cond_ids.keys())):
+                        if idx in ctx_list:
+                            line.append(1)
+                        else:
+                            line.append(0)
+                    output = ','.join([str(elem) for elem in line])
+                    file.write(f'{output}\n')
+
+
+def balance_data():
+    rating_obj = read_data_binary(2)
+    ratings_num = defaultdict(lambda: 0)
+    user_set = set.union(set(rating_obj.rating_users_multimap[1]), set(rating_obj.rating_users_multimap[2]))
+    corrected_dict = tree()
+
+    for u, values in rating_obj.user_rated_item_in_ctx_multimap.items():
+        if u in user_set:
+            corrected_dict[u] = values
+
+    for user, val in corrected_dict.items():
+        for item, context in val.items():
+            for ctx, rating in context.items():
+                ratings_num[rating] += 1
+
+    delete_poi_list = []
+    poi_good = False
+    user_good = False
+
+    dict_poi = defaultdict(lambda: 0)
+    for user, items in corrected_dict.items():
+        for item, contexts in items.items():
+            for context, rating in contexts.items():
+                dict_poi[item] += 1
+    for key, val in dict_poi.items():
+        if val == 1:
+            delete_poi_list.append(key)
+            poi_good = False
+
+    delete_user_list= []
+
+    while not poi_good or not user_good:
+        if not poi_good:
+            poi_good = True
+            for i in delete_poi_list:
+                for user in corrected_dict:
+                    corrected_dict[user].pop(i, None)
+            #check
+
+            for user,items in corrected_dict.items():
+                count = 0
+                for item, ctx in items.items():
+                    count += len(ctx.values())
+                if count == 1:
+                    user_good = False
+                    delete_user_list.append(user)
+            delete_poi_list = []
+
+        if not user_good:
+            user_good = True
+            for i in delete_user_list:
+                corrected_dict.pop(i,None)
+
+            for user, items in corrected_dict.items():
+                for item, contexts in items.items():
+                    for context, rating in contexts.items():
+                        dict_poi[item] += 1
+            for key, val in dict_poi.items():
+                if val == 1:
+                    delete_poi_list.append(key)
+                    poi_good = False
+
+    for user, val in corrected_dict.items():
+        for item, context in val.items():
+            for ctx, rating in context.items():
+                ratings_num[rating] += 1
+
+    rating_lowest = min([val for key,val in ratings_num.items()])
+    ratings_amount_to_delete = [(key, val-rating_lowest)for key, val in ratings_num.items()]
+
+    for rating, delete_amount in ratings_amount_to_delete:
+        if delete_amount > 0:
+            corrected_dict, dict_poi = __remove_ratings(corrected_dict, rating, delete_amount, dict_poi)
+    rating_obj.user_rated_item_in_ctx_multimap = corrected_dict
+    return rating_obj
+
+    
+def __remove_ratings(corrected_dict, rating_to_remove, remove_amount, dict_poi):
+    do_remove = []
+    for user, items in corrected_dict.items():
+        target_rating = False
+        number_of_5s = 0
+        number_of_ratings = 0
+        intermediate_candidate = []
+        for item, context in items.items():
+            for ctx_id, rating in context.items():
+                if rating == rating_to_remove:
+                    target_rating = True
+                    number_of_5s += 1
+                    intermediate_candidate.append((user, item, ctx_id))
+                number_of_ratings += 1
+
+        if target_rating and number_of_ratings > 2:
+            for i in intermediate_candidate:
+                if number_of_ratings - 1 > 1:
+                    if dict_poi[i[1]] > 3:
+                        number_of_ratings -= 1
+                        do_remove.append(i)
+                        dict_poi[i[1]] += -1
+                else:
+                    break
+
+    for i in do_remove:
+        if remove_amount == 0:
+            break
+        corrected_dict[i[0]][i[1]].pop(i[2], None)
+        remove_amount -= 1
+        if len(corrected_dict[i[0]][i[1]]) == 0:
+            corrected_dict[i[0]].pop(i[1],None)
+    return corrected_dict, dict_poi
