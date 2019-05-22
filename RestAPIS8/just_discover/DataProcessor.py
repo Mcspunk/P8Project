@@ -60,6 +60,7 @@ class RatingObj:
 
         self.rating_items_multimap = tree()
         self.user_item_context_rating = dict(list())
+        self.ratings = defaultdict(lambda: 0)
 
     def split_data(self, k_folds):
 
@@ -252,6 +253,7 @@ def read_data_binary_file():
             user_item_id = rating_obj.ui_ids.get(user_item, len(rating_obj.ui_ids))
             rating_obj.ui_ids[user_item] = user_item_id
 
+            rating_obj.ratings[rating] += 1
             rating_obj.ui_user_ids[user_item_id] = user_id
             rating_obj.ui_item_ids[user_item_id] = item_id
 
@@ -277,7 +279,7 @@ def read_data_binary_file():
             context_rating_pair = ContextRatingPair(context=context_id, rating=rating)
             rating_obj.user_item_context_rating.setdefault(user_item_id, list()).append(context_rating_pair)
 
-            #rating_obj.user_rated_item_in_ctx_multimap[user_id][item_id][context_id] = rating
+            rating_obj.user_rated_item_in_ctx_multimap[user_id][item_id][context_id] = rating
 
         for key, val in rating_obj.ids_ctx.items():
             rating_obj.ids_ctx_list[key] = [int(s) for s in val.split(',')]
@@ -357,6 +359,8 @@ def read_data_binary(min_num_ratings=1):
         user_item_id = rating_obj.ui_ids.get(user_item, len(rating_obj.ui_ids))
         rating_obj.ui_ids[user_item] = user_item_id
 
+        rating_obj.ratings[rating] += 1
+
         rating_obj.rating_items_multimap[rating][item_id] = item_id
         rating_obj.rating_users_multimap[rating][user_id] = user_id
 
@@ -400,8 +404,6 @@ def read_data_binary(min_num_ratings=1):
     for key, val in rating_obj.ids_ctx_list.items():
         context_str = ','.join([str(rating_obj.ids_cond[elem]) for elem in val])
         rating_obj.context_str_ids[context_str] = key
-
-
 
     sorted(rating_obj.rating_values)
     number_of_rows = len(rating_obj.user_item_context_rating)
@@ -481,11 +483,6 @@ def balance_data():
         if u in user_set:
             corrected_dict[u] = values
 
-    for user, val in corrected_dict.items():
-        for item, context in val.items():
-            for ctx, rating in context.items():
-                ratings_num[rating] += 1
-
     delete_poi_list = []
     poi_good = False
     user_good = False
@@ -532,7 +529,7 @@ def balance_data():
                 if val == 1:
                     delete_poi_list.append(key)
                     poi_good = False
-
+    ratings_num.clear()
     for user, val in corrected_dict.items():
         for item, context in val.items():
             for ctx, rating in context.items():
@@ -545,6 +542,13 @@ def balance_data():
         if delete_amount > 0:
             corrected_dict, dict_poi = __remove_ratings(corrected_dict, rating, delete_amount, dict_poi)
     rating_obj.user_rated_item_in_ctx_multimap = corrected_dict
+
+    ratings_num.clear()
+    for user, val in corrected_dict.items():
+        for item, context in val.items():
+            for ctx, rating in context.items():
+                ratings_num[rating] += 1
+    print(ratings_num)
     return rating_obj
 
     
