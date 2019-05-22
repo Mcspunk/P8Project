@@ -60,7 +60,7 @@ class RatingObj:
 
         self.rating_items_multimap = tree()
         self.user_item_context_rating = dict(list())
-        self.ratings = defaultdict(lambda: 0)
+        self.ratings = defaultdict(int)
 
     def split_data(self, k_folds):
 
