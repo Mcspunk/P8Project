@@ -10,6 +10,7 @@ import operator
 import dill
 import copy
 from joblib import Parallel, delayed
+import matplotlib.pyplot as plt
 
 
 
@@ -48,6 +49,27 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
         with open(f'Evaluations\\results_fold_{result.fold}_config_{result.configuration}.txt', "w+") as file:
             file.write(str(result))
     summary = reduce(operator.add, measurement_results)
+
+    fig, axs = plt.subplots(2)
+
+    axs[0].plot(summary.loss_list)
+    axs[0].set_xlim([0, iterations])
+    axs[0].set_ylim([0, max(summary.loss_list)+1000])
+    axs[0].set_title('Loss')
+    axs[0].set_xlabel('Iterations')
+    axs[0].set_ylabel('Loss')
+
+    axs[1].plot(summary.test_accuracy_list, 'tab:orange')
+    axs[1].plot(summary.train_accuracy_list, 'tab:green')
+    axs[1].set_xlim([0, iterations])
+    axs[1].set_ylim([0, 1])
+    axs[1].set_title('Test(Orange), Train(Green) Accuracy')
+    axs[1].set_xlabel('Iterations')
+    axs[1].set_ylabel('Accuracy')
+
+    plt.show()
+
+
     with open(f'Evaluations\\results_fold_{summary.fold}_config_{summary.configuration}.txt', "w+") as file:
         file.write(str(summary))
     print(summary)
@@ -212,6 +234,7 @@ class ICAMF:
             print(f'Fold: {str(self.fold)} ' + "Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
             print("Loss: " + str(loss))
             self.loss_list.append(loss)
+
 
     def evaluate_test_and_train(self):
         measurement_training = self.evaluate(test_is_training=True)
