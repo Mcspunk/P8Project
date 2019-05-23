@@ -516,7 +516,7 @@ def insert_geocoding_database():
 #dataprocessor.read_data_binary()
 #rating_obj = dataprocessor.balance_data()
 #dataprocessor.save_dataset_to_file(rating_obj)
-train_recommender_kfold(kfold=5, regularizer=0.01, learning_rate=0.0007, num_factors=10, iterations=5, clipping=5, min_num_ratings=1, momentum=0.9, read_from_file=True)
+train_recommender_kfold(kfold=5, regularizer=0.01, learning_rate=0.0007, num_factors=10, iterations=5, clipping=5, min_num_ratings=1, momentum=0.4, read_from_file=True)
 
 #train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.001, num_factors=20, iterations=50, clipping=5, min_num_ratings=2, read_from_file=True)
 

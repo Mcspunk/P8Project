@@ -227,29 +227,73 @@ class ICAMF:
 
                     # Update parameters using momentum:  First biases, then user_matrix, item_matrix, and contaxt_matrix
 
-                    # Update bias velocity
-                    self.user_bias_vel[user_id] = self.user_bias_vel[user_id] * self.momentum - self.learning_rate * user_bias_gradient * factor
-                    self.item_bias_vel[item_id] = self.item_bias_vel[item_id] * self.momentum - self.learning_rate * item_bias_gradient * factor
+
 
                     # Update bias
-                    self.user_bias[user_id] += self.user_bias_vel[user_id]
-                    self.item_bias[item_id] += self.item_bias_vel[item_id]
+                    if self.momentum != 0:
+                        delta = -1.0 * self.learning_rate * user_bias_gradient * factor
+                        self.user_bias[user_id] += self.user_bias_vel[user_id] * self.momentum + delta
+                        self.user_bias_vel[user_id] = delta
 
-                    for factor_index, gradient in enumerate(user_factor_gradients):
-                        # Velocity update
-                        self.user_factor_matrix_vel[user_id][factor_index] = self.user_factor_matrix_vel[user_id][factor_index] * self.momentum - self.learning_rate * gradient * factor
-                        # Parameter update
-                        self.user_factor_matrix[user_id][factor_index] += self.user_factor_matrix_vel[user_id][factor_index]
+                        delta = -1.0 * self.learning_rate * item_bias_gradient * factor
+                        self.item_bias[item_id] += self.item_bias_vel[item_id] * self.momentum + delta
+                        self.item_bias_vel[item_id] = delta
 
-                    for factor_index, gradient in enumerate(item_factor_gradients):
-                        self.item_factor_matrix_vel[item_id][factor_index] = self.item_factor_matrix_vel[item_id][factor_index] * self.momentum - self.learning_rate * gradient * factor
-                        self.item_factor_matrix[item_id][factor_index] += self.item_factor_matrix_vel[item_id][factor_index]
+                        for factor_index, gradient in enumerate(user_factor_gradients):
+                            delta = -1.0 * self.learning_rate * gradient * factor
+                            self.user_factor_matrix[user_id][factor_index] += self.user_factor_matrix_vel[user_id][factor_index] * self.momentum + delta
+                            self.user_factor_matrix_vel[user_id][factor_index] = delta
 
-                    for idx, condition in enumerate(conditions):
-                        for factor_index, gradient in enumerate(context_condition_factor_gradients[idx]):
-                            self.context_factor_matrix_vel[condition][factor_index] = self.context_factor_matrix_vel[condition][factor_index] * self.momentum - self.learning_rate * gradient * factor
-                            self.context_factor_matrix[condition][factor_index] += self.context_factor_matrix_vel[condition][factor_index]
+                        for factor_index, gradient in enumerate(item_factor_gradients):
+                            delta = -1.0 * self.learning_rate * gradient * factor
+                            self.item_factor_matrix[item_id][factor_index] += self.item_factor_matrix_vel[item_id][factor_index] * self.momentum + delta
+                            self.item_factor_matrix_vel[item_id][factor_index] = delta
 
+                        for idx, condition in enumerate(conditions):
+                            for factor_index, gradient in enumerate(context_condition_factor_gradients[idx]):
+                                delta = -1.0 * self.learning_rate * gradient * factor
+                                self.context_factor_matrix[condition][factor_index] += self.context_factor_matrix_vel[condition][factor_index] * self.momentum + delta
+                                self.context_factor_matrix_vel[condition][factor_index] = delta
+
+                        '''self.user_bias_vel[user_id] = self.user_bias_vel[user_id] * self.momentum - self.learning_rate * user_bias_gradient * factor
+                                            self.item_bias_vel[item_id] = self.item_bias_vel[item_id] * self.momentum - self.learning_rate * item_bias_gradient * factor
+
+                                            # Update bias
+                                            self.user_bias[user_id] += self.user_bias_vel[user_id]
+                                            self.item_bias[item_id] += self.item_bias_vel[item_id]
+
+                                            for factor_index, gradient in enumerate(user_factor_gradients):
+                                                # Velocity update
+                                                self.user_factor_matrix_vel[user_id][factor_index] = self.user_factor_matrix_vel[user_id][factor_index] * self.momentum - self.learning_rate * gradient * factor
+                                                # Parameter update
+                                                self.user_factor_matrix[user_id][factor_index] += self.user_factor_matrix_vel[user_id][factor_index]
+
+                                            for factor_index, gradient in enumerate(item_factor_gradients):
+                                                self.item_factor_matrix_vel[item_id][factor_index] = self.item_factor_matrix_vel[item_id][factor_index] * self.momentum - self.learning_rate * gradient * factor
+                                                self.item_factor_matrix[item_id][factor_index] += self.item_factor_matrix_vel[item_id][factor_index]
+
+                                            for idx, condition in enumerate(conditions):
+                                                for factor_index, gradient in enumerate(context_condition_factor_gradients[idx]):
+                                                    self.context_factor_matrix_vel[condition][factor_index] = self.context_factor_matrix_vel[condition][factor_index] * self.momentum - self.learning_rate * gradient * factor
+                                                    self.context_factor_matrix[condition][factor_index] += self.context_factor_matrix_vel[condition][factor_index]
+                        '''
+
+
+
+                    else:
+                        self.user_bias[user_id] += self.learning_rate * user_bias_gradient * factor
+                        self.item_bias[item_id] += self.learning_rate * item_bias_gradient * factor
+
+                        for factor_index, gradient in enumerate(user_factor_gradients):
+                            self.user_factor_matrix[user_id][factor_index] += self.learning_rate * gradient * factor
+                        for factor_index, gradient in enumerate(item_factor_gradients):
+                            self.item_factor_matrix[item_id][factor_index] += self.learning_rate * gradient * factor
+
+                        for idx, condition in enumerate(conditions):
+                            for factor_index, gradient in enumerate(context_condition_factor_gradients[idx]):
+                                self.context_factor_matrix[condition][
+                                    factor_index] += self.learning_rate * gradient * factor
+                                
             if evaluate_while_training:
                 self.evaluate_test_and_train()
 
