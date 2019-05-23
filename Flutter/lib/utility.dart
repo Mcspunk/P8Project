@@ -11,20 +11,21 @@ import 'dart:ui';
 import 'dart:math';
 
 Map months = {
-    1: "january",
-    2: "febuary",
-    3: "march",
-    4: "april",
-    5: "may",
-    6: "june",
-    7: "july",
-    8: "august",
-    9: "september",
-    10: "october",
-    11: "november",
-    12: "december"
-  };
-String apiAdress = "http://ec2-3-14-87-243.us-east-2.compute.amazonaws.com/app/api";
+  1: "january",
+  2: "febuary",
+  3: "march",
+  4: "april",
+  5: "may",
+  6: "june",
+  7: "july",
+  8: "august",
+  9: "september",
+  10: "october",
+  11: "november",
+  12: "december"
+};
+String apiAdress =
+    "http://ec2-3-14-87-243.us-east-2.compute.amazonaws.com/app/api";
 //String apiAdress = "https://10.0.2.2:5000/api";
 ThemeData jdDarkTheme() {
   return ThemeData(
@@ -36,7 +37,6 @@ ThemeData jdDarkTheme() {
     backgroundColor: Colors.grey[300],
 
     primaryColorDark: Colors.grey[800],
-    
 
     hintColor: Colors.grey[500],
 
@@ -64,8 +64,6 @@ ThemeData jdLightTheme() {
     buttonColor: Colors.white,
     backgroundColor: Colors.grey[275],
     scaffoldBackgroundColor: Colors.grey[275],
-    
-    
 
     primaryColorDark: Colors.white,
 
@@ -80,8 +78,7 @@ ThemeData jdLightTheme() {
       headline: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
       title: TextStyle(fontSize: 36.0, fontStyle: FontStyle.italic),
       body1: TextStyle(fontSize: 14.0, fontFamily: 'Hind', color: Colors.black),
-      body2: TextStyle(
-          fontSize: 14.0, fontFamily: 'Hind', color: Colors.black),
+      body2: TextStyle(fontSize: 14.0, fontFamily: 'Hind', color: Colors.black),
     ),
   );
 }
@@ -152,10 +149,8 @@ Future<void> updatePreferences(BuildContext context) async {
   var postEncode = jsonEncode(preEncode);
   try {
     String _apiAdress = apiAdress + '/update-preferences/';
-    var response = await http.post(
-        _apiAdress,
-        body: postEncode,
-        headers: {"Content-Type": "application/json"});
+    var response = await http.post(_apiAdress,
+        body: postEncode, headers: {"Content-Type": "application/json"});
 
     if (response.statusCode != 200) {
       displayMsg('Error: ' + response.statusCode.toString(), context);
@@ -174,58 +169,64 @@ Future<void> getPreferences(BuildContext context) async {
     String _apiAdress = apiAdress + '/get-preferences/';
     var response = await http.post(_apiAdress,
         body: postEncode, headers: {"Content-Type": "application/json"});
-    if(response.statusCode == 200){
-    var prefspre = response.headers['prefs'];
-    var prefspost = jsonDecode(prefspre);    
+    if (response.statusCode == 200) {
+      var prefspre = response.headers['prefs'];
+      var prefspost = jsonDecode(prefspre);
 
-    data.getCategoryRatings()['Museums'] = prefspost['Museums'];
-    data.getCategoryRatings()['Art Museums'] = prefspost['Art Museums'];
-    data.getCategoryRatings()['Sights & Landmarks'] = prefspost['Sights & Landmarks'];
-    data.getCategoryRatings()['Points of Interest & Landmarks'] = prefspost['Points of Interest & Landmarks'];
-    data.getCategoryRatings()['Historic Sites'] = prefspost['Historic Sites'];
-    data.getCategoryRatings()['Concerts & Shows'] = prefspost['Concerts & Shows'];
-    data.getCategoryRatings()['Theaters'] = prefspost['Theaters'];
-    data.getCategoryRatings()['Nature & Parks'] = prefspost['Nature & Parks'];
-    data.getCategoryRatings()['Churches & Cathedrals'] = prefspost['Churches & Cathedrals'];
-    data.getCategoryRatings()['Gardens'] = prefspost['Gardens'];
-    data.getCategoryRatings()['Cafe'] = prefspost['Cafe'];
-    data.getCategoryRatings()['Seafood'] = prefspost['Seafood'];
-    data.getCategoryRatings()['Steakhouse'] = prefspost['Steakhouse'];
-    data.getCategoryRatings()['Indian'] = prefspost['Indian'];
-    data.getCategoryRatings()['British'] = prefspost['British'];
-    data.getCategoryRatings()['Mediterranean'] = prefspost['Mediterranean'];
-    data.getCategoryRatings()['French'] = prefspost['French'];
-    data.getCategoryRatings()['Italian'] = prefspost['Italian'];
-    data.getCategoryRatings()['European'] = prefspost['European'];
+      data.getCategoryRatings()['Museums'] = prefspost['Museums'];
+      data.getCategoryRatings()['Art Museums'] = prefspost['Art Museums'];
+      data.getCategoryRatings()['Sights & Landmarks'] =
+          prefspost['Sights & Landmarks'];
+      data.getCategoryRatings()['Points of Interest & Landmarks'] =
+          prefspost['Points of Interest & Landmarks'];
+      data.getCategoryRatings()['Historic Sites'] = prefspost['Historic Sites'];
+      data.getCategoryRatings()['Concerts & Shows'] =
+          prefspost['Concerts & Shows'];
+      data.getCategoryRatings()['Theaters'] = prefspost['Theaters'];
+      data.getCategoryRatings()['Nature & Parks'] = prefspost['Nature & Parks'];
+      data.getCategoryRatings()['Churches & Cathedrals'] =
+          prefspost['Churches & Cathedrals'];
+      data.getCategoryRatings()['Gardens'] = prefspost['Gardens'];
+      data.getCategoryRatings()['Cafe'] = prefspost['Cafe'];
+      data.getCategoryRatings()['Seafood'] = prefspost['Seafood'];
+      data.getCategoryRatings()['Steakhouse'] = prefspost['Steakhouse'];
+      data.getCategoryRatings()['Indian'] = prefspost['Indian'];
+      data.getCategoryRatings()['British'] = prefspost['British'];
+      data.getCategoryRatings()['Mediterranean'] = prefspost['Mediterranean'];
+      data.getCategoryRatings()['French'] = prefspost['French'];
+      data.getCategoryRatings()['Italian'] = prefspost['Italian'];
+      data.getCategoryRatings()['European'] = prefspost['European'];
     }
   } catch (e) {
     print(e);
   }
-  
 }
 
-Future<int> getRecCount(Coordinate coordinate) async {  
-  if(coordinate == null){
+Future<int> getRecCount(Coordinate coordinate) async {
+  if (coordinate == null) {
     return 0;
   }
   DateTime dt = DateTime.now();
   String tt = await loadString('triptype') ?? 'alone';
   int distance = await loadInt('dist') ?? 1;
   tt = tt.toLowerCase() == 'solo' ? 'alone' : tt;
-  String usercontext = "month_visited:" + months[dt.month] + ",company:" + (tt ?? 'alone');
+  String usercontext =
+      "month_visited:" + months[dt.month] + ",company:" + (tt ?? 'alone');
   var jsonstring = {
     "id": await loadInt('currentUserID'),
     "context": usercontext.toLowerCase(),
-    "coordinate": "(" +  coordinate.getLat().toString() + "," + coordinate.getLong().toString() + ")",
+    "coordinate": "(" +
+        coordinate.getLat().toString() +
+        "," +
+        coordinate.getLong().toString() +
+        ")",
     "dist": distance ?? 1
   };
   var jsonedString = jsonEncode(jsonstring);
   try {
     String _apiAdress = apiAdress + '/request-recommendations/';
-    var response = await http.post(
-        _apiAdress,
-        body: jsonedString,
-        headers: {"Content-Type": "application/json"});
+    var response = await http.post(_apiAdress,
+        body: jsonedString, headers: {"Content-Type": "application/json"});
     var attracts = response.headers['attractions'];
     var decoded = jsonDecode(attracts);
     var t = decoded as List;
@@ -238,31 +239,32 @@ Future<int> getRecCount(Coordinate coordinate) async {
 
 Future<List<Attraction>> getAllAttractions(
     Coordinate coordinate, BuildContext context) async {
-  if(coordinate == null){
+  if (coordinate == null) {
     return new List<Attraction>();
   }
   DataContainerState data = DataContainer.of(context);
   int distance = data.getDist() ?? await loadInt('dist');
   var jsonstring = {
-    "coordinate": "(" +  coordinate.getLat().toString() + "," + coordinate.getLong().toString() + ")",
+    "coordinate": "(" +
+        coordinate.getLat().toString() +
+        "," +
+        coordinate.getLong().toString() +
+        ")",
     "dist": distance ?? 1
   };
   var jsonedString = jsonEncode(jsonstring);
   try {
     String _apiAdress = apiAdress + '/request-all-attractions/';
-    var response = await http.post(
-        _apiAdress,
-        body: jsonedString,
-        headers: {"Content-Type": "application/json"});
+    var response = await http.post(_apiAdress,
+        body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
       var attracts = response.headers['attractions'];
       var decoded = attracts == null ? [] : jsonDecode(attracts);
       var t = decoded as List;
       List<Attraction> recAttractions = List<Attraction>();
       for (var i = 0; i < t.length; i++) {
-        
         List<String> open = [];
-        if (t[i]['opening_hours'] == "NA"){
+        if (t[i]['opening_hours'] == "NA") {
           open.add('Not Available');
           open.add('Not Available');
           open.add('Not Available');
@@ -270,13 +272,13 @@ Future<List<Attraction>> getAllAttractions(
           open.add('Not Available');
           open.add('Not Available');
           open.add('Not Available');
-        }else{
+        } else {
           var oh = jsonDecode(t[i]['opening_hours']);
           for (var item in oh) {
             open.add(item.toString());
           }
         }
-        
+
         recAttractions.add(new Attraction(
             t[i]['id'],
             t[i]['name'],
@@ -305,40 +307,46 @@ Future<List<Attraction>> getAllAttractions(
 
 Future<List<Attraction>> getRecommendations(
     Coordinate coordinate, BuildContext context) async {
-  if(coordinate == null){
+  if (coordinate == null) {
     return List<Attraction>();
   }
   DataContainerState data = DataContainer.of(context);
   DateTime dt = DateTime.now();
-  int distance = await loadInt('dist') ?? 1; //ID, Context (commpany:triptype, monthvisited:måned)
+  int distance = await loadInt('dist') ??
+      1; //ID, Context (commpany:triptype, monthvisited:måned)
   String tt = await loadString('triptype') ?? 'alone';
   tt = tt.toLowerCase() == 'solo' ? 'alone' : tt;
-  String usercontext = "month_visited:" + months[dt.month] + ",company:" + (tt ?? 'alone');
-  if(coordinate == null){
-    if(await PermissionHandler().checkPermissionStatus(PermissionGroup.location) == PermissionStatus.granted) {
-      
-      try{
-      Position pos = await Geolocator().getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
-      coordinate = new Coordinate(pos.latitude, pos.longitude);
-      } catch(e){
+  String usercontext =
+      "month_visited:" + months[dt.month] + ",company:" + (tt ?? 'alone');
+  if (coordinate == null) {
+    if (await PermissionHandler()
+            .checkPermissionStatus(PermissionGroup.location) ==
+        PermissionStatus.granted) {
+      try {
+        Position pos = await Geolocator()
+            .getLastKnownPosition(desiredAccuracy: LocationAccuracy.high);
+        coordinate = new Coordinate(pos.latitude, pos.longitude);
+      } catch (e) {
         print(e);
       }
-    }    
+    }
   }
 
   var jsonstring = {
     "id": await loadInt('currentUserID'),
     "context": usercontext.toLowerCase(),
-    "coordinate": "(" +  coordinate.getLat().toString() + "," + coordinate.getLong().toString() + ")",
+    "coordinate": "(" +
+        coordinate.getLat().toString() +
+        "," +
+        coordinate.getLong().toString() +
+        ")",
     "dist": distance ?? 1
   };
   var jsonedString = jsonEncode(jsonstring);
   try {
     String _apiAdress = apiAdress + '/request-recommendations/';
-    var response = await http.post(
-        _apiAdress,
-        body: jsonedString,
-        headers: {"Content-Type": "application/json"});
+    var response = await http.post(_apiAdress,
+        body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
       var attracts = response.headers['attractions'];
       var decoded = attracts == null ? [] : jsonDecode(attracts);
@@ -346,8 +354,9 @@ Future<List<Attraction>> getRecommendations(
       List<Attraction> recAttractions = List<Attraction>();
       String temp = "";
       for (var i = 0; i < t.length; i++) {
+        bool toadd = true;
         List<String> open = [];
-        if (t[i]['opening_hours'] == "NA"){
+        if (t[i]['opening_hours'] == "NA") {
           open.add('Not Available');
           open.add('Not Available');
           open.add('Not Available');
@@ -355,37 +364,182 @@ Future<List<Attraction>> getRecommendations(
           open.add('Not Available');
           open.add('Not Available');
           open.add('Not Available');
-        }else{
+        } else {
           var oh = jsonDecode(t[i]['opening_hours']);
+
+          String dayoh = oh[dt.weekday -1];
+
+          List<String> dayopenhours = dayoh.split(',');
+            if (dayopenhours.length > 1) {
+              int interValCounter = 0;
+              for (var time in dayopenhours) {
+                List<String> splitonspace = time.split(' ');
+                if (interValCounter == 0) {
+                  splitonspace.removeAt(0);
+                  interValCounter++;
+                }
+                if (splitonspace[0] == 'Closed') {
+                  toadd = false;
+                  break;
+                } else if (splitonspace[1] == 'AM') {
+                  if (splitonspace[0].split(':')[0] == '12') {
+                    splitonspace[0] = '0:' + splitonspace[0].split(':')[1];
+                  }
+                  if (splitonspace[4] == 'PM') {
+                    int temptime = int.parse(splitonspace[3].split(':')[0]);
+                    temptime += splitonspace[3].split(':')[0] == '12' ? 0 : 12;
+                    splitonspace[3] = temptime.toString() +
+                        ':' +
+                        splitonspace[2].split(':')[1];
+                  }
+                  splitonspace.removeAt(1);
+                } else if (splitonspace[1] == 'PM') {
+                  int temptime = int.parse(splitonspace[0].split(':')[0]);
+                  temptime += splitonspace[0].split(':')[0] == '12' ? 0 : 12;
+                  splitonspace[0] =
+                      temptime.toString() + ':' + splitonspace[0].split(':')[1];
+                  if (splitonspace[4] == 'AM') {
+                    if (splitonspace[3].split(':')[0] == '12') {
+                      splitonspace[3] = '0:' + splitonspace[0].split(':')[1];
+                    }
+                  } else if (splitonspace[4] == 'PM') {
+                    int temptime = int.parse(splitonspace[3].split(':')[0]);
+                    temptime += splitonspace[3].split(':')[0] == '12' ? 0 : 12;
+                    splitonspace[3] = temptime.toString() +
+                        ':' +
+                        splitonspace[3].split(':')[1];
+                  }
+                  splitonspace.removeAt(1);
+                } else if (splitonspace[1] == '–') {
+                  if (splitonspace[3] == 'AM') {
+                    if (splitonspace[2].split(':')[2] == '12') {
+                      splitonspace[2] = '0:' + splitonspace[2].split(':')[1];
+                    }
+                    if (splitonspace[0].split(':')[0] == '12') {
+                      splitonspace[0] = '0:' + splitonspace[0].split(':')[1];
+                    }
+                  } else if (splitonspace[3] == 'PM') {
+                    int temptime = int.parse(splitonspace[2].split(':')[2]);
+                    temptime += splitonspace[2].split(':')[0] == '12' ? 0 : 12;
+                    splitonspace[2] = temptime.toString() +
+                        ':' +
+                        splitonspace[2].split(':')[1];
+                    temptime = int.parse(splitonspace[0].split(':')[0]);
+                    temptime += splitonspace[0].split(':')[0] == '12' ? 0 : 12;
+                    ;
+                    splitonspace[0] = temptime.toString() +
+                        ':' +
+                        splitonspace[0].split(':')[1];
+                  }
+                }
+
+                if (int.parse(dt.hour.toString()) >
+                    int.parse(splitonspace[0].split(':')[0])) {
+                  if (int.parse(dt.hour.toString()) <
+                      int.parse(splitonspace[2].split(':')[0])) {
+                    break;
+                  } else if (int.parse(splitonspace[2].split(':')[0]) <
+                      int.parse(splitonspace[0].split(':')[0])) {
+                    break;
+                  }
+                }
+                toadd = false;
+              }
+            } else {
+              List<String> splitonspace = dayoh.split(' ');
+              splitonspace.removeAt(0);
+              if (splitonspace[0] == 'Closed') {
+                toadd = false;
+              } else if (splitonspace[1] == 'AM') {
+                if (splitonspace[0].split(':')[0] == '12') {
+                  splitonspace[0] = '0:' + splitonspace[0].split(':')[1];
+                }
+                if (splitonspace[4] == 'PM') {
+                  int temptime = int.parse(splitonspace[3].split(':')[0]);
+                  temptime += splitonspace[3].split(':')[0] == '12' ? 0 : 12;
+                  splitonspace[3] =
+                      temptime.toString() + ':' + splitonspace[3].split(':')[1];
+                }
+                splitonspace.removeAt(1);
+              } else if (splitonspace[1] == 'PM') {
+                int temptime = int.parse(splitonspace[0].split(':')[0]);
+                temptime += splitonspace[0].split(':')[0] == '12' ? 0 : 12;
+                splitonspace[0] =
+                    temptime.toString() + ':' + splitonspace[0].split(':')[1];
+                if (splitonspace[4] == 'AM') {
+                  if (splitonspace[3].split(':')[0] == '12') {
+                    splitonspace[3] = '0:' + splitonspace[0].split(':')[1];
+                  }
+                } else if (splitonspace[4] == 'PM') {
+                  int temptime = int.parse(splitonspace[3].split(':')[0]);
+                  temptime += splitonspace[3].split(':')[0] == '12' ? 0 : 12;
+                  splitonspace[0] =
+                      temptime.toString() + ':' + splitonspace[3].split(':')[1];
+                }
+                splitonspace.removeAt(1);
+              } else if (splitonspace[1] == "–") {
+                if (splitonspace[3] == 'AM') {
+                  if (splitonspace[2].split(':')[2] == '12') {
+                    splitonspace[2] = '0:' + splitonspace[2].split(':')[1];
+                  }
+                  if (splitonspace[0].split(':')[0] == '12') {
+                    splitonspace[0] = '0:' + splitonspace[0].split(':')[1];
+                  }
+                } else if (splitonspace[3] == 'PM') {
+                  int temptime = int.parse(splitonspace[2].split(':')[0]);
+                  temptime += splitonspace[2].split(':')[0] == '12' ? 0 : 12;
+                  splitonspace[2] =
+                      temptime.toString() + ':' + splitonspace[2].split(':')[1];
+                  temptime = int.parse(splitonspace[0].split(':')[0]);
+                  temptime += splitonspace[0].split(':')[0] == '12' ? 0 : 12;
+                  splitonspace[0] =
+                      temptime.toString() + ':' + splitonspace[0].split(':')[1];
+                }
+              }
+
+              if (int.parse(dt.hour.toString()) >
+                  int.parse(splitonspace[0].split(':')[0])) {
+                if (int.parse(dt.hour.toString()) <
+                    int.parse(splitonspace[2].split(':')[0])) {
+                } else if (int.parse(splitonspace[2].split(':')[0]) <
+                    int.parse(splitonspace[0].split(':')[0])) {
+                } else {
+                  toadd = false;
+                }
+              } else {
+                toadd = false;
+              }
+            }
+
           for (var item in oh) {
             open.add(item.toString());
           }
         }
         double score = t[i]['score'];
         score = score > 5 ? 5 : score;
-        
-        
+
         temp += (t[i]['id']).toString() + '|';
 
-        recAttractions.add(new Attraction(
-          t[i]['id'],
-          t[i]['name'],
-          open,
-          t[i]['img_path'],
-          !t[i]['isFoodPlace'],
-          t[i]['rating'],
-          t[i]['description'],
-          t[i]['url'],
-          t[i]['lat'],
-          t[i]['long'],
-          score,
-          //t[i]['distance']
-          distanceBetweenCoordinates(new Coordinate(t[i]['lat'], t[i]['long']), coordinate)
-          ));        
+        if (toadd) {
+          recAttractions.add(new Attraction(
+              t[i]['id'],
+              t[i]['name'],
+              open,
+              t[i]['img_path'],
+              !t[i]['isFoodPlace'],
+              t[i]['rating'],
+              t[i]['description'],
+              t[i]['url'],
+              t[i]['lat'],
+              t[i]['long'],
+              score,
+              //t[i]['distance']
+              distanceBetweenCoordinates(
+                  new Coordinate(t[i]['lat'], t[i]['long']), coordinate)));
+        }
       }
       print(temp);
       return recAttractions;
-
     } else {
       displayMsg('No connection to server: \nGR', context);
     }
@@ -394,7 +548,6 @@ Future<List<Attraction>> getRecommendations(
     print(e);
   }
 }
-
 
 Future<void> updateLikedAttraction(BuildContext context) async {
   DataContainerState data = DataContainer.of(context);
@@ -410,10 +563,8 @@ Future<void> updateLikedAttraction(BuildContext context) async {
     var postEncode = jsonEncode(preEncode);
     try {
       String _apiAdress = apiAdress + '/update-liked-attractions/';
-      var response = await http.post(
-          _apiAdress,
-          body: postEncode,
-          headers: {"Content-Type": "application/json"});
+      var response = await http.post(_apiAdress,
+          body: postEncode, headers: {"Content-Type": "application/json"});
       if (response.statusCode != 200) {
         displayMsg('Error: ' + response.statusCode.toString(), context);
       }
@@ -428,10 +579,8 @@ Future<List<Attraction>> getLikedAttraction(BuildContext context) async {
   var jsonedString = jsonEncode(jsonstring);
   try {
     String _apiAdress = apiAdress + '/request-liked-attractions/';
-    var response = await http.post(
-        _apiAdress,
-        body: jsonedString,
-        headers: {"Content-Type": "application/json"});
+    var response = await http.post(_apiAdress,
+        body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
       var attracts = response.headers['attractions'];
       var decoded = attracts == null ? [] : jsonDecode(attracts);
@@ -439,7 +588,7 @@ Future<List<Attraction>> getLikedAttraction(BuildContext context) async {
       List<Attraction> recAttractions = List<Attraction>();
       for (var i = 0; i < t.length; i++) {
         List<String> open = [];
-        if (t[i]['opening_hours'] == "NA"){
+        if (t[i]['opening_hours'] == "NA") {
           open.add('Not Available');
           open.add('Not Available');
           open.add('Not Available');
@@ -447,7 +596,7 @@ Future<List<Attraction>> getLikedAttraction(BuildContext context) async {
           open.add('Not Available');
           open.add('Not Available');
           open.add('Not Available');
-        }else{
+        } else {
           var oh = jsonDecode(t[i]['opening_hours']);
           for (var item in oh) {
             open.add(item.toString());
@@ -489,8 +638,8 @@ Future<void> checkLogIn(
     var response = await http.post(_apiadress,
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
-      saveString('currentUser', username.toString());   
-      //print(await loadString('currentUser'));   
+      saveString('currentUser', username.toString());
+      //print(await loadString('currentUser'));
       var t = jsonDecode(response.headers['id']);
       int v = t['id'];
       saveInt('currentUserID', v);
@@ -521,7 +670,8 @@ Future<void> checkSignUp(
       saveString('currentUser', username.toString());
       var id = jsonDecode(response.headers['id']);
       saveInt('currentUserID', id);
-      Navigator.pushNamedAndRemoveUntil(context, '/context_prompt', (Route<dynamic> route) => false);
+      Navigator.pushNamedAndRemoveUntil(
+          context, '/context_prompt', (Route<dynamic> route) => false);
     } else if (response.statusCode == 208) {
       displayMsg('Username already taken.', context);
     } else {
@@ -592,15 +742,20 @@ void launchWebsite(String url, var context) async {
 }
 
 Coordinate findMiddlePoint(Coordinate one, Coordinate two) {
-  double latdiff =
-      one.getLat() < two.getLat() ? two.getLat() - one.getLat() : one.getLat() - two.getLat();
-  double longdiff =
-      one.getLong() < two.getLong() ? two.getLong() - one.getLong() : one.getLong() - two.getLong();
+  double latdiff = one.getLat() < two.getLat()
+      ? two.getLat() - one.getLat()
+      : one.getLat() - two.getLat();
+  double longdiff = one.getLong() < two.getLong()
+      ? two.getLong() - one.getLong()
+      : one.getLong() - two.getLong();
   longdiff = longdiff / 2;
   latdiff = latdiff / 2;
-  double lat = one.getLat() < two.getLat() ? one.getLat() + latdiff : two.getLat() + latdiff;
-  double long =
-      one.getLong() < two.getLong() ? one.getLong() + longdiff : two.getLong() + longdiff;
+  double lat = one.getLat() < two.getLat()
+      ? one.getLat() + latdiff
+      : two.getLat() + latdiff;
+  double long = one.getLong() < two.getLong()
+      ? one.getLong() + longdiff
+      : two.getLong() + longdiff;
   return new Coordinate(lat, long);
 }
 
@@ -696,11 +851,11 @@ class Attraction {
     _phone_number = phone_number;
   }
 
-  double getPenalisedScore(){
+  double getPenalisedScore() {
     return _penalisedScore;
   }
 
-  void setPenalisedScore(double val){
+  void setPenalisedScore(double val) {
     this._penalisedScore = val;
   }
 
@@ -742,19 +897,19 @@ class Attraction {
 
   double getScore() => _score;
 
-  double setScore(score){
+  double setScore(score) {
     _score = score;
   }
 
   double getDistance() => _distance;
 
-  void setDistance(dist){
+  void setDistance(dist) {
     _distance = dist;
   }
 
   String getPhoneNumber() => _phone_number;
 
-  void setPhoneNumber(pn){
+  void setPhoneNumber(pn) {
     _phone_number = pn;
   }
 
