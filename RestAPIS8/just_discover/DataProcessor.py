@@ -237,7 +237,7 @@ def read_data_binary_file():
             rating_obj.cond_dim_dict[counter] = dimc
 
         for line in reader:
-            row = line.split(',')
+            row = line.strip().split(',')
             user = row[0]
             user_id = rating_obj.user_ids.get(user, len(rating_obj.user_ids))
             rating_obj.user_ids[user] = user_id
@@ -461,7 +461,6 @@ def save_dataset_to_file(rating_obj, path="dataset.csv"):
                     line = []
                     line.append(user_name)
                     line.append(item_id)
-                    line.append(rating)
                     line.append(rating)
                     ctx_list = rating_obj.ids_ctx_list[ctx]
                     for idx in range(len(rating_obj.cond_ids.keys())):

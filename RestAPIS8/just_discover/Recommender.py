@@ -13,7 +13,6 @@ from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 
 
-
 np.random.seed(seed=8)
 np.seterr(all='raise')
 latent_factor_values = recordclass('latent_factor_values', 'value delta')
@@ -24,6 +23,7 @@ def __train_eval_parallel_worker(recommender):
     recommender.build_ICAMF(evaluate_while_training=True)
     measurement = recommender.evaluate()
     return measurement
+
 
 
 def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterations, clipping, min_num_ratings=1, read_from_file=False):
@@ -69,14 +69,16 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
 
     plt.show()
 
-
     with open(f'Evaluations\\results_fold_{summary.fold}_config_{summary.configuration}.txt', "w+") as file:
         file.write(str(summary))
     print(summary)
 
-def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping, min_num_ratings=1):
-    #rating_obj = dp.read_data_binary(min_num_ratings)
-    rating_obj = dp.read_data_binary_file()
+def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping, min_num_ratings=1, read_from_file=False):
+    if read_from_file:
+        rating_obj = dp.read_data_binary_file()
+    else:
+        rating_obj = dp.read_data_binary(min_num_ratings)
+
     rating_obj.rate_matrix = rating_obj.rate_matrix.tocsc()
     icamf = ICAMF(rating_obj.rate_matrix, None, rating_obj, fold="Final_Model", regularizer=regularizer,
                   learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping)
@@ -137,7 +139,6 @@ class ICAMF:
         for iteration in range(0, self.iterations):
 
             loss = 0
-
             for idx_ctx in range(0, self.train_matrix._shape[1]):
                 column = self.train_matrix.getcol(idx_ctx)
                 for idx_inner in range(0, column.nnz):

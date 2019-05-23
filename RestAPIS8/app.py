@@ -397,9 +397,9 @@ def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iter
                                     num_factors=num_factors, iterations=iterations, clipping=clipping,min_num_ratings= min_num_ratings,read_from_file=read_from_file)
 
 
-def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping=False, min_num_ratings=1):
+def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping=False, min_num_ratings=1, read_from_file=False):
     recommender.train_and_save_model(regularizer=regularizer, learning_rate=learning_rate,
-                                     num_factors=num_factors,iterations=iterations,clipping=clipping,min_num_ratings=min_num_ratings)
+                                     num_factors=num_factors,iterations=iterations,clipping=clipping,min_num_ratings=min_num_ratings,read_from_file=read_from_file)
 
 
 def place_details():
@@ -512,12 +512,16 @@ def insert_geocoding_database():
 #To run without clipping set to False or del argument
 
 
+#rating_obj = dataprocessor.balance_data()
+#dataprocessor.save_dataset_to_file(rating_obj=rating_obj)
+
+
 
 #dataprocessor.read_data_binary()
 #rating_obj = dataprocessor.balance_data()
 #dataprocessor.save_dataset_to_file(rating_obj)
-train_recommender_kfold(kfold=5, regularizer=0.01, learning_rate=0.0007, num_factors=10, iterations=5, clipping=5, min_num_ratings=1, read_from_file=True)
-
+train_and_save_model(0.001,0.001,20,20,5,1, True)
+#train_and_save_model(0.001,0.001,20,20,5,1, False)
 #train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.001, num_factors=20, iterations=50, clipping=5, min_num_ratings=2, read_from_file=True)
 
 
