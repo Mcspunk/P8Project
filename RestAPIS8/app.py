@@ -515,6 +515,101 @@ def insert_geocoding_database():
 #dataprocessor.save_dataset_to_file(rating_obj)
 
 
+
+def save_movie_lens():
+    item_id_title_dict = dataprocessor.tree()
+    item_id_genre_dict = dataprocessor.tree()
+    user_id_gender_dict = dataprocessor.tree()
+    user_id_age_dict = dataprocessor.tree()
+    genre_dict = dataprocessor.tree()
+
+
+    def get_age_id(age):
+        if age < 20:
+            return [1, 0, 0, 0, 0]
+        elif age < 30:
+            return [0, 1, 0, 0, 0]
+        elif age < 40:
+            return [0, 0, 1, 0, 0]
+        elif age < 50:
+            return [0, 0, 0, 1, 0]
+        else:
+            return [0, 0, 0, 0, 1]
+
+    with open('ml\\u.user', 'r') as file:
+        for line in file:
+            line_str = line.strip().lower().split('|')
+            user_id = int(line_str[0])
+            age = get_age_id(int(line_str[1]))
+            gender = line_str[2]
+            user_id_age_dict[user_id] = age
+            user_id_gender_dict[user_id] = gender
+            # print(line)
+
+    with open('ml\\u.genre', 'r') as file:
+        for line in file:
+            line_str = line.strip().lower().split('|')
+            if line == '\n':
+                continue
+            genre = line_str[0]
+            id = int(line_str[1])
+            genre_dict[genre][id] = id
+
+    with open('ml\\u.item', 'r') as file:
+        for line in file:
+            line_str = line.strip().lower().split('|')
+            id = int(line_str[0])
+            title = line_str[1].replace(',','')
+            genres_binary = line_str[5:]
+            genre_id_list = []
+            for idx, genre in enumerate(genres_binary):
+                if genre == '1':
+                    genre_id_list.append(idx)
+            item_id_genre_dict[id] = genre_id_list
+            item_id_title_dict[id] = title
+
+    genre_list = ["genre:" + str(x) for x in genre_dict.keys()]
+    header = "user_id,item_id,rating,age:0-19,age:20-29,age:30-39,age:40-49,age:50++,gender:m,gender:f," + ','.join(genre_list)
+    with open('movielens.csv', 'w+') as writer:
+        writer.write(header + '\n')
+        with open('ml\\u.data','r') as reader:
+            for line in reader:
+                line_str = line.split('\t')
+                user_id = int(line_str[0])
+                item_id  = int(line_str[1])
+                rating = float(line_str[2])
+                genres = item_id_genre_dict[item_id]
+                title = item_id_title_dict[item_id]
+
+                context_binary = []
+                context_binary.extend(user_id_age_dict[user_id])
+                if user_id_gender_dict[user_id] == 'm':
+                    context_binary.append(1)
+                else:
+                    context_binary.append(0)
+                if user_id_gender_dict[user_id] == 'f':
+                    context_binary.append(1)
+                else:
+                    context_binary.append(0)
+                for genre in range(len(genre_dict.keys())):
+                    if genre in genres:
+                        context_binary.append(1)
+                    else:
+                        context_binary.append(0)
+                context_str = ','.join(str(elem) for elem in context_binary)
+
+                final = f'{user_id},{title},{rating},{context_str}'
+                writer.write(final + '\n')
+
+
+
+
+
+
+
+
+
+#save_movie_lens()
 train_recommender_kfold(kfold=5, regularizer=0.01, learning_rate=0.05, num_factors=20, iterations=50, clipping=5, min_num_ratings=1, momentum=0, read_from_file=True)
 #train_and_save_model(regularizer=0.001, learning_rate=0.002, num_factors=20, iterations=10, clipping=5, min_num_ratings=1, read_from_file=True, momentum=0)
 

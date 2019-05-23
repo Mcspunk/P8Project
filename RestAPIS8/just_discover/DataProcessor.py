@@ -224,7 +224,7 @@ def transform_reviews_table_to_binary():
 def read_data_binary_file():
     rating_obj = RatingObj()
 
-    with open('dataset.csv', 'r') as reader:
+    with open('movielens.csv', 'r') as reader:
         line = reader.readline()
         colnames = line.split(',')[3:]
         for counter, context in enumerate(colnames):
