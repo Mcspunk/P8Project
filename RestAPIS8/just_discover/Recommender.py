@@ -11,6 +11,7 @@ import dill
 import copy
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
+import sklearn as sk
 
 
 np.random.seed(seed=8)
@@ -79,7 +80,7 @@ def train_and_save_model(regularizer, learning_rate, num_factors, iterations, cl
     else:
         rating_obj = dp.read_data_binary(min_num_ratings)
 
-    rating_obj.rate_matrix = rating_obj.rate_matrix.tocsc()
+    #rating_obj.rate_matrix = rating_obj.rate_matrix.tocsc()
     icamf = ICAMF(rating_obj.rate_matrix, None, rating_obj, fold="Final_Model", regularizer=regularizer,
                   learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping, momentum=momentum)
     icamf.build_ICAMF()
@@ -147,17 +148,19 @@ class ICAMF:
 
         for iteration in range(0, self.iterations):
 
+            shuffled_idx = list(range(0, self.train_matrix._shape[0]))
+            shuffled_idx = sk.utils.shuffle(shuffled_idx)
             loss = 0
-            for idx_ctx in range(0, self.train_matrix._shape[1]):
-                column = self.train_matrix.getcol(idx_ctx)
-                for idx_inner in range(0, column.nnz):
+            for idx in shuffled_idx:
+                row = self.train_matrix.getrow(idx)
+                for idx_inner in range(0, row.nnz):
 
-                    user_item_id = column.indices[idx_inner]
+                    user_item_id = idx
                     user_id = self.rating_object.get_user_id_from_user_item_id(user_item_id)
                     item_id = self.rating_object.get_item_id_from_user_item_id(user_item_id)
-                    context = idx_ctx
+                    context = row.indices[idx_inner]
                     conditions = self.rating_object.ids_ctx_list.get(context)
-                    rating_user_item_context = column.data[idx_inner]
+                    rating_user_item_context = row.data[idx_inner]
                     prediction = self.predict(user_id, item_id, context)
                     error_user_item = rating_user_item_context - prediction
 
