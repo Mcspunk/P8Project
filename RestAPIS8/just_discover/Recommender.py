@@ -36,7 +36,7 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
 
     for fold in range(k_fold):
         train_sparse_matrix, test_sparse_matrix = rating_obj.get_kth_fold(fold+1)
-        icamf = ICAMF(train_sparse_matrix, train_sparse_matrix, rating_obj, fold=fold+1, regularizer=regularizer,
+        icamf = ICAMF(train_sparse_matrix, test_sparse_matrix, rating_obj, fold=fold+1, regularizer=regularizer,
                       learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping, momentum=momentum)
         recommender_list.append(icamf)
     rating_obj.post_process_memory_for_training()
