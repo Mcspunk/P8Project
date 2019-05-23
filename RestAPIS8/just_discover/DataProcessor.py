@@ -492,47 +492,53 @@ def balance_data(min_num_ratings_per_user=2):
             for context, rating in contexts.items():
                 dict_poi[item] += 1
     for key, val in dict_poi.items():
-        if val == 1:
+        if val < min_num_ratings_per_user:
             delete_poi_list.append(key)
             poi_good = False
 
     delete_user_list= []
 
     while not poi_good or not user_good:
+        dict_poi.clear()
         if not poi_good:
             poi_good = True
             for i in delete_poi_list:
                 for user in corrected_dict:
                     corrected_dict[user].pop(i, None)
-            #check
+            delete_poi_list = []
+
 
             for user,items in corrected_dict.items():
                 count = 0
                 for item, ctx in items.items():
                     count += len(ctx.values())
-                if count == 1:
+                if count < min_num_ratings_per_user:
                     user_good = False
                     delete_user_list.append(user)
-            delete_poi_list = []
+
 
         if not user_good:
             user_good = True
             for i in delete_user_list:
                 corrected_dict.pop(i,None)
+            delete_user_list = []
 
             for user, items in corrected_dict.items():
                 for item, contexts in items.items():
                     for context, rating in contexts.items():
                         dict_poi[item] += 1
             for key, val in dict_poi.items():
-                if val == 1:
+                if val < min_num_ratings_per_user:
                     delete_poi_list.append(key)
                     poi_good = False
+
+
     ratings_num.clear()
     for user, val in corrected_dict.items():
         for item, context in val.items():
             for ctx, rating in context.items():
                 ratings_num[rating] += 1
+
 
     rating_lowest = min([val for key,val in ratings_num.items()])
     ratings_amount_to_delete = [(key, val-rating_lowest)for key, val in ratings_num.items()]
@@ -569,8 +575,8 @@ def __remove_ratings(corrected_dict, rating_to_remove, remove_amount, dict_poi, 
 
         if target_rating and number_of_ratings > min_num_ratings_per_user:
             for i in intermediate_candidate:
-                if number_of_ratings - 1 > (min_num_ratings_per_user-1):
-                    if dict_poi[i[1]] > 3:
+                if number_of_ratings > min_num_ratings_per_user:
+                    if dict_poi[i[1]] > min_num_ratings_per_user:
                         number_of_ratings -= 1
                         do_remove.append(i)
                         dict_poi[i[1]] += -1
