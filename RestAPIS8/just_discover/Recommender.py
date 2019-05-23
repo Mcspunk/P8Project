@@ -50,26 +50,6 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
             file.write(str(result))
     summary = reduce(operator.add, measurement_results)
 
-    fig, axs = plt.subplots(2)
-    fig.suptitle('Configuration: LR = ' + str(learning_rate) + ', Reg = ' + str(regularizer) + ', Factors = ' + str(num_factors) + ', Momentum = ' + str(momentum))
-
-    axs[0].plot(summary.loss_list)
-    axs[0].set_xlim([0, iterations])
-    axs[0].set_ylim([0, max(summary.loss_list)+1000])
-    axs[0].set_title('\nLoss')
-    axs[0].set_xlabel('Iterations')
-    axs[0].set_ylabel('Loss')
-
-    axs[1].plot(summary.test_accuracy_list, 'tab:orange')
-    axs[1].plot(summary.train_accuracy_list, 'tab:green')
-    axs[1].set_xlim([0, iterations])
-    axs[1].set_ylim([0, 1])
-    axs[1].set_title('Test(Orange), Train(Green) Accuracy')
-    axs[1].set_xlabel('Iterations')
-    axs[1].set_ylabel('Accuracy')
-
-    plt.show()
-
     with open(f'Evaluations\\results_fold_{summary.fold}_config_{summary.configuration}.txt', "w+") as file:
         file.write(str(summary))
     print(summary)
@@ -293,13 +273,40 @@ class ICAMF:
                             for factor_index, gradient in enumerate(context_condition_factor_gradients[idx]):
                                 self.context_factor_matrix[condition][
                                     factor_index] += self.learning_rate * gradient * factor
-                                
+
             if evaluate_while_training:
                 self.evaluate_test_and_train()
 
             print(f'Fold: {str(self.fold)} ' + "Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
             print("Loss: " + str(loss))
             self.loss_list.append(loss)
+
+            # Show plots each iteration
+            fig, axs = plt.subplots(2)
+            fig.suptitle(
+                'Configuration: LR = ' + str(self.learning_rate) +
+                ', Reg = ' + str(self.regularizer_1) +
+                ', Factors = ' + str(self.num_factors) +
+                ', \nMomentum = ' + str(self.momentum) +
+                ', Iteration = ' + str(iteration) +
+                ', Fold = ' + str(self.fold))
+
+            axs[0].plot(self.loss_list)
+            axs[0].set_xlim([0, self.iterations])
+            axs[0].set_ylim([0, max(self.loss_list) + 1000])
+            axs[0].set_title('\n\n')
+            axs[0].set_xlabel('Iterations')
+            axs[0].set_ylabel('Loss')
+
+            axs[1].plot(self.test_accuracy_list, 'tab:orange')
+            axs[1].plot(self.train_accuracy_list, 'tab:green')
+            axs[1].set_xlim([0, self.iterations])
+            axs[1].set_ylim([0, 1])
+            axs[1].set_title('Test(Orange), Train(Green)')
+            axs[1].set_xlabel('Iterations')
+            axs[1].set_ylabel('Accuracy')
+
+            plt.show()
 
 
     def evaluate_test_and_train(self):
