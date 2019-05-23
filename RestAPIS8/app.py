@@ -392,9 +392,9 @@ def update_binary_review_table():
     dataprocessor.transform_reviews_table_to_binary()
 
 
-def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iterations, clipping=False, min_num_ratings=1, read_from_file=False):
+def train_recommender_kfold(kfold, regularizer, learning_rate, num_factors, iterations, momentum, clipping=False, min_num_ratings=1, read_from_file=False):
     recommender.train_eval_parallel(k_fold=kfold, regularizer=regularizer, learning_rate=learning_rate,
-                                    num_factors=num_factors, iterations=iterations, clipping=clipping,min_num_ratings= min_num_ratings,read_from_file=read_from_file)
+                                    num_factors=num_factors, iterations=iterations, clipping=clipping,min_num_ratings= min_num_ratings, momentum=momentum, read_from_file=read_from_file)
 
 
 def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping=False, min_num_ratings=1):
@@ -516,7 +516,7 @@ def insert_geocoding_database():
 #dataprocessor.read_data_binary()
 #rating_obj = dataprocessor.balance_data()
 #dataprocessor.save_dataset_to_file(rating_obj)
-train_recommender_kfold(kfold=5, regularizer=0.01, learning_rate=0.0007, num_factors=10, iterations=5, clipping=5, min_num_ratings=1, read_from_file=True)
+train_recommender_kfold(kfold=5, regularizer=0.01, learning_rate=0.0007, num_factors=10, iterations=5, clipping=5, min_num_ratings=1, momentum=0.9, read_from_file=True)
 
 #train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.001, num_factors=20, iterations=50, clipping=5, min_num_ratings=2, read_from_file=True)
 

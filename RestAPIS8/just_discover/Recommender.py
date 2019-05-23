@@ -26,7 +26,7 @@ def __train_eval_parallel_worker(recommender):
     return measurement
 
 
-def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterations, clipping, min_num_ratings=1, read_from_file=False):
+def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterations, clipping, momentum, min_num_ratings=1, read_from_file=False):
     if read_from_file:
         rating_obj = dp.read_data_binary_file()
     else:
@@ -38,7 +38,7 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
     for fold in range(k_fold):
         train_sparse_matrix, test_sparse_matrix = rating_obj.get_kth_fold(fold+1)
         icamf = ICAMF(train_sparse_matrix, test_sparse_matrix, rating_obj, fold=fold+1, regularizer=regularizer,
-                      learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping)
+                      learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping, momentum=momentum)
         recommender_list.append(icamf)
     rating_obj.post_process_memory_for_training()
     measurement_results = Parallel(max_nbytes='6G', backend='multiprocessing', n_jobs=k_fold, verbose=1)(map(delayed(__train_eval_parallel_worker), recommender_list))
@@ -98,7 +98,8 @@ class ICAMF:
     init_std = 0.1
     num_factors = 10
 
-    def __init__(self, train_matrix, test_matrix, rating_obj, fold, regularizer, learning_rate, num_factors, iterations, soft_clipping=False):
+    def __init__(self, train_matrix, test_matrix, rating_obj, fold, regularizer, learning_rate, num_factors, iterations, momentum, soft_clipping=False):
+        self.momentum = momentum
         self.train_matrix = train_matrix
         self.global_mean_rating = np.mean(self.train_matrix.data)
         self.test_matrix = test_matrix
@@ -121,6 +122,14 @@ class ICAMF:
 
         self.context_factor_matrix = np.random.uniform(self.init_mean, high=self.init_std,
                                                        size=(len(self.rating_object.ids_cond), self.num_factors))
+
+        #Velocity structures for momentum
+        self.user_bias_vel = np.zeros_like(self.user_bias)
+        self.item_bias_vel = np.zeros_like(self.item_bias)
+        self.user_factor_matrix_vel = np.zeros_like(self.user_factor_matrix)
+        self.item_factor_matrix_vel = np.zeros_like(self.item_factor_matrix)
+        self.context_factor_matrix_vel = np.zeros_like(self.context_factor_matrix)
+
         self.loss_list = list()
         self.test_accuracy_list = list()
         self.test_precision_list = list()
@@ -156,9 +165,9 @@ class ICAMF:
                     context_condition_factor_gradients = [list() for condition in conditions]
 
                     loss += abs(error_user_item)
-                    #loss += error_user_item*error_user_item
+                    # loss += error_user_item*error_user_item
 
-                    #Calculate loss
+                    # Calculate loss
                     loss += 0.5 * self.regularizer_1 * self.item_bias[item_id]*self.item_bias[item_id]
                     loss += 0.5 * self.regularizer_1 * self.user_bias[user_id]*self.user_bias[user_id]
                     loss += 0.5 * self.regularizer_1 * (np.linalg.norm(self.user_factor_matrix[user_id]) ** 2)
@@ -169,7 +178,8 @@ class ICAMF:
                             loss += 0.5 * self.regularizer_1 * (np.linalg.norm(self.context_factor_matrix[condition]) ** 2)
                         except FloatingPointError:
                             loss += 0
-                    #Calculate gradients
+
+                    # Calculate gradients
                     user_bias_gradient = error_user_item - (self.regularizer_1 * self.user_bias[user_id])
                     item_bias_gradient = error_user_item - (self.regularizer_1 * self.item_bias[item_id])
 
@@ -198,8 +208,9 @@ class ICAMF:
                                 item_factor_gradients.append(tuple_element.delta)
                             else:
                                 context_condition_factor_gradients[idx-2].append(tuple_element.delta)
-                    factor = 1
 
+                    # Gradient clipping
+                    factor = 1
                     if self.soft_clipping is not False:
                         gradient_sum_squared = 0
                         try:
@@ -214,20 +225,31 @@ class ICAMF:
                         if norm > self.soft_clipping:
                             factor = self.soft_clipping / norm
 
-                    # Update gradients:  First biases, then user_matrix, item_matrix, and contaxt_matrix
+                    # Update parameters using momentum:  First biases, then user_matrix, item_matrix, and contaxt_matrix
 
-                    self.user_bias[user_id] += self.learning_rate * user_bias_gradient * factor
-                    self.item_bias[item_id] += self.learning_rate * item_bias_gradient * factor
+                    # Update bias velocity
+                    self.user_bias_vel[user_id] = self.user_bias_vel[user_id] * self.momentum - self.learning_rate * user_bias_gradient * factor
+                    self.item_bias_vel[item_id] = self.item_bias_vel[item_id] * self.momentum - self.learning_rate * item_bias_gradient * factor
+
+                    # Update bias
+                    self.user_bias[user_id] += self.user_bias_vel[user_id]
+                    self.item_bias[item_id] += self.item_bias_vel[item_id]
 
                     for factor_index, gradient in enumerate(user_factor_gradients):
-                        self.user_factor_matrix[user_id][factor_index] += self.learning_rate * gradient * factor
+                        # Velocity update
+                        self.user_factor_matrix_vel[user_id][factor_index] = self.user_factor_matrix_vel[user_id][factor_index] * self.momentum - self.learning_rate * gradient * factor
+                        # Parameter update
+                        self.user_factor_matrix[user_id][factor_index] += self.user_factor_matrix_vel[user_id][factor_index]
+
                     for factor_index, gradient in enumerate(item_factor_gradients):
-                        self.item_factor_matrix[item_id][factor_index] += self.learning_rate * gradient * factor
+                        self.item_factor_matrix_vel[item_id][factor_index] = self.item_factor_matrix_vel[item_id][factor_index] * self.momentum - self.learning_rate * gradient * factor
+                        self.item_factor_matrix[item_id][factor_index] += self.item_factor_matrix_vel[item_id][factor_index]
 
                     for idx, condition in enumerate(conditions):
                         for factor_index, gradient in enumerate(context_condition_factor_gradients[idx]):
-                            self.context_factor_matrix[condition][
-                                factor_index] += self.learning_rate * gradient*factor
+                            self.context_factor_matrix_vel[condition][factor_index] = self.context_factor_matrix_vel[condition][factor_index] * self.momentum - self.learning_rate * gradient * factor
+                            self.context_factor_matrix[condition][factor_index] += self.context_factor_matrix_vel[condition][factor_index]
+
             if evaluate_while_training:
                 self.evaluate_test_and_train()
 
