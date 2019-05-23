@@ -72,7 +72,7 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
         file.write(str(summary))
     print(summary)
 
-def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping, min_num_ratings=1, read_from_file=False):
+def train_and_save_model(regularizer, learning_rate, num_factors, iterations, clipping, min_num_ratings=1, read_from_file=False, momentum=0.9):
     if read_from_file:
         rating_obj = dp.read_data_binary_file()
     else:
@@ -80,7 +80,7 @@ def train_and_save_model(regularizer, learning_rate, num_factors, iterations, cl
 
     rating_obj.rate_matrix = rating_obj.rate_matrix.tocsc()
     icamf = ICAMF(rating_obj.rate_matrix, None, rating_obj, fold="Final_Model", regularizer=regularizer,
-                  learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping)
+                  learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping, momentum=momentum)
     icamf.build_ICAMF()
     rating_obj.post_process_memory_for_saving()
     icamf.post_process_memory_for_saving()
