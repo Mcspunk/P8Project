@@ -538,6 +538,11 @@ def balance_data(min_num_ratings_per_user=2):
         for item, context in val.items():
             for ctx, rating in context.items():
                 ratings_num[rating] += 1
+    dict_poi.clear()
+    for user, items in corrected_dict.items():
+        for item, contexts in items.items():
+            for context, rating in contexts.items():
+                dict_poi[item] += 1
 
 
     rating_lowest = min([val for key,val in ratings_num.items()])
@@ -555,6 +560,7 @@ def balance_data(min_num_ratings_per_user=2):
             for ctx, rating in context.items():
                 ratings_num[rating] += 1
     print(ratings_num)
+
     return rating_obj
 
     
@@ -562,14 +568,12 @@ def __remove_ratings(corrected_dict, rating_to_remove, remove_amount, dict_poi, 
     do_remove = []
     for user, items in corrected_dict.items():
         target_rating = False
-        number_of_5s = 0
         number_of_ratings = 0
         intermediate_candidate = []
         for item, context in items.items():
             for ctx_id, rating in context.items():
                 if rating == rating_to_remove:
                     target_rating = True
-                    number_of_5s += 1
                     intermediate_candidate.append((user, item, ctx_id))
                 number_of_ratings += 1
 

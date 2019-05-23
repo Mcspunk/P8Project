@@ -511,22 +511,20 @@ def insert_geocoding_database():
 
 #To run without clipping set to False or del argument
 
-rating_obj = dataprocessor.balance_data(4)
-dataprocessor.save_dataset_to_file(rating_obj)
-#train_recommender_kfold(kfold=5, regularizer=0.01, learning_rate=0.001, num_factors=0, iterations=5, clipping=5, min_num_ratings=1, momentum=0.9, read_from_file=True)
+#rating_obj = dataprocessor.balance_data(4)
+#dataprocessor.save_dataset_to_file(rating_obj)
+
+
+train_recommender_kfold(kfold=5, regularizer=0.001, learning_rate=0.05, num_factors=20, iterations=50, clipping=5, min_num_ratings=1, momentum=0, read_from_file=True)
 #train_and_save_model(regularizer=0.001, learning_rate=0.002, num_factors=20, iterations=1, clipping=5, min_num_ratings=1, read_from_file=True, momentum=0)
-#train_recommender_kfold(kfold=5, regularizer=0.0001, learning_rate=0.001, num_factors=50, iterations=50, clipping=5, min_num_ratings=1, momentum=0.0, read_from_file=True)
-#train_recommender_kfold(kfold=5, regularizer=0.01, learning_rate=0.005, num_factors=20, iterations=50, clipping=5, min_num_ratings=1, momentum=0.0, read_from_file=True)
-#train_recommender_kfold(kfold=5, regularizer=0.01, learning_rate=0.001, num_factors=20, iterations=50, clipping=5, min_num_ratings=1, momentum=0.0, read_from_file=True)
+
 
 
 #dataprocessor.read_data_binary()
 #rating_obj = dataprocessor.balance_data(4)
 #dataprocessor.save_dataset_to_file(rating_obj)
 
-#train_recommender_kfold(kfold=5, regularizer=0.01, learning_rate=0.05, num_factors=20, iterations=50, clipping=5, min_num_ratings=1, momentum=0, read_from_file=True)
-#train_recommender_kfold(kfold=5, regularizer=0.05, learning_rate=0.05, num_factors=20, iterations=50, clipping=5, min_num_ratings=1, momentum=0, read_from_file=True)
-#train_recommender_kfold(kfold=5, regularizer=0.0001, learning_rate=0.05, num_factors=20, iterations=50, clipping=5, min_num_ratings=1, momentum=0, read_from_file=True)
+
 
 
 
