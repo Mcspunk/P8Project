@@ -36,7 +36,7 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
 
     for fold in range(k_fold):
         train_sparse_matrix, test_sparse_matrix = rating_obj.get_kth_fold(fold+1)
-        icamf = ICAMF(train_sparse_matrix, train_sparse_matrix, rating_obj, fold=fold+1, regularizer=regularizer,
+        icamf = ICAMF(train_sparse_matrix, test_sparse_matrix, rating_obj, fold=fold+1, regularizer=regularizer,
                       learning_rate=learning_rate, num_factors=num_factors, iterations=iterations, soft_clipping=clipping, momentum=momentum)
         recommender_list.append(icamf)
     rating_obj.post_process_memory_for_training()
@@ -403,7 +403,9 @@ class ICAMF:
             if (entry.true_positive + entry.true_negative) > 0:
                 entry.recall = entry.true_positive / (entry.true_positive + entry.false_negative)
             if (entry.true_positive + entry.true_negative + entry.false_positive + entry.false_negative) > 0:
-                entry.accuracy = (entry.true_positive + entry.true_negative) / (entry.true_positive + entry.true_negative + entry.false_positive + entry.false_negative)
+                #entry.accuracy = (entry.true_positive + entry.true_negative) / (entry.true_positive + entry.true_negative + entry.false_positive + entry.false_negative)
+                total = sum([x for x in labeled_as_dict[entry.rating].values()])
+                entry.accuracy = (entry.true_positive / total)
         precision = 0
         accuracy = 0
         recall = 0
