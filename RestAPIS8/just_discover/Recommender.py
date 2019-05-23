@@ -50,6 +50,32 @@ def train_eval_parallel(k_fold, regularizer, learning_rate, num_factors, iterati
             file.write(str(result))
     summary = reduce(operator.add, measurement_results)
 
+    # Show plots each iteration
+    fig, axs = plt.subplots(2)
+    fig.suptitle(
+        'Configuration: LR = ' + str(learning_rate) +
+        ', Reg = ' + str(regularizer) +
+        ', Factors = ' + str(num_factors) +
+        ', \nMomentum = ' + str(momentum) +
+        ', average')
+
+    axs[0].plot(summary.loss_list)
+    axs[0].set_xlim([0, iterations])
+    axs[0].set_ylim([0, max(summary.loss_list) + 1000])
+    axs[0].set_title('\n\n')
+    axs[0].set_xlabel('Iterations')
+    axs[0].set_ylabel('Loss')
+
+    axs[1].plot(summary.test_accuracy_list, 'tab:orange')
+    axs[1].plot(summary.train_accuracy_list, 'tab:green')
+    axs[1].set_xlim([0, iterations])
+    axs[1].set_ylim([0, 1])
+    axs[1].set_title('Test(Orange), Train(Green)')
+    axs[1].set_xlabel('Iterations')
+    axs[1].set_ylabel('Accuracy')
+
+    plt.show()
+
     with open(f'Evaluations\\results_fold_{summary.fold}_config_{summary.configuration}.txt', "w+") as file:
         file.write(str(summary))
     print(summary)
@@ -249,16 +275,16 @@ class ICAMF:
                             # Velocity update
                             self.user_factor_matrix_vel[user_id][factor_index] = self.user_factor_matrix_vel[user_id][factor_index] * self.momentum - self.learning_rate * gradient * factor
                             # Parameter update
-                            self.user_factor_matrix[user_id][factor_index] += self.user_factor_matrix_vel[user_id][factor_index]
+                            self.user_factor_matrix[user_id][factor_index] -= self.user_factor_matrix_vel[user_id][factor_index]
 
                         for factor_index, gradient in enumerate(item_factor_gradients):
                             self.item_factor_matrix_vel[item_id][factor_index] = self.item_factor_matrix_vel[item_id][factor_index] * self.momentum - self.learning_rate * gradient * factor
-                            self.item_factor_matrix[item_id][factor_index] += self.item_factor_matrix_vel[item_id][factor_index]
+                            self.item_factor_matrix[item_id][factor_index] -= self.item_factor_matrix_vel[item_id][factor_index]
 
                         for idx, condition in enumerate(conditions):
                             for factor_index, gradient in enumerate(context_condition_factor_gradients[idx]):
                                 self.context_factor_matrix_vel[condition][factor_index] = self.context_factor_matrix_vel[condition][factor_index] * self.momentum - self.learning_rate * gradient * factor
-                                self.context_factor_matrix[condition][factor_index] += self.context_factor_matrix_vel[condition][factor_index]
+                                self.context_factor_matrix[condition][factor_index] -= self.context_factor_matrix_vel[condition][factor_index]
 
                     else:
                         self.user_bias[user_id] += self.learning_rate * user_bias_gradient * factor
