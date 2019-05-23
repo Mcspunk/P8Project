@@ -472,8 +472,8 @@ def save_dataset_to_file(rating_obj, path="dataset.csv"):
                     file.write(f'{output}\n')
 
 
-def balance_data():
-    rating_obj = read_data_binary(2)
+def balance_data(min_num_ratings_per_user=2):
+    rating_obj = read_data_binary(min_num_ratings=min_num_ratings_per_user)
     ratings_num = defaultdict(lambda: 0)
     user_set = set.union(set(rating_obj.rating_users_multimap[1]), set(rating_obj.rating_users_multimap[2]))
     corrected_dict = tree()
@@ -536,10 +536,11 @@ def balance_data():
 
     rating_lowest = min([val for key,val in ratings_num.items()])
     ratings_amount_to_delete = [(key, val-rating_lowest)for key, val in ratings_num.items()]
+    ratings_amount_to_delete.sort(key=lambda tup: tup[1], reverse=True)
 
     for rating, delete_amount in ratings_amount_to_delete:
         if delete_amount > 0:
-            corrected_dict, dict_poi = __remove_ratings(corrected_dict, rating, delete_amount, dict_poi)
+            corrected_dict, dict_poi = __remove_ratings(corrected_dict, rating, delete_amount, dict_poi, min_num_ratings_per_user)
     rating_obj.user_rated_item_in_ctx_multimap = corrected_dict
 
     ratings_num.clear()
@@ -551,7 +552,7 @@ def balance_data():
     return rating_obj
 
     
-def __remove_ratings(corrected_dict, rating_to_remove, remove_amount, dict_poi):
+def __remove_ratings(corrected_dict, rating_to_remove, remove_amount, dict_poi, min_num_ratings_per_user):
     do_remove = []
     for user, items in corrected_dict.items():
         target_rating = False
@@ -566,9 +567,9 @@ def __remove_ratings(corrected_dict, rating_to_remove, remove_amount, dict_poi):
                     intermediate_candidate.append((user, item, ctx_id))
                 number_of_ratings += 1
 
-        if target_rating and number_of_ratings > 2:
+        if target_rating and number_of_ratings > min_num_ratings_per_user:
             for i in intermediate_candidate:
-                if number_of_ratings - 1 > 1:
+                if number_of_ratings - 1 > (min_num_ratings_per_user-1):
                     if dict_poi[i[1]] > 3:
                         number_of_ratings -= 1
                         do_remove.append(i)
