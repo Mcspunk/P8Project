@@ -367,14 +367,14 @@ class ICAMF:
         for rating in self.rating_object.rating_values:
             confusion_matrix[rating] = confusion_matrix_row(rating, 0, 0, 0, 0, 0, 0, 0)
 
-        for idx_ctx in range(0, test_matrix._shape[1]):
-            column = test_matrix.getcol(idx_ctx)
-            for idx_inner in range(0, column.nnz):
-                user_item_id = column.indices[idx_inner]
+        for idx_ui in range(0, self.test_matrix._shape[0]):
+            row = test_matrix.getrow(idx_ui)
+            for idx_inner in range(0, row.nnz):
+                user_item_id = idx_ui
                 user_id = self.rating_object.get_user_id_from_user_item_id(user_item_id)
                 item_id = self.rating_object.get_item_id_from_user_item_id(user_item_id)
-                context = idx_ctx
-                rating_user_item_context = column.data[idx_inner]
+                context = row.indices[idx_inner]
+                rating_user_item_context = row.data[idx_inner]
                 prediction = self.predict(user_id, item_id, context)
                 error_user_item = rating_user_item_context - prediction
                 mae += abs(error_user_item)
@@ -403,7 +403,7 @@ class ICAMF:
         for entry in confusion_matrix.values():
             if (entry.true_positive+entry.false_positive) > 0:
                 entry.precision = entry.true_positive / (entry.true_positive+entry.false_positive)
-            if (entry.true_positive + entry.true_negative) > 0:
+            if (entry.true_positive + entry.false_negative) > 0:
                 entry.recall = entry.true_positive / (entry.true_positive + entry.false_negative)
             if (entry.true_positive + entry.true_negative + entry.false_positive + entry.false_negative) > 0:
                 #entry.accuracy = (entry.true_positive + entry.true_negative) / (entry.true_positive + entry.true_negative + entry.false_positive + entry.false_negative)
