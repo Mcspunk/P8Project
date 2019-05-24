@@ -12,6 +12,7 @@ import copy
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 import sklearn as sk
+import math
 
 
 np.random.seed(seed=8)
@@ -99,6 +100,7 @@ def train_and_save_model(regularizer, learning_rate, num_factors, iterations, cl
 class ICAMF:
 
     learning_rate = 0.03
+    initial_learning_rate = 0.1
     regularizer_1 = 0.01
     iterations = 20
     num_users = 0
@@ -117,6 +119,7 @@ class ICAMF:
         self.iterations = iterations
         self.num_factors = num_factors
         self.learning_rate = learning_rate
+        self.initial_learning_rate = learning_rate
         self.rating_object = rating_obj
         self.num_users = self.rating_object.users
         self.num_items = self.rating_object.items
@@ -303,10 +306,15 @@ class ICAMF:
             if evaluate_while_training:
                 self.evaluate_test_and_train()
 
+            #if (iteration+1) % 3 == 0:
+            #    self.learning_rate = self.learning_rate*0.9
+            #    print(f'Learning_rate= {self.learning_rate}')
+
             print(f'Fold: {str(self.fold)} ' + "Iteration: " + str(iteration) + "\t" + str(datetime.datetime.now().time()))
             print("Loss: " + str(loss))
+            self.learning_rate = self.step_decay(iteration)
             self.loss_list.append(loss)
-
+        '''
             # Show plots each iteration
             fig, axs = plt.subplots(2)
             fig.suptitle(
@@ -333,7 +341,15 @@ class ICAMF:
             axs[1].set_ylabel('Accuracy')
 
             plt.show()
+        '''
 
+    def step_decay(self, iteration):
+        initial_lrate = self.initial_learning_rate
+        drop = 0.5
+        iteration_drop = 5.0
+        lrate = initial_lrate * math.pow(drop,
+                                         math.floor((1 + iteration) / iteration_drop))
+        return lrate
 
     def evaluate_test_and_train(self):
         measurement_training = self.evaluate(test_is_training=True)
