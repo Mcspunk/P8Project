@@ -31,17 +31,9 @@ main() async {
   else {
     runApp(MyApp());
     initPushNotif();
-   // BackgroundFetch.registerHeadlessTask(locationChecker);
+    BackgroundFetch.registerHeadlessTask(locationChecker);
   }
 }
-
-void bgfFired() {
-  DateTime a = new DateTime.now();
-  print(a.toString() + ' backgroundFetch fired-------------------------------------');
-  BackgroundFetch.finish();
-}
-
-//void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {  
   static Widget determineHome() {
@@ -51,7 +43,6 @@ class MyApp extends StatelessWidget {
       return HomeScreenState();
     }
   }
-
   
   @override
   Widget build(BuildContext context) {

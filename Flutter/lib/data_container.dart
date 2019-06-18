@@ -94,11 +94,6 @@ class DataContainerState extends State<DataContainer> {
     _dist = distance;
   }
 
-  bool getupdateRecs() => _updateRecs;
-
-  void setUpdateRecs(boolean) {
-    _updateRecs = boolean;
-  }
 
   List<Attraction> getAllNearbyAttractions() => _allNearbyAttractions;
 

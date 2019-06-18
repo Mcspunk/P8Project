@@ -36,7 +36,7 @@ class Settings extends State<SettingsState> {
 
   void loadTheme(theme) {
     setState(() {
-      this.isDarkTheme = theme;
+      this.isDarkTheme = theme ?? false;
     });
   }
 
@@ -77,7 +77,6 @@ class Settings extends State<SettingsState> {
       child: Scaffold(      
       appBar: AppBar(
         title: Row(
-          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             Text('Settings  '),
             Icon(Icons.settings),
@@ -86,11 +85,6 @@ class Settings extends State<SettingsState> {
       ),
       body: WillPopScope(
         onWillPop: (){
-
-          if(loadInt('dist') != _n || loadString('tripType') != dropdownValue){
-            data.setUpdateRecs(true);
-          }
-
           data.setDist(_n);
           saveInt('dist', _n);
           data.setTripType(dropdownValue);

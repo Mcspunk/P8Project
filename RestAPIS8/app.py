@@ -38,9 +38,7 @@ def get_preferences():
     DBres = cursor.fetchone()
 
     result = DBres[3]
-    # {"pref_0":res[6], "pref_1":res[7], "pref_2":res[8], "pref_3":res[9], "pref_4":res[10], "pref_5":res[11], "pref_6":res[12]}
 
-    # res2 = json.dumps(result)
     res = json.loads(result)
 
     temp = {"Museums": res['Museums'],
@@ -224,7 +222,7 @@ def get_all_recommendations():
     cursor.close()
     conn.close()
 
-    return Response(headers={"attractions": attracs}, content_type='text/json', status=200)
+    return attracs, 200
 
 
 @app.route('/api/update-liked-attractions/', methods=['POST'])
@@ -302,7 +300,7 @@ def get_liked_attractions():
         cursor.close()
         conn.close()
 
-    return Response(headers={"attractions": attracs}, content_type='text/json', status=200)
+    return attracs, 200
 
 
 @app.route('/api/request-recommendations/', methods=['POST'])
@@ -320,7 +318,7 @@ def get_recommendations():
 
     if user_id not in icamf_recommender.rating_object.user_ids:
         cursorGetUser = conn.cursor()
-        cursorGetUser.execute("SELECT most_sim_user FROM justdiscover.users WHERE id_sk = '"+user_id+"';")
+        cursorGetUser.execute("SELECT most_sim_user FROM justdiscover.users WHERE id_sk = '"+str(user_id)+"';")
         user_id = cursorGetUser.fetchone()[0]
         cursorGetUser.close()
 
@@ -376,7 +374,8 @@ def get_recommendations():
     cursor.close()
     conn.close()
 
-    return Response(headers={"attractions": attracs}, content_type='text/json', status=200)
+    return attracs,200
+    #return Response(headers={"attractions": attracs}, content_type='text/json', status=200)
 
 
 @app.route('/api/create-user/', methods=['POST'])

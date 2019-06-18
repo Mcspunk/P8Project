@@ -26,7 +26,7 @@ Map months = {
 };
 String apiAdress =
     "http://ec2-3-14-87-243.us-east-2.compute.amazonaws.com/app/api";
-//String apiAdress = "https://10.0.2.2:5000/api";
+  //String apiAdress = "http://10.0.2.2:5000/api";
 ThemeData jdDarkTheme() {
   return ThemeData(
     // Define the default Brightness and Colors
@@ -227,7 +227,7 @@ Future<int> getRecCount(Coordinate coordinate) async {
     String _apiAdress = apiAdress + '/request-recommendations/';
     var response = await http.post(_apiAdress,
         body: jsonedString, headers: {"Content-Type": "application/json"});
-    var attracts = response.headers['attractions'];
+    var attracts = response.body;
     var decoded = jsonDecode(attracts);
     var t = decoded as List;
     return t.length;
@@ -258,7 +258,7 @@ Future<List<Attraction>> getAllAttractions(
     var response = await http.post(_apiAdress,
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
-      var attracts = response.headers['attractions'];
+      var attracts = response.body;
       var decoded = attracts == null ? [] : jsonDecode(attracts);
       var t = decoded as List;
       List<Attraction> recAttractions = List<Attraction>();
@@ -343,12 +343,12 @@ Future<List<Attraction>> getRecommendations(
     "dist": distance ?? 1
   };
   var jsonedString = jsonEncode(jsonstring);
-  try {
+  //try {
     String _apiAdress = apiAdress + '/request-recommendations/';
     var response = await http.post(_apiAdress,
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
-      var attracts = response.headers['attractions'];
+      var attracts = response.body;
       var decoded = attracts == null ? [] : jsonDecode(attracts);
       var t = decoded as List;
       List<Attraction> recAttractions = List<Attraction>();
@@ -373,6 +373,7 @@ Future<List<Attraction>> getRecommendations(
             if (dayopenhours.length > 1) {
               int interValCounter = 0;
               for (var time in dayopenhours) {
+                time = time.trim();
                 List<String> splitonspace = time.split(' ');
                 if (interValCounter == 0) {
                   splitonspace.removeAt(0);
@@ -412,14 +413,14 @@ Future<List<Attraction>> getRecommendations(
                   splitonspace.removeAt(1);
                 } else if (splitonspace[1] == '–') {
                   if (splitonspace[3] == 'AM') {
-                    if (splitonspace[2].split(':')[2] == '12') {
+                    if (splitonspace[2].split(':')[0] == '12') {
                       splitonspace[2] = '0:' + splitonspace[2].split(':')[1];
                     }
                     if (splitonspace[0].split(':')[0] == '12') {
                       splitonspace[0] = '0:' + splitonspace[0].split(':')[1];
                     }
                   } else if (splitonspace[3] == 'PM') {
-                    int temptime = int.parse(splitonspace[2].split(':')[2]);
+                    int temptime = int.parse(splitonspace[2].split(':')[0]);
                     temptime += splitonspace[2].split(':')[0] == '12' ? 0 : 12;
                     splitonspace[2] = temptime.toString() +
                         ':' +
@@ -479,7 +480,7 @@ Future<List<Attraction>> getRecommendations(
                 splitonspace.removeAt(1);
               } else if (splitonspace[1] == "–") {
                 if (splitonspace[3] == 'AM') {
-                  if (splitonspace[2].split(':')[2] == '12') {
+                  if (splitonspace[2].split(':')[0] == '12') {
                     splitonspace[2] = '0:' + splitonspace[2].split(':')[1];
                   }
                   if (splitonspace[0].split(':')[0] == '12') {
@@ -496,7 +497,7 @@ Future<List<Attraction>> getRecommendations(
                       temptime.toString() + ':' + splitonspace[0].split(':')[1];
                 }
               }
-
+              if(toadd){
               if (int.parse(dt.hour.toString()) >
                   int.parse(splitonspace[0].split(':')[0])) {
                 if (int.parse(dt.hour.toString()) <
@@ -508,6 +509,7 @@ Future<List<Attraction>> getRecommendations(
                 }
               } else {
                 toadd = false;
+              }
               }
             }
 
@@ -543,10 +545,10 @@ Future<List<Attraction>> getRecommendations(
     } else {
       displayMsg('No connection to server: \nGR', context);
     }
-  } catch (e) {
-    print('gr: ');
-    print(e);
-  }
+  //} catch (e) {
+  //  print('gr: ');
+  //  print(e);
+  //}
 }
 
 Future<void> updateLikedAttraction(BuildContext context) async {
@@ -582,7 +584,7 @@ Future<List<Attraction>> getLikedAttraction(BuildContext context) async {
     var response = await http.post(_apiAdress,
         body: jsonedString, headers: {"Content-Type": "application/json"});
     if (response.statusCode == 200) {
-      var attracts = response.headers['attractions'];
+      var attracts = response.body;
       var decoded = attracts == null ? [] : jsonDecode(attracts);
       var t = decoded as List;
       List<Attraction> recAttractions = List<Attraction>();

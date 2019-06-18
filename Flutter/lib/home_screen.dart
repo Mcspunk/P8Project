@@ -10,8 +10,7 @@ import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'data_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class RatingDialog extends State<RatingState> {
-  //https://www.youtube.com/watch?v=MsycCv5r2Wo
+class RatingDialog extends State<RatingState> {  
   double attractionRating = 0;
   String tripType = '';
   String dateText = 'Select date';
